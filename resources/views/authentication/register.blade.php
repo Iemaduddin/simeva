@@ -52,7 +52,7 @@
                         <span class="icon top-50 translate-middle-y">
                             <iconify-icon icon="mage:phone-call"></iconify-icon>
                         </span>
-                        <input type="number" name="no_hp" min="0"
+                        <input type="number" name="phone_number" min="0"
                             class="form-control h-56-px bg-neutral-50 radius-12" placeholder="Nomor Handphone/WA">
                     </div>
                     <div class="icon-field mb-16">

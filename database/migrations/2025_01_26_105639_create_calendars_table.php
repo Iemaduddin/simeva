@@ -16,11 +16,7 @@ return new class extends Migration
             $table->uuid('id')->primary()->default(Str::uuid());
             $table->enum('type', ['event', 'asset']);
             $table->uuid('event_id')->nullable();
-            $table->uuid('asset_id')->nullable();
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->dateTime('start_date');
-            $table->dateTime('end_date')->nullable();
+            $table->uuid('asset_booking_id')->nullable();
             $table->boolean('is_public')->default(true);
             $table->boolean('all_day')->default(false);
             $table->string('background_color', 7);
@@ -28,7 +24,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
-            $table->foreign('asset_id')->references('id')->on('assets')->onDelete('cascade');
+            $table->foreign('asset_booking_id')->references('id')->on('asset_bookings')->onDelete('cascade');
         });
     }
 

@@ -15,9 +15,9 @@ return new class extends Migration
         Schema::create('asset_booking_documents', function (Blueprint $table) {
             $table->uuid('id')->primary()->default(Str::uuid());
             $table->uuid('booking_id');
-            $table->string('document_name');
+            // $table->string('document_name');
             $table->string('document_path');
-            $table->enum('document_type', ['contract', 'approval_letter', 'supporting']);
+            $table->enum('document_type', ['Identitas Diri', 'Form Peminjaman', 'Surat Perjanjian Kontrak', 'Surat Pernyataan']);
             $table->uuid('uploaded_by');
             $table->timestamps();
 

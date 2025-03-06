@@ -29,7 +29,7 @@
                             <li class="breadcrumb__item">
                                 <a href="{{ route('home') }}"
                                     class="breadcrumb__link text-neutral-500 hover-text-main-600 fw-medium">
-                                    <i class="text-lg d-inline-flex ph-bold ph-house"></i> Home</a>
+                                    <i class="text-lg d-inline-flex ph-bold ph-house"></i> Beranda</a>
                             </li>
                             <li class="breadcrumb__item ">
                                 <i class="text-neutral-500 d-flex ph-bold ph-caret-right"></i>

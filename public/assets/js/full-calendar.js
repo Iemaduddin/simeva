@@ -1,29 +1,176 @@
-$(document).ready(function () {
-    var date = new Date();
-    var d = date.getDate();
-    var m = date.getMonth();
-    var y = date.getFullYear();
-    /*  className colors
-		className: default(transparent), important(red), chill(pink), success(green), info(blue)
-		*/
-    /* initialize the external events
-		-----------------------------------------------------------------*/
-    $("#external-events div.external-event").each(function () {
-        // create an Event Object (http://arshaw.com/fullcalendar/docs/event_data/Event_Object/)
-        // it doesn't need to have a start or end
-        var eventObject = {
-            title: $.trim($(this).text()), // use the element's text as the event title
-        };
-        // store the Event Object in the DOM element so we can get to it later
-        $(this).data("eventObject", eventObject);
-        // make the event draggable using jQuery UI
-        $(this).draggable({
-            zIndex: 999,
-            revert: true, // will cause the event to go back to its
-            revertDuration: 0, //  original position after the drag
-        });
-    });
-});
+// $(document).ready(function () {
+//     var date = new Date();
+//     var d = date.getDate();
+//     var m = date.getMonth();
+//     var y = date.getFullYear();
+//     /*  className colors
+//       className: default(transparent), important(red), chill(pink), success(green), info(blue)
+//       */
+//     /* initialize the external events
+//       -----------------------------------------------------------------*/
+//     $("#external-events div.external-event").each(function () {
+//         // create an Event Object (http://arshaw.com/fullcalendar/docs/event_data/Event_Object/)
+//         // it doesn't need to have a start or end
+//         var eventObject = {
+//             title: $.trim($(this).text()), // use the element's text as the event title
+//         };
+//         // store the Event Object in the DOM element so we can get to it later
+//         $(this).data("eventObject", eventObject);
+//         // make the event draggable using jQuery UI
+//         $(this).draggable({
+//             zIndex: 999,
+//             revert: true, // will cause the event to go back to its
+//             revertDuration: 0, //  original position after the drag
+//         });
+//     });
+//     /************** initialize the calendar *********************
+//       -----------------------------------------------------------------*/
+//     var calendar = $("#calendar").fullCalendar({
+//         header: {
+//             left: "title",
+//             center: "agendaDay,agendaWeek,month",
+//             right: "prev,next today",
+//         },
+//         editable: true,
+//         firstDay: 1, //  1(Monday) this can be changed to 0(Sunday) for the USA system
+//         selectable: true,
+//         defaultView: "month",
+//         axisFormat: "h:mm",
+//         columnFormat: {
+//             month: "ddd", // Mon
+//             week: "ddd d", // Mon 7
+//             day: "dddd M/d", // Monday 9/7
+//             agendaDay: "dddd d",
+//         },
+//         titleFormat: {
+//             month: "MMMM yyyy", // September 2009
+//             week: "MMMM yyyy", // September 2009
+//             day: "MMMM yyyy", // Tuesday, Sep 8, 2009
+//         },
+//         allDaySlot: false, //cambie a true
+//         selectHelper: true,
+//         dayClick: function (date, allDay, jsEvent, view) {
+//             if (allDay) {
+//                 // Clicked on the day number
+//                 calendar
+//                     .fullCalendar("changeView", "agendaDay" /* or 'basicDay' */)
+//                     .fullCalendar(
+//                         "gotoDate",
+//                         date.getFullYear(),
+//                         date.getMonth(),
+//                         date.getDate()
+//                     );
+//             }
+//         },
+//         select: function (startDate, endDate, allDay) {
+//             if (!allDay) {
+//                 swal({
+//                     input: "text",
+//                     title: "Event title:",
+//                     showCancelButton: true,
+//                 }).then((result) => {
+//                     swal.resetDefaults();
+//                     console.log("result: " + result);
+//                     if (result) {
+//                         calendar.fullCalendar(
+//                             "renderEvent",
+//                             {
+//                                 title: result,
+//                                 start: startDate,
+//                                 end: endDate,
+//                                 allDay: allDay,
+//                             },
+//                             true // make the event "stick"
+//                         );
+//                         swal({
+//                             type: "success",
+//                             title: "Agended!",
+//                             html: "Event title: " + result,
+//                         });
+//                     } else {
+//                         swal({
+//                             type: "warning",
+//                             title: "Not Agended!",
+//                             html: "Title is empty! ",
+//                         });
+//                     }
+//                     calendar.fullCalendar("unselect");
+//                 });
+//             }
+//         },
+//         droppable: true, // this allows things to be dropped onto the calendar !!!
+//         drop: function (date, allDay) {
+//             // this function is called when something is dropped
+
+//             // retrieve the dropped element's stored Event Object
+//             var originalEventObject = $(this).data("eventObject");
+
+//             // we need to copy it, so that multiple events don't have a reference to the same object
+//             var copiedEventObject = $.extend({}, originalEventObject);
+
+//             // assign it the date that was reported
+//             copiedEventObject.start = date;
+//             copiedEventObject.allDay = allDay;
+
+//             // render the event on the calendar
+//             // the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)
+//             $("#calendar").fullCalendar("renderEvent", copiedEventObject, true);
+
+//             // is the "remove after drop" checkbox checked?
+//             if ($("#drop-remove").is(":checked")) {
+//                 // if so, remove the element from the "Draggable Events" list
+//                 $(this).remove();
+//             }
+//         },
+
+//         events: [
+//             {
+//                 title: "All Day Event",
+//                 start: new Date(y, m, 1),
+//             },
+//             {
+//                 id: 999,
+//                 title: "Repeating Event",
+//                 start: new Date(y, m, d - 3, 16, 0),
+//                 allDay: false,
+//                 className: "info",
+//             },
+//             {
+//                 id: 999,
+//                 title: "Repeating Event",
+//                 start: new Date(y, m, d + 4, 16, 0),
+//                 allDay: false,
+//                 className: "info",
+//             },
+//             {
+//                 title: "Meeting",
+//                 start: new Date(y, m, d, 10, 30),
+//                 allDay: false,
+//                 className: "important",
+//             },
+//             {
+//                 title: "Lunch",
+//                 start: new Date(y, m, d, 12, 0),
+//                 end: new Date(y, m, d, 14, 0),
+//                 allDay: false,
+//                 className: "important",
+//             },
+//             {
+//                 title: "Birthday Party",
+//                 start: new Date(y, m, d + 1, 19, 0),
+//                 end: new Date(y, m, d + 1, 22, 30),
+//                 allDay: false,
+//             },
+//             {
+//                 title: "Click for Google",
+//                 start: new Date(y, m, 28),
+//                 end: new Date(y, m, 29),
+//                 url: "http://google.com/",
+//                 className: "success",
+//             },
+//         ],
+//     });
+// });
 /*!
  * FullCalendar v1.6.4
  * Docs & License: http://arshaw.com/fullcalendar/
@@ -52,9 +199,9 @@ $(document).ready(function () {
         weekNumberTitle: "W",
 
         // editing
-        editable: false,
-        disableDragging: false,
-        disableResizing: false,
+        //editable: false,
+        //disableDragging: false,
+        //disableResizing: false,
 
         allDayDefault: true,
         ignoreTimezone: true,
@@ -84,43 +231,51 @@ $(document).ready(function () {
         isRTL: false,
         firstDay: 0,
         monthNames: [
-            "January",
-            "February",
-            "March",
+            "Januari",
+            "Februari",
+            "Maret",
             "April",
-            "May",
-            "June",
-            "July",
-            "August",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
             "September",
-            "October",
+            "Oktober",
             "November",
-            "December",
+            "Desember",
         ],
         monthNamesShort: [
             "Jan",
             "Feb",
             "Mar",
             "Apr",
-            "May",
+            "Mei",
             "Jun",
             "Jul",
-            "Aug",
+            "Ags",
             "Sep",
-            "Oct",
+            "Okt",
             "Nov",
-            "Dec",
+            "Des",
         ],
         dayNames: [
-            "Sunday",
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
+            "Minggu",
+            "Senin",
+            "Selasa",
+            "Rabu",
+            "Kamis",
+            "Jum'at",
+            "Sabtu",
         ],
-        dayNamesShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        dayNamesShort: [
+            "Minggu",
+            "Senin",
+            "Selasa",
+            "Rabu",
+            "Kamis",
+            "Jum'at",
+            "Sabtu",
+        ],
         buttonText: {
             prev: "<span class='fc-text-arrow'>&lsaquo;</span>",
             next: "<span class='fc-text-arrow'>&rsaquo;</span>",
@@ -280,7 +435,7 @@ $(document).ready(function () {
         var _dragElement;
 
         /* Main Rendering
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         setYMD(date, options.year, options.month, options.date);
 
@@ -367,7 +522,7 @@ $(document).ready(function () {
         }
 
         /* View Rendering
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         function changeView(newViewName) {
             if (!currentView || newViewName != currentView.name) {
@@ -461,7 +616,7 @@ $(document).ready(function () {
         }
 
         /* Resizing
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         function updateSize() {
             if (elementVisible()) {
@@ -537,7 +692,7 @@ $(document).ready(function () {
         }
 
         /* Event Fetching/Rendering
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
         // TODO: going forward, most of this stuff should be directly handled by the view
 
         function refetchEvents() {
@@ -596,7 +751,7 @@ $(document).ready(function () {
         }
 
         /* Header Updating
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         function updateTitle() {
             header.updateTitle(currentView.title);
@@ -612,7 +767,7 @@ $(document).ready(function () {
         }
 
         /* Selection
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         function select(start, end, allDay) {
             currentView.select(
@@ -630,7 +785,7 @@ $(document).ready(function () {
         }
 
         /* Date
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         function prev() {
             renderView(-1);
@@ -682,7 +837,7 @@ $(document).ready(function () {
         }
 
         /* Height "Freezing"
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         function freezeContentHeight() {
             content.css({
@@ -701,7 +856,7 @@ $(document).ready(function () {
         }
 
         /* Misc
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         function getView() {
             return currentView;
@@ -731,7 +886,7 @@ $(document).ready(function () {
         }
 
         /* External Dragging
-	------------------------------------------------------------------------*/
+  ------------------------------------------------------------------------*/
 
         if (options.droppable) {
             $(document)
@@ -976,7 +1131,7 @@ $(document).ready(function () {
         }
 
         /* Fetching
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         function isFetchNeeded(start, end) {
             return !rangeStart || start < rangeStart || end > rangeEnd;
@@ -1118,7 +1273,7 @@ $(document).ready(function () {
         }
 
         /* Sources
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         function addEventSource(source) {
             source = _addEventSource(source);
@@ -1153,7 +1308,7 @@ $(document).ready(function () {
         }
 
         /* Manipulation
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         function updateEvent(event) {
             // update an existing event
@@ -1253,7 +1408,7 @@ $(document).ready(function () {
         }
 
         /* Loading State
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         function pushLoading() {
             if (!loadingLevel++) {
@@ -1268,7 +1423,7 @@ $(document).ready(function () {
         }
 
         /* Event Normalization
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         function normalizeEvent(event) {
             var source = event.source || {};
@@ -1310,7 +1465,7 @@ $(document).ready(function () {
         }
 
         /* Utils
-	------------------------------------------------------------------------------*/
+  ------------------------------------------------------------------------------*/
 
         function normalizeSource(source) {
             if (source.className) {
@@ -1938,10 +2093,10 @@ $(document).ready(function () {
 
     /*
 function enableTextSelection(element) {
-	element
-		.attr('unselectable', 'off')
-		.css('MozUserSelect', '')
-		.unbind('selectstart.ui');
+  element
+      .attr('unselectable', 'off')
+      .css('MozUserSelect', '')
+      .unbind('selectstart.ui');
 }
 */
 
@@ -2250,7 +2405,7 @@ function enableTextSelection(element) {
         var weekNumberFormat;
 
         /* Rendering
-	------------------------------------------------------------*/
+  ------------------------------------------------------------*/
 
         disableTextSelection(element.addClass("fc-grid"));
 
@@ -2321,7 +2476,7 @@ function enableTextSelection(element) {
         }
 
         /* HTML Building
-	-----------------------------------------------------------*/
+  -----------------------------------------------------------*/
 
         function buildTableHTML() {
             var html =
@@ -2453,7 +2608,7 @@ function enableTextSelection(element) {
         }
 
         /* Dimensions
-	-----------------------------------------------------------*/
+  -----------------------------------------------------------*/
 
         function setHeight(height) {
             viewHeight = height;
@@ -2499,7 +2654,7 @@ function enableTextSelection(element) {
         }
 
         /* Day clicking and binding
-	-----------------------------------------------------------*/
+  -----------------------------------------------------------*/
 
         function dayBind(days) {
             days.click(dayClick).mousedown(daySelectionMousedown);
@@ -2514,7 +2669,7 @@ function enableTextSelection(element) {
         }
 
         /* Semi-transparent Overlay Helpers
-	------------------------------------------------------*/
+  ------------------------------------------------------*/
         // TODO: should be consolidated with AgendaView's methods
 
         function renderDayOverlay(
@@ -2550,7 +2705,7 @@ function enableTextSelection(element) {
         }
 
         /* Selection
-	-----------------------------------------------------------------------*/
+  -----------------------------------------------------------------------*/
 
         function defaultSelectionEnd(startDate, allDay) {
             return cloneDate(startDate);
@@ -2571,7 +2726,7 @@ function enableTextSelection(element) {
         }
 
         /* External Dragging
-	-----------------------------------------------------------------------*/
+  -----------------------------------------------------------------------*/
 
         function dragStart(_dragElement, ev, ui) {
             hoverListener.start(function (cell) {
@@ -2592,7 +2747,7 @@ function enableTextSelection(element) {
         }
 
         /* Utilities
-	--------------------------------------------------------*/
+  --------------------------------------------------------*/
 
         function defaultEventEnd(event) {
             return cloneDate(event.start);
@@ -2907,7 +3062,7 @@ function enableTextSelection(element) {
         var weekNumberFormat;
 
         /* Rendering
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         disableTextSelection(element.addClass("fc-agenda"));
 
@@ -2943,7 +3098,7 @@ function enableTextSelection(element) {
         }
 
         /* Build DOM
-	-----------------------------------------------------------------------*/
+  -----------------------------------------------------------------------*/
 
         function buildSkeleton() {
             var headerClass = tm + "-widget-header";
@@ -3048,7 +3203,7 @@ function enableTextSelection(element) {
         }
 
         /* Build Day Table
-	-----------------------------------------------------------------------*/
+  -----------------------------------------------------------------------*/
 
         function buildDayTable() {
             var html = buildDayTableHTML();
@@ -3204,7 +3359,7 @@ function enableTextSelection(element) {
         // TODO: data-date on the cells
 
         /* Dimensions
-	-----------------------------------------------------------------------*/
+  -----------------------------------------------------------------------*/
 
         function setHeight(height) {
             if (height === undefined) {
@@ -3280,7 +3435,7 @@ function enableTextSelection(element) {
         }
 
         /* Scrolling
-	-----------------------------------------------------------------------*/
+  -----------------------------------------------------------------------*/
 
         function resetScroll() {
             var d0 = zeroDate();
@@ -3300,7 +3455,7 @@ function enableTextSelection(element) {
         }
 
         /* Slot/Day clicking and binding
-	-----------------------------------------------------------------------*/
+  -----------------------------------------------------------------------*/
 
         function dayBind(cells) {
             cells.click(slotClick).mousedown(daySelectionMousedown);
@@ -3335,7 +3490,7 @@ function enableTextSelection(element) {
         }
 
         /* Semi-transparent Overlay Helpers
-	-----------------------------------------------------*/
+  -----------------------------------------------------*/
         // TODO: should be consolidated with BasicView's methods
 
         function renderDayOverlay(
@@ -3388,7 +3543,7 @@ function enableTextSelection(element) {
         }
 
         /* Coordinate Utilities
-	-----------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------*/
 
         coordinateGrid = new CoordinateGrid(function (rows, cols) {
             var e, n, p;
@@ -3515,7 +3670,7 @@ function enableTextSelection(element) {
         }
 
         /* Selection
-	---------------------------------------------------------------------------------*/
+  ---------------------------------------------------------------------------------*/
 
         function defaultSelectionEnd(startDate, allDay) {
             if (allDay) {
@@ -3655,7 +3810,7 @@ function enableTextSelection(element) {
         }
 
         /* External Dragging
-	--------------------------------------------------------------------------------*/
+  --------------------------------------------------------------------------------*/
 
         function dragStart(_dragElement, ev, ui) {
             hoverListener.start(function (cell) {
@@ -3744,7 +3899,7 @@ function enableTextSelection(element) {
         t.draggableDayEvent = draggableDayEvent;
 
         /* Rendering
-	----------------------------------------------------------------------------*/
+  ----------------------------------------------------------------------------*/
 
         function renderEvents(events, modifiedEventId) {
             var i,
@@ -4078,7 +4233,7 @@ function enableTextSelection(element) {
         }
 
         /* Dragging
-	-----------------------------------------------------------------------------------*/
+  -----------------------------------------------------------------------------------*/
 
         // when event starts out FULL-DAY
         // overrides DayEventRenderer's version because it needs to account for dragging elements
@@ -4376,7 +4531,7 @@ function enableTextSelection(element) {
         }
 
         /* Resizing
-	--------------------------------------------------------------------------------------*/
+  --------------------------------------------------------------------------------------*/
 
         function resizableSlotEvent(event, eventElement, timeElement) {
             var snapDelta, prevSnapDelta;
@@ -4695,7 +4850,7 @@ function enableTextSelection(element) {
         }
 
         /* Event Editable Boolean Calculations
-	------------------------------------------------------------------------------*/
+  ------------------------------------------------------------------------------*/
 
         function isEventDraggable(event) {
             var source = event.source || {};
@@ -4727,7 +4882,7 @@ function enableTextSelection(element) {
         }
 
         /* Event Data
-	------------------------------------------------------------------------------*/
+  ------------------------------------------------------------------------------*/
 
         function setEventData(events) {
             // events are already normalized at this point
@@ -4757,7 +4912,7 @@ function enableTextSelection(element) {
         }
 
         /* Event Elements
-	------------------------------------------------------------------------------*/
+  ------------------------------------------------------------------------------*/
 
         // report when view creates an element for an event
         function reportEventElement(event, element) {
@@ -4825,7 +4980,7 @@ function enableTextSelection(element) {
         }
 
         /* Event Modification Reporting
-	---------------------------------------------------------------------------------*/
+  ---------------------------------------------------------------------------------*/
 
         function eventDrop(e, event, dayDelta, minuteDelta, allDay, ev, ui) {
             var oldAllDay = event.allDay;
@@ -4879,7 +5034,7 @@ function enableTextSelection(element) {
         }
 
         /* Event Modification Math
-	---------------------------------------------------------------------------------*/
+  ---------------------------------------------------------------------------------*/
 
         function moveEvents(events, dayDelta, minuteDelta, allDay) {
             minuteDelta = minuteDelta || 0;
@@ -5526,7 +5681,7 @@ function enableTextSelection(element) {
         }
 
         /* Top-coordinate Methods
-	-------------------------------------------------------------------------------------------------*/
+  -------------------------------------------------------------------------------------------------*/
 
         // Sets the "top" CSS property for each element.
         // If `doRowHeights` is `true`, also sets each row's first cell to an explicit height,
@@ -5706,7 +5861,7 @@ function enableTextSelection(element) {
         }
 
         /* Mouse Handlers
-	---------------------------------------------------------------------------------------------------*/
+  ---------------------------------------------------------------------------------------------------*/
         // TODO: better documentation!
 
         function attachHandlers(segments, modifiedEventId) {

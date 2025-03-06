@@ -179,8 +179,8 @@
                                             @endforeach
                                             <div class="flex-align gap-8 mt-20">
                                                 <span
-                                                    class="btn rounded-10 px-10 py-10 bg-success text-white text-sm fw-medium">
-                                                    OPEN
+                                                    class="badge {{ $asset->status === 'OPEN' ? 'badge-success' : 'badge-danger' }}rounded-10 px-10 py-10 bg-success text-white text-sm fw-bold ">
+                                                    {{ $asset->status }}
                                                 </span>
                                                 <div class="row">
                                                     <div class="col-12 fw-bold">Tersedia:</div>

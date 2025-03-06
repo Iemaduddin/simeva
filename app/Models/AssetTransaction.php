@@ -14,17 +14,19 @@ class AssetTransaction extends Model
     protected $fillable = [
         'booking_id',
         'user_id',
+        'invoice_number',
         'amount',
-        'payment_method',
+        'va_number',
+        'va_expiry',
+        'tax',
         'proof_of_payment',
         'status',
-        'payment_date'
+        'payment_date',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'payment_date' => 'datetime',
-        'payment_method' => 'string',
         'status' => 'string'
     ];
 

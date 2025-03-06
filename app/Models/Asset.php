@@ -39,9 +39,4 @@ class Asset extends Model
     {
         return $this->hasMany(AssetBooking::class);
     }
-
-    public function calendar()
-    {
-        return $this->hasOne(Calendar::class);
-    }
 }

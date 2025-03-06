@@ -34,8 +34,10 @@
             });
             document.body.addEventListener('submit', function(e) {
                 const form = e.target;
-                if (!form.matches('form[data-table]'))
+                if (!form.matches('form[data-table]')) {
+                    console.log('takde');
                     return; // Hanya menangani form dengan atribut data-table
+                }
 
                 e.preventDefault();
 

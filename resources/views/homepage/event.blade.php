@@ -24,7 +24,7 @@
                             <li class="breadcrumb__item">
                                 <a href="{{ route('home') }}"
                                     class="breadcrumb__link text-neutral-500 hover-text-main-600 fw-medium">
-                                    <i class="text-lg d-inline-flex ph-bold ph-house"></i> Home</a>
+                                    <i class="text-lg d-inline-flex ph-bold ph-house"></i> Beranda</a>
                             </li>
                             <li class="breadcrumb__item">
                                 <i class="text-neutral-500 d-flex ph-bold ph-caret-right"></i>
@@ -612,22 +612,22 @@
 
 @endsection
 @push('script')
-        <!-- ============================== Course List View Section End ============================== -->
-        <script>
-            // Function untuk menampilkan lebih banyak organizer
-            document.getElementById('see_more_organizer').addEventListener('click', function(event) {
-                event.preventDefault();
-    
-                const organizerMore = document.getElementById('organizer_more');
-                const seeMoreLink = event.target;
-    
-                if (organizerMore.classList.contains('d-none')) {
-                    organizerMore.classList.remove('d-none');
-                    seeMoreLink.textContent = 'Lihat Lebih Sedikit';
-                } else {
-                    organizerMore.classList.add('d-none');
-                    seeMoreLink.textContent = 'Lihat Selengkapnya';
-                }
-            });
-        </script>
+    <!-- ============================== Course List View Section End ============================== -->
+    <script>
+        // Function untuk menampilkan lebih banyak organizer
+        document.getElementById('see_more_organizer').addEventListener('click', function(event) {
+            event.preventDefault();
+
+            const organizerMore = document.getElementById('organizer_more');
+            const seeMoreLink = event.target;
+
+            if (organizerMore.classList.contains('d-none')) {
+                organizerMore.classList.remove('d-none');
+                seeMoreLink.textContent = 'Lihat Lebih Sedikit';
+            } else {
+                organizerMore.classList.add('d-none');
+                seeMoreLink.textContent = 'Lihat Selengkapnya';
+            }
+        });
+    </script>
 @endpush

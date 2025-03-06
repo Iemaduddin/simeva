@@ -22,6 +22,7 @@ class Event extends Model
         'remaining_quota',
         'quota',
         'event_mode',
+        'event_category',
         'benefit',
         'sponsored_by',
         'media_partner',
@@ -46,10 +47,6 @@ class Event extends Model
         'status' => 'string'
     ];
 
-    public function categories()
-    {
-        return $this->belongsToMany(CategoryOfEvent::class, 'event_categories', 'event_id', 'category_id');
-    }
 
     public function speakers()
     {

@@ -9,11 +9,7 @@ class Calendar extends Model
     protected $fillable = [
         'type',
         'event_id',
-        'asset_id',
-        'title',
-        'description',
-        'start_date',
-        'end_date',
+        'asset_booking_id',
         'is_public',
         'all_day',
         'background_color',
@@ -21,8 +17,6 @@ class Calendar extends Model
     ];
 
     protected $casts = [
-        'start_date' => 'datetime',
-        'end_date' => 'datetime',
         'is_public' => 'boolean',
         'all_day' => 'boolean',
         'type' => 'string'
@@ -33,8 +27,8 @@ class Calendar extends Model
         return $this->belongsTo(Event::class);
     }
 
-    public function asset()
+    public function asset_booking()
     {
-        return $this->belongsTo(Asset::class);
+        return $this->belongsTo(AssetBooking::class);
     }
 }

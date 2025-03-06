@@ -51,7 +51,7 @@
                             <li class="breadcrumb__item">
                                 <a href="{{ route('home') }}"
                                     class="breadcrumb__link text-neutral-500 hover-text-main-600 fw-medium">
-                                    <i class="text-lg d-inline-flex ph-bold ph-house"></i> Home</a>
+                                    <i class="text-lg d-inline-flex ph-bold ph-house"></i> Beranda</a>
                             </li>
                             <li class="breadcrumb__item">
                                 <i class="text-neutral-500 d-flex ph-bold ph-caret-right"></i>
@@ -73,12 +73,13 @@
             </div>
         </div>
     </section>
-
-    <!-- ============================== Course Details Section Start ============================== -->
     <section class="course-details py-120">
         <div class="container">
             <div class="row gy-4">
                 <div class="col-xl-7">
+                    <!-- Simpan assetId dalam elemen hidden -->
+                    <input type="hidden" id="asset-id" value="{{ $assetDetails->id }}">
+
                     @php
                         $asset_images = json_decode($assetDetails->asset_images, true);
                     @endphp
@@ -122,8 +123,9 @@
                         @endforeach
                     </div>
                     <div class="flex-align gap-8 mt-20">
-                        <span class="btn rounded-10 px-10 py-10 bg-success text-white text-sm fw-medium">
-                            OPEN
+                        <span
+                            class="badge {{ $assetDetails->status === 'OPEN' ? 'badge-success' : 'badge-danger' }}rounded-10 px-10 py-10 bg-success text-white text-sm fw-bold ">
+                            {{ $assetDetails->status }}
                         </span>
                         <div class="row">
                             <div class="col-12 fw-bold">Tersedia:</div>
@@ -201,8 +203,34 @@
             </div>
         </div>
     </section>
-    <!-- ============================== Course Details Section End ============================== -->
-    @push('script')
-        @include('components.calendar')
-    @endpush
+    <div class="modal fade" id="not-available-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Peminjaman Tidak Tersedia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p>Maaf, Peminjaman Aset {{ $assetDetails->name }} tidak dapat dilakukan pada hari yang dipilih.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="status-closed-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Peminjaman Tidak Tersedia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p>Maaf, Aset {{ $assetDetails->name }} saat ini sedang tidak tersedia.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
+@push('script')
+    @include('components.script-crud')
+    @include('components.calendar')
+@endpush

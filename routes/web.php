@@ -11,11 +11,14 @@ use App\Http\Controllers\FormsController;
 use App\Http\Controllers\TableController;
 use App\Http\Controllers\AssetsController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AssetBookingController;
 use App\Http\Controllers\JurusanProdiController;
 use App\Http\Controllers\AiapplicationController;
 use App\Http\Controllers\ComponentpageController;
+use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\RoleandaccessController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\CryptocurrencyController;
@@ -107,13 +110,7 @@ Route::group(['middleware' => ['auth', 'role:Super Admin']], function () {
         Route::delete('/destroy-mahasiswauser/{id}', 'destroyMahasiswaUser')->name('destroy.mahasiswaUser');
         Route::get('/get-prodi-by-jurusan',  action: 'getProdiByJurusan')->name('getProdiByJurusan');
     });
-    // Route::prefix('tenant-users')->controller(StakeholderUsersController::class)->group(function () {
-    //     Route::get('/', 'indexTenant')->name('tenantUsers');
-    //     Route::get('/get-data-tenantUser', 'getDataTenantUser')->name('tenantUsers.getData');
-    //     Route::post('/add-tenantuser', 'addTenantUser')->name('add.tenantUser');
-    //     Route::put('/update-tenantuser/{id}', 'updateTenantUser')->name('update.tenantUser');
-    //     Route::delete('/destroy-tenantuser/{id}', 'destroyTenantUser')->name('destroy.tenantUser');
-    // });
+
     Route::prefix('jurusan-prodi')->controller(JurusanProdiController::class)->group(function () {
         Route::get('/', 'indexJurusanProdi')->name('jurusanProdi');
         // Jurusan
@@ -128,20 +125,86 @@ Route::group(['middleware' => ['auth', 'role:Super Admin']], function () {
         Route::delete('/destroy-prodi/{id}', 'destroyProdi')->name('destroy.prodi');
     });
 });
-
-// Assets Management
-Route::group(['middleware' => ['auth', 'role:Super Admin']], function () {
-    Route::prefix('assets')->controller(AssetsController::class)->group(function () {
-        Route::get('/fasilitas-umum', 'indexAssetFasum')->name('assets.fasum');
-        Route::get('/fasilitas-jurusan/{kode_jurusan}', 'indexAssetFasjur')->name('assets.fasjur');
-        Route::get('/get-data-asset/{kode_jurusan?}', 'getDataAsset')->name('assets.getData');
-        Route::post('/add-asset', 'addAsset')->name('add.asset');
-        Route::put('/update-asset/{id}', 'updateAsset')->name('update.asset');
-        Route::delete('/destroy-asset/{id}', 'destroyAsset')->name('destroy.asset');
+Route::middleware(['auth', 'role:Tenant|Participant'])->controller(ProfileController::class)->group(function () {
+    // Data Profile
+    Route::prefix('profile')->group(function () {
+        Route::get('/{id}', 'profile')->name('profile');
+        Route::post('/update-data-user/{id}', 'updateProfile')->name('profile.update');
     });
-    // Home Page
-    Route::prefix('aset-bmn')->controller(AssetsController::class)->group(function () {
-        Route::get('/', 'indexAsetBmn')->name('aset-bmn');
-        Route::get('/{id}', 'getDataAssetBmn')->name('asset-bmn.getData');
+
+    // Asset
+    Route::prefix('my-asset')->group(function () {
+        Route::get('/{id}', 'asset')->name('asset');
     });
 });
+Route::prefix('asset-booking')->middleware(['auth', 'role:Tenant|UPT PU'])->controller(AssetBookingController::class)->group(function () {});
+
+
+// Assets Management
+Route::group(['middleware' => ['auth']], function () {
+    Route::prefix('assets')->group(function () {
+
+        // Routes untuk AssetsController
+        Route::controller(AssetsController::class)->group(function () {
+
+            Route::group(['middleware' => ['role:Super Admin|Kaur RT']], function () {
+                Route::get('/fasilitas-umum', 'indexAssetFasum')->name('assets.fasum');
+            });
+
+            Route::group(['middleware' => ['role:Super Admin|Admin Jurusan']], function () {
+                Route::get('/fasilitas-jurusan/{kode_jurusan}', 'indexAssetFasjur')->name('assets.fasjur');
+                Route::get('/get-data-asset/{kode_jurusan?}', 'getDataAsset')->name('assets.getData');
+            });
+
+            Route::group(['middleware' => ['role:Super Admin|Kaur RT|Admin Jurusan']], function () {
+                Route::post('/add-asset', 'addAsset')->name('add.asset');
+                Route::put('/update-asset/{id}', 'updateAsset')->name('update.asset');
+                Route::delete('/destroy-asset/{id}', 'destroyAsset')->name('destroy.asset');
+            });
+        });
+        // Routes untuk AssetBookingController
+        Route::prefix('bookings')->controller(AssetBookingController::class)->group(function () {
+
+            // Dashboard Booking Fasilitas Umum (Super Admin, Kaur RT, UPT PU)
+            Route::group(['middleware' => ['role:Super Admin|Kaur RT|UPT PU']], function () {
+                Route::get('/fasilitas-umum', 'assetBookingFasum')->name('asset.fasum.bookings');
+            });
+
+            // Dashboard Booking Fasilitas Jurusan (Super Admin & Admin Jurusan)
+            Route::group(['middleware' => ['role:Super Admin|Admin Jurusan']], function () {
+                Route::get('/fasilitas-jurusan/{kode_jurusan}', 'assetBookingFasjur')->name('asset.fasjur.bookings');
+            });
+
+
+            Route::group(['middleware' => ['role:Super Admin|Kaur RT|UPT PU|Admin Jurusan']], function () {
+                // Ambil Data Booking (Untuk Semua Fasilitas)
+                Route::get('/get-data-asset-booking/{kode_jurusan?}', 'getDataAssetBooking')->name('assets.getDataBooking');
+
+                // Konfirmasi Booking (Super Admin, Kaur RT, UPT PU, Admin Jurusan)
+                Route::post('/confirm-booking/{id}', 'confirmBooking')->name('assetBooking.confirm');
+
+                // Konfirmasi Pembayaran Booking (Super Admin, Kaur RT, UPT PU, Admin Jurusan)
+                Route::post('/confirm-payment/{id}', 'confirmPayment')->name('assetBooking.confirmPayment');
+            });
+            // Tenant Bisa Melakukan Booking Aset
+            Route::group(['middleware' => ['role:Tenant']], function () {
+                Route::post('/asset-booking/{id}', 'assetBooking')->name('asset.booking.tenant');
+                Route::post('/asset-rebooking/{id}', 'assetRebooking')->name('asset.rebooking.tenant');
+                Route::post('/pay-complete-file-booking/{id}', 'payAndCompleteFile')->name('assetBooking.payAndCompleteFile');
+                Route::post('/pay-infull-booking/{id}', 'payInFull')->name('assetBooking.payInFull');
+            });
+        });
+    });
+});
+
+
+Route::prefix('aset-bmn')->controller(AssetsController::class)->group(function () {
+    Route::get('/', 'indexAsetBmn')->name('aset-bmn');
+    Route::get('/{id}', 'getDataAssetBmn')->name('asset-bmn.getData');
+    Route::get('/get-data-category/{id}', 'getDataCategoryAssetBooking')->name('asset-booking.getDataCategory');
+});
+
+// Notifikasi
+Route::post('/notifications/{id}/read', [NotificationsController::class, 'markAsRead'])
+    ->middleware('auth')
+    ->name('notifications.read');

@@ -88,36 +88,153 @@
 
             <!-- Header Right Start -->
             <div class="header-right d-flex align-items-center">
-                @auth
+                @php
+                    use Illuminate\Support\Carbon;
+
+                    $user = auth()->user();
+
+                    if ($user) {
+                        $unreadNotifications = $user
+                            ->unreadNotifications()
+                            ->whereDate('created_at', Carbon::today())
+                            ->get();
+
+                        $allNotifications = $user->notifications()->whereDate('created_at', Carbon::today())->get();
+
+                        $displayNotifications =
+                            $allNotifications->count() <= 5 ? $allNotifications : $unreadNotifications;
+                    } else {
+                        $displayNotifications = collect(); // Kosongkan jika tidak ada user
+                    }
+                @endphp
+
+                @if (Auth::check())
+
+                    <div class="dropdown flex-shrink-0">
+                        <button
+                            class="w-44 h-44 flex-center bg-main-50 rounded-circle text-main-600 text-lg hover-text-white hover-bg-main-600 transition-1"
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="ph-bold ph-bell-simple"></i>
+                            @if ($unreadNotifications->count() > 0)
+                                <span
+                                    class="w-22 h-22 flex-center rounded-circle bg-main-two-600 text-white text-xs position-absolute top-n6 end-n4">
+                                    {{ $unreadNotifications->count() }}</span>
+                            @endif
+                        </button>
+                        <div class="dropdown-menu to-top dropdown-menu-lg bg-white p-0">
+                            <div
+                                class="m-16 py-12 px-16 rounded-10 bg-main-50 mb-16 d-flex align-items-center justify-content-between gap-2">
+                                <div>
+                                    <h6 class="text-lg text-main-light fw-semibold mb-0">Notifications</h6>
+                                </div>
+                                <span
+                                    class="text-main-600 fw-semibold text-lg w-40-px h-40-px rounded-circle bg-base d-flex justify-content-center align-items-center">
+                                    {{ $displayNotifications->count() }}
+                                </span>
+                            </div>
+
+                            <div class="max-h-400-px overflow-y-auto scroll-sm pe-4" id="notif-list">
+                                @foreach ($displayNotifications as $notification)
+                                    @php
+                                        $data = $notification->data;
+                                        $isRead = $notification->read_at !== null;
+                                        $bgClass = $isRead ? 'bg-light' : 'bg-primary-25';
+
+                                        // Ambil pengirim notifikasi
+                                        $sender = \App\Models\User::find($data['user_id']);
+                                        $profilePhoto = $sender->profile_picture ?? 'default-avatar.png';
+
+                                        // Cek apakah ada booking dan asset
+                                        $booking = $data['booking'] ?? null;
+                                        $asset = $booking->asset ?? null;
+                                        $jurusan = $asset->jurusan ?? null;
+
+                                        // Tentukan route berdasarkan jurusan
+
+                                        $routeName = 'profile';
+                                        $routeParam = ['id' => $sender->id];
+
+                                    @endphp
+
+                                    <a href="javascript:void(0);"
+                                        class="px-24 py-12 d-flex align-items-start gap-3 mb-2 justify-content-between {{ $bgClass }}"
+                                        onclick="markAsRead('{{ $notification->id }}', '{{ route($routeName, $routeParam) }}')">
+                                        <div class="text-black hover-text-primary d-flex align-items-center gap-3">
+                                            <img src="{{ asset('storage/' . $profilePhoto) }}" alt="User Avatar"
+                                                class="w-44-px h-44-px rounded-circle flex-shrink-0">
+                                            <div>
+                                                <h6 class="text-md fw-semibold mb-4">
+                                                    {{ $data['title'] ?? 'Notifikasi Baru' }}
+                                                </h6>
+                                                <p class="mb-0 text-sm text-secondary-light text-w-200-px">
+                                                    {{ $data['message'] ?? 'Tidak ada pesan' }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <span class="text-sm text-secondary-light flex-shrink-0">
+                                            {{ Carbon::parse($notification->created_at)->diffForHumans() }}
+                                        </span>
+                                    </a>
+                                @endforeach
+
+                            </div>
+
+                            <div class="text-center py-12 px-16">
+                                <a href="" class="text-primary-600 fw-semibold text-md">See All Notifications</a>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Jika Sudah Login, Tampilkan Nama & Dropdown -->
                     <div class="dropdown d-lg-block ">
                         <a class="btn bg-main-50 border border-main-600 px-24 hover-bg-main-600 rounded-pill p-9 d-flex align-items-center justify-content-center text-2xl text-neutral-500 hover-text-white hover-border-main-600 me-5 dropdown-toggle"
-                            href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="ph ph-user-circle"></i>
+                            href="#" role="button" id="userDropdown" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            @if (Auth::user()->profile_picture)
+                                <div style="width: 30px; height: 30px;">
+                                    <img id="profilePicture"
+                                        src="{{ asset('storage/' . Auth::user()->profile_picture) }}"
+                                        alt="Profile Picture" class="rounded-circle object-fit-cover w-100 h-100">
+                                </div>
+                            @else
+                                <i class="ph ph-user-circle"></i>
+                            @endif
                             <h6 class="ms-2 m-0 text-neutral-500 dropdown-text">{{ Auth::user()->name }}</h6>
                         </a>
 
-                        <ul class="dropdown-menu dropdown-menu-end w-75" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item hover-bg-main-600 hover-text-white text-neutral-700"
-                                    href="/dashboard/index2"><i class="ph ph-user"></i>
-                                    Dashboard</a></li>
-                            <li><a class="dropdown-item hover-bg-main-600 hover-text-white text-neutral-700"
-                                    href=""><i class="ph ph-user"></i>
-                                    Profilku</a></li>
-                            <li><a class="dropdown-item hover-bg-main-600 hover-text-white text-neutral-700"
-                                    href=""><i class="ph ph-cube"></i>
-                                    Itemku</a>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <form action="{{ route('logout') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item text-danger"><i class="ph ph-sign-out"></i>
-                                        Logout</button>
-                                </form>
-                            </li>
+
+                        <ul class="dropdown-menu dropdown-menu--md border-0 bg-transparent p-0"
+                            aria-labelledby="userDropdown">
+                            <div class="card border border-gray-100 rounded-12 box-shadow-custom">
+                                <div class="card-body p-16">
+                                    @hasanyrole(['Super Admin', 'UPT PU', 'Kaur RT', 'Admin Jurusan', 'Organizer'])
+                                        <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
+                                                href="{{ route('stakeholderUsers') }}"><i class="ph ph-user"></i>
+                                                Dashboard</a></li>
+                                    @endhasanyrole
+                                    @hasanyrole(['Participant', 'Tenant'])
+                                        <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
+                                                href="{{ route('profile', Auth::user()->id) }}"><i
+                                                    class="ph ph-user"></i>
+                                                Profilku</a></li>
+                                        <li><a class="dropdown-item hover-bg-main-50  text-neutral-700" href=""><i
+                                                    class="ph ph-cube"></i>
+                                                Itemku</a>
+                                        </li>
+                                    @endhasanyrole
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li>
+                                        <form action="{{ route('logout') }}" method="POST">
+                                            @csrf
+                                            <button type="submit"
+                                                class="dropdown-item text-danger hover-bg-main-50"><i
+                                                    class="ph ph-sign-out"></i>
+                                                Logout</button>
+                                        </form>
+                                    </li>
+                                </div>
+                            </div>
                         </ul>
                     </div>
                 @else
@@ -127,7 +244,7 @@
                         <i class="ph ph-user-circle"></i>
                         <h6 class="ms-2 m-0 login-text">Login</h6>
                     </a>
-                @endauth
+                @endif
 
                 <!-- Mobile Menu Toggle -->
                 <button type="button"
@@ -151,3 +268,19 @@
     </style>
 </header>
 <!-- ==================== Header End Here ==================== -->
+<script>
+    function markAsRead(notificationId, redirectUrl) {
+        fetch("{{ route('notifications.read', '__ID__') }}".replace('__ID__', notificationId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.href = redirectUrl; // Redirect ke halaman sesuai route
+                }
+            });
+    }
+</script>

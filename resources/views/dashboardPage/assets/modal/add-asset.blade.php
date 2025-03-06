@@ -42,7 +42,7 @@
                                         class="form-control form-control-sm radius-8" placeholder="Masukkan Nama Aset"
                                         required>
                                 </div>
-                                <div class="col-md-6 mb-20">
+                                <div class="col-md-3 mb-20">
                                     <label for="AssetTypeInput"
                                         class="form-label fw-semibold text-primary-light text-sm mb-8">
                                         Tipe Aset <span class="text-danger">*</span>
@@ -52,6 +52,18 @@
                                         <option disabled>Pilih Tipe Aset</option>
                                         <option value="building">Bangunan</option>
                                         <option value="transportation">Kendaraan</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-20">
+                                    <label for="BookingTypeSelect"
+                                        class="form-label fw-semibold text-primary-light text-sm mb-8">
+                                        Tipe Sewa <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="BookingTypeSelect" class="form-select bg-base form-select-sm w-100"
+                                        name="booking_type" required>
+                                        <option disabled>Pilih Tipe Sewa</option>
+                                        <option value="daily">Harian</option>
+                                        <option value="annual">Tahunan</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-20">
@@ -71,26 +83,76 @@
                                         id="facilityInput" type="text" name="facility[]" style="overflow: hidden;"
                                         required />
                                 </div>
-
-
-                                <div class="col-md-6 mb-20">
+                                <div class="col-md-6 mb-20" id="col-available">
                                     <label for="availableAtInput"
                                         class="form-label fw-semibold text-primary-light text-sm mb-8 text-muted">
                                         Waktu Aset Tersedia (Pihak Ekstern)
                                         <span class="text-danger">*</span>
                                     </label>
-                                    <select id="availableAtInput"
-                                        class="form-control form-control-sm choices-multiple-remove-button"
-                                        name="available_at[]" placeholder="Masukkan waktu ketersediaan aset" multiple
-                                        required>
-                                        <option value="Senin">Senin</option>
-                                        <option value="Selasa">Selasa</option>
-                                        <option value="Rabu">Rabu</option>
-                                        <option value="Kamis">Kamis</option>
-                                        <option value="Jum'at">Jum'at</option>
-                                        <option value="Sabtu" selected>Sabtu</option>
-                                        <option value="Minggu" selected>Minggu</option>
-                                    </select>
+                                    <div class="dropdown">
+                                        <button
+                                            class="btn btn-outline-primary-600 not-active text-start dropdown-toggle toggle-icon w-100"
+                                            type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Pilih hari aset dapat disewa
+                                        </button>
+                                        <ul class="dropdown-menu w-100">
+                                            <div class="row">
+                                                <div class="col-sm-6">
+                                                    <li>
+                                                        <label class="dropdown-item">
+                                                            <input class="form-check-input me-2" name='available_at[]'
+                                                                type="checkbox" value="Senin">
+                                                            Senin
+                                                        </label>
+                                                    </li>
+                                                    <li>
+                                                        <label class="dropdown-item">
+                                                            <input class="form-check-input me-2" name='available_at[]'
+                                                                type="checkbox" value="Selasa">
+                                                            Selasa
+                                                        </label>
+                                                    </li>
+                                                    <li>
+                                                        <label class="dropdown-item">
+                                                            <input class="form-check-input me-2" name='available_at[]'
+                                                                type="checkbox" value="Rabu">
+                                                            Rabu
+                                                        </label>
+                                                    </li>
+                                                    <li>
+                                                        <label class="dropdown-item">
+                                                            <input class="form-check-input me-2" name='available_at[]'
+                                                                type="checkbox" value="Kamis">
+                                                            Kamis
+                                                        </label>
+                                                    </li>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <li>
+                                                        <label class="dropdown-item">
+                                                            <input class="form-check-input me-2" name='available_at[]'
+                                                                type="checkbox" value="Jum'at">
+                                                            Jum'at
+                                                        </label>
+                                                    </li>
+                                                    <li>
+                                                        <label class="dropdown-item">
+                                                            <input class="form-check-input me-2" name='available_at[]'
+                                                                type="checkbox" value="Sabtu">
+                                                            Sabtu
+                                                        </label>
+                                                    </li>
+                                                    <li>
+                                                        <label class="dropdown-item">
+                                                            <input class="form-check-input me-2" name='available_at[]'
+                                                                type="checkbox" value="Minggu">
+                                                            Minggu
+                                                        </label>
+                                                    </li>
+                                                </div>
+                                            </div>
+                                        </ul>
+                                    </div>
                                 </div>
                                 <div class="col-md-6 mb-20">
                                     <label for="upload-file-multiple"
@@ -118,32 +180,19 @@
                             </div>
                         </fieldset>
                         <fieldset class="wizard-fieldset">
-                            <h6 class="text-md text-neutral-500">Informasai Detail Penyewaan Aset</h6>
+                            <h6 class="text-md text-neutral-500">Informasi Detail Penyewaan Aset</h6>
                             <div class="row gy-3">
                                 @if ($kode_jurusan)
-                                    <div class="col-md-6 mb-20">
+                                    {{-- <div class="col-md-6 mb-20">
                                         <label class="form-label fw-semibold text-primary-light text-sm mb-8">Aset
                                             Jurusan<span class="text-danger">*</span></label>
                                         <div class="d-flex align-items-center flex-wrap gap-28">
                                             <input class="form-control form-control-sm" type="text"
-                                                value="Fasilitas {{ $kode_jurusan }}" disabled>
-                                            <input type="hidden" name="jurusan" value="{{ $kode_jurusan }}">
-                                        </div>
-                                    </div>
+                                                value="Fasilitas {{ $kode_jurusan }}" disabled> --}}
+                                    <input type="hidden" name="jurusan" value="{{ $kode_jurusan }}">
+                                    {{-- </div>
+                                    </div> --}}
                                 @endif
-                                <div class="col-md-6 mb-20">
-                                    <label for="BookingTypeSelect"
-                                        class="form-label fw-semibold text-primary-light text-sm mb-8">
-                                        Tipe Sewa <span class="text-danger">*</span>
-                                    </label>
-                                    <select id="BookingTypeSelect" class="form-select bg-base form-select-sm w-100"
-                                        name="booking_type" required>
-                                        <option disabled>Pilih Tipe Sewa</option>
-                                        <option value="daily">Harian</option>
-                                        <option value="annual">Tahunan</option>
-                                    </select>
-                                </div>
-                                <hr>
                                 <div class="col-md-12">
                                     <div id="tarif-container">
                                         <div class="tarif-row row align-items-end">
@@ -281,14 +330,27 @@
     // ================================================ Upload Multiple image js End here  ================================================
 </script>
 <script>
-    document.getElementById("add-tarif").addEventListener("click", function(event) {
-        event.preventDefault();
+    $(document).ready(function() {
+        let bookingType = $('#BookingTypeSelect');
+        bookingType.change(function() {
+            let bookingTypeSelected = $(this).val(); // Ambil nilai terbaru setiap kali berubah
 
-        let container = document.getElementById("tarif-container");
-        let newRow = document.createElement("div");
-        newRow.classList.add("tarif-row", "row", "align-items-end");
+            if (bookingTypeSelected === 'annual') {
+                $('#col-available').prop('hidden', true);
+                $('#availableAtInput').prop('hidden', true).prop('disabled', true);
+            } else {
+                $('#availableAtInput').prop('hidden', false).prop('disabled', false);
+                $('#col-available').prop('hidden', false);
+            }
+        });
+        document.getElementById("add-tarif").addEventListener("click", function(event) {
+            event.preventDefault();
 
-        newRow.innerHTML = `
+            let container = document.getElementById("tarif-container");
+            let newRow = document.createElement("div");
+            newRow.classList.add("tarif-row", "row", "align-items-end");
+
+            newRow.innerHTML = `
         <div class="row align-items-end">
         <div class="col-md-5 mb-20">
             <label for="categoryNameInput" class="form-label fw-semibold text-primary-light text-sm mb-8">Jenis Tarif Aset
@@ -321,13 +383,14 @@
         </div>
         `;
 
-        container.appendChild(newRow);
-    });
+            container.appendChild(newRow);
+        });
 
-    // Event Listener untuk Menghapus Baris
-    document.addEventListener("click", function(event) {
-        if (event.target.classList.contains("remove-tarif")) {
-            event.target.closest(".tarif-row").remove();
-        }
+        // Event Listener untuk Menghapus Baris
+        document.addEventListener("click", function(event) {
+            if (event.target.classList.contains("remove-tarif")) {
+                event.target.closest(".tarif-row").remove();
+            }
+        });
     });
 </script>

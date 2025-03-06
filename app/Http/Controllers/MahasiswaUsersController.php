@@ -126,9 +126,6 @@ class MahasiswaUsersController extends Controller
             $jurusanName = Jurusan::where('id', $request->jurusan)->value('nama');
             $prodi = Prodi::where('id', $request->prodi)->value('nama_prodi');
             if ($request->hasFile('profile_picture')) {
-                $request->validate([
-                    'profile_picture' => 'image|mimes:jpeg,png,jpg',
-                ]);
                 $file = $request->file('profile_picture');
                 $extension = $file->getClientOriginalExtension();
                 $fileName =  $request->nim . '_' . $request->name . '.' . $extension;
@@ -180,7 +177,7 @@ class MahasiswaUsersController extends Controller
         $rules = [
             'nim' => 'required',
             'name' => 'required',
-            'phone_number' => 'required|integer',
+            'phone_number' => 'required|numeric',
             'tanggal_lahir' => 'required|date',
             'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
             'jurusan' => 'required',
@@ -213,19 +210,20 @@ class MahasiswaUsersController extends Controller
             'email.unique' => 'Email sudah digunakan.',
             'password.required' => 'Password harus diisi.',
             'phone_number.required' => 'Nomor HP Mahasiswa harus diisi.',
-            'phone_number.integer' => 'Nomor HP Mahasiswa harus mengandung angka 0-9.',
+            'phone_number.numeric' => 'Nomor HP Mahasiswa harus mengandung angka 0-9.',
             'tanggal_lahir.required' => 'Tanggal Lahir Mahasiswa harus diisi.',
             'tanggal_lahir.date' => 'Tanggal Lahir Mahasiswa harus berupa tanggal.',
             'jenis_kelamin.required' => 'Jenis Kelamin Mahasiswa harus diisi.',
             'jenis_kelamin.in' => 'Jenis Kelamin Mahasiswa harus Laki-laki/Perempuan.',
             'jurusan.required' => 'Jurusan Mahasiswa harus diisi.',
+            'prodi.required' => 'Prodi Mahasiswa harus diisi.',
             'province.required' => 'Asal Provinsi Mahasiswa harus diisi.',
             'city.required' => 'Asal Kabupaten/Kota Mahasiswa harus diisi.',
             'subdistrict.required' => 'Asal Kecamatan Mahasiswa harus diisi.',
             'village.required' => 'Asal Kelurahan/Desa Mahasiswa harus diisi.',
             'address.required' => 'Alamat Lengkap Mahasiswa harus diisi.',
-            'profile_picture.image' => 'Foto harus Mahasiswa harus berupa file gambar.',
-            'profile_picture.mimes' => 'Foto harus Mahasiswa harus memiliki format: .jpeg, .png, .jpg.',
+            'profile_picture.image' => 'Foto Mahasiswa harus berupa file gambar.',
+            'profile_picture.mimes' => 'Foto  Mahasiswa harus memiliki format: .jpeg, .png, .jpg.',
         ]);
 
         if ($validator->fails()) {
@@ -264,7 +262,7 @@ class MahasiswaUsersController extends Controller
                 $fileName =  $request->nim . '_' . $request->name . '.' . $extension;
                 $filePath = "Foto Profil/Mahasiswa/{$jurusan}/{$prodi}/{$fileName}";
                 $file->storeAs("Foto Profil/Mahasiswa/{$jurusan}/{$prodi}", $fileName, 'public');
-                $mahasiswa->update(['profile_picture' => $filePath]);
+                $user->update(['profile_picture' => $filePath]);
             }
             // Update password jika diisi
             if ($request->filled('password')) {
@@ -277,14 +275,12 @@ class MahasiswaUsersController extends Controller
                 'email' => $request->email,
                 'category_user' => 'internal_kampus',
                 'jurusan_id' => $request->jurusan,
-                'password' => Hash::make($request->password),
                 'phone_number' => $request->phone_number,
                 'province' => $request->province,
                 'city' => $request->city,
                 'subdistrict' => $request->subdistrict,
                 'village' => $request->village,
                 'address' => $request->address,
-                'profile_picture' => $filePath,
             ]);
             $mahasiswa->update([
                 'user_id' => $user->id,

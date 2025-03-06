@@ -166,7 +166,7 @@
                                      <iconify-icon icon="solar:camera-outline"
                                          class="text-xl text-secondary-light"></iconify-icon>
                                      <span class="fw-semibold text-secondary-light">Upload</span>
-                                     <input id="upload-file" type="file" name="logo"
+                                     <input id="upload-file" type="file" name="profile_picture"
                                          accept=".jpg, .jpeg, .png" hidden>
                                  </label>
                              </div>

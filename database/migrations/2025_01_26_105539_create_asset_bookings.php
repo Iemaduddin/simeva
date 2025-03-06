@@ -20,10 +20,14 @@ return new class extends Migration
             $table->uuid('asset_category_id')->nullable();
             $table->dateTime('usage_date_start');
             $table->dateTime('usage_date_end');
-            $table->integer('booking_duration')->default(1);
+            $table->dateTime('loading_date_start')->nullable();
+            $table->dateTime('loading_date_end')->nullable();
+            $table->dateTime('unloading_date')->nullable();
+            $table->string('usage_event_name');
             $table->enum('payment_type', ['dp', 'lunas']);
-            $table->decimal('total_amount', 10, 2);
-            $table->enum('status', ['booked', 'submission', 'approved', 'rejected'])->default('submission');
+            $table->decimal('total_amount', 18, 2);
+            $table->enum('status', ['submission_booking', 'booked', 'rejected_booking', 'submission_dp_payment', 'submission_full_payment', 'rejected_dp_payment', 'rejected_full_payment', 'approved_dp_payment', 'approved_full_payment', 'rejected', 'cancelled'])->nullable();
+            $table->text('reason_rejected')->nullable();
             $table->timestamps();
 
             // Foreign keys

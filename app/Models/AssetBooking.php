@@ -17,11 +17,13 @@ class AssetBooking extends Model
         'usage_date_end',
         'loading_date_start',
         'loading_date_end',
-        'usage_event_type',
-        'event_name',
+        'unloading_date',
+        'usage_event_name',
         'payment_type',
         'booking_duration',
-        'status'
+        'total_amount',
+        'status',
+        'reason_rejected'
     ];
 
     protected $casts = [
@@ -29,7 +31,7 @@ class AssetBooking extends Model
         'usage_date_end' => 'datetime',
         'loading_date_start' => 'datetime',
         'loading_date_end' => 'datetime',
-        'booking_duration' => 'integer',
+        'unloading_date' => 'date',
         'payment_type' => 'string',
         'status' => 'string'
     ];
@@ -38,7 +40,7 @@ class AssetBooking extends Model
     {
         return $this->belongsTo(Asset::class);
     }
-    public function category()
+    public function asset_category()
     {
         return $this->belongsTo(AssetCategory::class, 'asset_category_id');
     }
@@ -60,5 +62,9 @@ class AssetBooking extends Model
     public function documents()
     {
         return $this->hasMany(AssetBookingDocument::class, 'booking_id');
+    }
+    public function calendar()
+    {
+        return $this->hasOne(Calendar::class);
     }
 }

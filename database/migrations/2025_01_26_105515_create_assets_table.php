@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('available_at')->nullable();
             $table->text('asset_images');
             $table->enum('booking_type', ['daily', 'annual'])->default('daily');
-            $table->enum('status', ['available', 'borrowed', 'unavailable'])->default('available');
+            $table->enum('status', ['OPEN', 'CLOSED'])->default('OPEN');
             $table->timestamps();
 
             $table->foreign('jurusan_id')->references('id')->on('jurusan')->onDelete('cascade');

@@ -10,7 +10,7 @@ class AssetBookingDocument extends Model
     use HasUuids;
     protected $fillable = [
         'booking_id',
-        'document_name',
+        // 'document_name',
         'document_path',
         'document_type',
         'uploaded_by'

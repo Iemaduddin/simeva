@@ -79,6 +79,7 @@
     </div>
 @endsection
 @push('script')
+    {{-- Set Jurusan --}}
     <script>
         $(document).ready(function() {
             let loadedTabs = {}; // Menyimpan tab yang sudah dimuat
@@ -187,6 +188,7 @@
             }
         });
     </script>
+    {{-- Set Prodi by Jurusan --}}
     <script>
         $(document).ready(function() {
             $(document).on('change', '.select-jurusan', function() {

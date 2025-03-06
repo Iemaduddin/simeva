@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Jurusan;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,8 +27,8 @@ class AuthenticationController extends Controller
             'name' => 'required|string|max:255',
             'username' => 'required|string|unique:users|max:255',
             'email' => 'required|email|max:255|unique:users',
-            'no_hp' => 'nullable|string',
-            'address' => 'nullable|string|max:255',
+            'phone_number' => 'required|string',
+            'address' => 'required|string|max:255',
             'password' => 'required|string|min:8',
             'role_type' => 'required|string|in:participant,tenant',
         ], [
@@ -43,7 +44,10 @@ class AuthenticationController extends Controller
             'email.unique' => 'Email sudah terdaftar!',
             'email.max' => 'Email tidak boleh lebih dari 255 karakter!',
 
-            'address.max' => 'Alamat tidak boleh lebih dari 255 karakter!',
+            'phone_number.required' => 'Email harus diisi!',
+            'phone_number.number' => 'Nomor Handphone harus angka!',
+
+            'address.required' => 'Alamat harus diisi!',
 
             'password.required' => 'Password harus diisi!',
             'password.min' => 'Password harus minimal 8 karakter!',
@@ -57,10 +61,10 @@ class AuthenticationController extends Controller
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
-            'no_hp' => $request->no_hp ?? '',
+            'phone_number' => $request->phone_number ?? '',
             'address' => $request->address ?? '',
             'password' => Hash::make($request->password),
-            'category_user' => 'external'
+            'category_user' => 'eksternal_kampus'
         ]);
 
         $request->role_type == 'participant' ?
@@ -73,8 +77,12 @@ class AuthenticationController extends Controller
         return redirect()->route('verification.notice')
             ->with('success', 'Silakan cek email Anda untuk verifikasi.');
     }
-    public function showLoginPage()
+    public function showLoginPage(Request $request)
     {
+        // Jika user belum login DAN session url.intended belum ada, simpan URL sebelumnya
+        if (!auth()->check() && !$request->session()->pull('url.just_logged_out', false)) {
+            session(['url.intended' => url()->previous()]);
+        }
         return view('authentication/login');
     }
     public function login(Request $request)
@@ -102,6 +110,12 @@ class AuthenticationController extends Controller
             // Cek peran pengguna dan arahkan ke halaman yang sesuai
 
             $user = Auth::user();
+            // if (session()->has('url.intended')) {
+            //     return redirect(session()->pull('url.intended')); // Ambil URL lalu hapus dari session
+            // }
+
+            $jurusanAdmin = Auth::user()->jurusan_id;
+            $kode_jurusan = Jurusan::where('id', $jurusanAdmin)->value('kode_jurusan');
 
             if ($user->hasRole('Super Admin')) {
                 // Arahkan ke halaman dashboard untuk Super Admin
@@ -109,6 +123,14 @@ class AuthenticationController extends Controller
             } elseif ($user->hasRole('Participant')) {
                 // Arahkan ke halaman home untuk Participant
                 return redirect()->route('home');
+            } elseif ($user->hasRole('Kaur RT')) {
+                return redirect()->route('asset.fasum');
+            } elseif ($user->hasRole('UPT PU')) {
+                return redirect()->route('asset.fasum.bookings');
+            } elseif ($user->hasRole('Admin Jurusan')) {
+                return redirect()->route('asset.fasjur.bookings', $kode_jurusan);
+            } elseif ($user->hasRole('Tenant')) {
+                return redirect()->route('aset-bmn');
             }
 
             // Jika peran tidak cocok, arahkan ke halaman default atau berikan error
@@ -168,6 +190,11 @@ class AuthenticationController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
+        // $request->session()->put('url.just_logged_out', true);
+
+        // // Hapus session termasuk url.intended
+        // $request->session()->flush();
+
         Auth::logout();
 
         $request->session()->invalidate();

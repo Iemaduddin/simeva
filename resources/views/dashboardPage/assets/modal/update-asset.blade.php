@@ -67,26 +67,88 @@
                             <input type="number" name="price" class="form-control radius-8"
                                 placeholder="Masukkan Harga Sewa" value="{{ $asset->price }}" required>
                         </div>
-                        <div class="col-md-6 mb-20">
-                            <label class="form-label fw-semibold text-primary-light text-sm mb-8 text-muted">
-                                Waktu Aset Tersedia (Pihak Ekstern):
+                        <div class="col-md-6 mb-20" id="col-available">
+                            <label for="availableAtInput"
+                                class="form-label fw-semibold text-primary-light text-sm mb-8 text-muted">
+                                Waktu Aset Tersedia (Pihak Ekstern)
                                 <span class="text-danger">*</span>
                             </label>
-                            <select class="form-control choices-multiple-remove-button" name="available_at[]"
-                                placeholder="Masukkan waktu ketersediaan aset" multiple>
-
-                                @php
-                                    // Ubah string "Sabtu, Minggu, Rabu" menjadi array ['Sabtu', 'Minggu', 'Rabu']
+                            <div class="dropdown">
+                                <button
+                                    class="btn btn-outline-primary-600 not-active text-start dropdown-toggle toggle-icon w-100"
+                                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Pilih hari aset dapat disewa
+                                </button>
+                                <ul class="dropdown-menu w-100">
+                                    <?php
+                                    // Ambil data tersedia sebagai array
                                     $availableDays = explode(', ', $asset->available_at ?? '');
-                                @endphp
+                                    ?>
 
-                                @foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', "Jum'at", 'Sabtu', 'Minggu'] as $day)
-                                    <option value="{{ $day }}"
-                                        {{ in_array($day, $availableDays) ? 'selected' : '' }}>
-                                        {{ $day }}
-                                    </option>
-                                @endforeach
-                            </select>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <li>
+                                                <label class="dropdown-item">
+                                                    <input class="form-check-input me-2" name="available_at[]"
+                                                        type="checkbox" value="Senin"
+                                                        <?= in_array('Senin', $availableDays) ? 'checked' : '' ?>>
+                                                    Senin
+                                                </label>
+                                            </li>
+                                            <li>
+                                                <label class="dropdown-item">
+                                                    <input class="form-check-input me-2" name="available_at[]"
+                                                        type="checkbox" value="Selasa"
+                                                        <?= in_array('Selasa', $availableDays) ? 'checked' : '' ?>>
+                                                    Selasa
+                                                </label>
+                                            </li>
+                                            <li>
+                                                <label class="dropdown-item">
+                                                    <input class="form-check-input me-2" name="available_at[]"
+                                                        type="checkbox" value="Rabu"
+                                                        <?= in_array('Rabu', $availableDays) ? 'checked' : '' ?>>
+                                                    Rabu
+                                                </label>
+                                            </li>
+                                            <li>
+                                                <label class="dropdown-item">
+                                                    <input class="form-check-input me-2" name="available_at[]"
+                                                        type="checkbox" value="Kamis"
+                                                        <?= in_array('Kamis', $availableDays) ? 'checked' : '' ?>>
+                                                    Kamis
+                                                </label>
+                                            </li>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <li>
+                                                <label class="dropdown-item">
+                                                    <input class="form-check-input me-2" name="available_at[]"
+                                                        type="checkbox" value="Jum'at"
+                                                        <?= in_array("Jum'at", $availableDays) ? 'checked' : '' ?>>
+                                                    Jum'at
+                                                </label>
+                                            </li>
+                                            <li>
+                                                <label class="dropdown-item">
+                                                    <input class="form-check-input me-2" name="available_at[]"
+                                                        type="checkbox" value="Sabtu"
+                                                        <?= in_array('Sabtu', $availableDays) ? 'checked' : '' ?>>
+                                                    Sabtu
+                                                </label>
+                                            </li>
+                                            <li>
+                                                <label class="dropdown-item">
+                                                    <input class="form-check-input me-2" name="available_at[]"
+                                                        type="checkbox" value="Minggu"
+                                                        <?= in_array('Minggu', $availableDays) ? 'checked' : '' ?>>
+                                                    Minggu
+                                                </label>
+                                            </li>
+                                        </div>
+                                    </div>
+
+                            </div>
                         </div>
 
 
@@ -105,33 +167,41 @@
                         <div class="col-md-12 mb-20">
                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Gambar Aset</label>
                             <div class="upload-image-wrapper d-flex align-items-center gap-3 flex-wrap">
+
+                                <!-- Gambar yang sudah ada di database -->
                                 <div class="uploaded-imgs-container d-flex gap-3 flex-wrap">
                                     @foreach (json_decode($asset->asset_images, true) as $image)
                                         <div
-                                            class="position-relative h-120-px w-120-px border radius-8 overflow-hidden">
+                                            class="uploaded-asset-img position-relative h-120-px w-120-px border radius-8 overflow-hidden">
                                             <img src="{{ asset('storage/' . $image) }}"
                                                 class="w-100 h-100 object-fit-cover">
                                             <button type="button"
                                                 class="uploaded-img__remove position-absolute top-0 end-0 z-1 text-2xxl"
-                                                onclick="removeImage(this, '{{ $image }}')">
+                                                data-image="{{ $image }}">
                                                 <iconify-icon icon='radix-icons:cross-2'
                                                     class='text-xl text-danger-600'></iconify-icon>
                                             </button>
                                         </div>
                                     @endforeach
                                 </div>
+
+                                <!-- Gambar baru yang diunggah (bukan dari DB) -->
+                                <div class="new-uploaded-imgs-container d-flex gap-3 flex-wrap"></div>
+
+                                <!-- Tombol Upload -->
                                 <label
                                     class="upload-file-multiple h-120-px w-120-px border input-form-light radius-8 overflow-hidden 
-                                    border-dashed bg-neutral-50 bg-hover-neutral-200 d-flex align-items-center flex-column justify-content-center gap-1"
-                                    for="upload-file-multiple">
+                                    border-dashed bg-neutral-50 bg-hover-neutral-200 d-flex align-items-center flex-column justify-content-center gap-1">
                                     <iconify-icon icon="solar:camera-outline"
                                         class="text-xl text-secondary-light"></iconify-icon>
                                     <span class="fw-semibold text-secondary-light">Upload</span>
-                                    <input class="upload-file-multiple" type="file" name="asset_images[]"
+                                    <input type="file" name="asset_images[]" class="upload-file-input"
                                         accept=".jpg, .jpeg, .png" hidden multiple>
                                 </label>
                             </div>
                         </div>
+
+
                         <div class="modal-footer d-flex align-items-end justify-content-end gap-3 mt-24">
                             <button type="reset"
                                 class="border border-danger-600 bg-hover-danger-200 text-danger-600 text-md px-24 py-12 radius-8"

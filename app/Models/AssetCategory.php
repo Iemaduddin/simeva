@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class AssetCategory extends Model
 {
     use HasUuids;
-    protected $fillable = 
+    protected $fillable =
     [
-        'asset_id', 
-        'category_name', 
-        'external_price', 
-        'internal_price_percentage', 
-        'social_price_percentage', 
+        'asset_id',
+        'category_name',
+        'external_price',
+        'internal_price_percentage',
+        'social_price_percentage',
         'price'
     ];
 

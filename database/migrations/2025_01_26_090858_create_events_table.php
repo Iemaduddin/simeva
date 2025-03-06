@@ -28,6 +28,7 @@ return new class extends Migration
             $table->integer('remaining_quota')->nullable();
             $table->integer('quota')->nullable();
             $table->enum('event_mode', ['offline', 'online', 'hybrid']);
+            $table->enum('event_category', ['Seminar', 'Kuliah Tamu', 'Pelatihan', 'Workshop', 'Kompetisi', 'Lainnya']);
             $table->text('benefit')->nullable();
             $table->text('sponsored_by')->nullable();
             $table->text('media_partner')->nullable();
@@ -43,22 +44,22 @@ return new class extends Migration
             $table->foreign('organizer_id')->references('id')->on('organizers')->onDelete('cascade');
         });
 
-        // Categories of Event Table
-        Schema::create('categories_of_event', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(Str::uuid());
-            $table->string('name', 100);
-        });
+        // // Categories of Event Table
+        // Schema::create('categories_of_event', function (Blueprint $table) {
+        //     $table->uuid('id')->primary()->default(Str::uuid());
+        //     $table->string('name', 100);
+        // });
 
-        // Event Categories Table
-        Schema::create('event_categories', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(Str::uuid());
-            $table->uuid('event_id');
-            $table->uuid('category_id');
+        // // Event Categories Table
+        // Schema::create('event_categories', function (Blueprint $table) {
+        //     $table->uuid('id')->primary()->default(Str::uuid());
+        //     $table->uuid('event_id');
+        //     $table->uuid('category_id');
 
-            $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
-            $table->foreign('category_id')->references('id')->on('categories_of_event')->onDelete('cascade');
-            $table->unique(['event_id', 'category_id']);
-        });
+        //     $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
+        //     $table->foreign('category_id')->references('id')->on('categories_of_event')->onDelete('cascade');
+        //     $table->unique(['event_id', 'category_id']);
+        // });
     }
 
     /**

@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Asset;
-use App\Models\AssetCategory;
 use App\Models\Jurusan;
+use App\Models\AssetBooking;
 use Illuminate\Http\Request;
+use App\Models\AssetCategory;
+use Illuminate\Support\Facades\DB;
+use App\Models\AssetBookingDocument;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
@@ -15,7 +19,7 @@ class AssetsController extends Controller
     public function indexAssetFasum()
     {
         $jurusans = Jurusan::all();
-        return view('dashboardPage/assets/index', ['kode_jurusan' => null, 'jurusans' => $jurusans]);
+        return view('dashboardPage.assets.index', ['kode_jurusan' => null, 'jurusans' => $jurusans]);
     }
     public function indexAssetFasjur($kode_jurusan)
     {
@@ -310,5 +314,14 @@ class AssetsController extends Controller
     {
         $assetDetails  = Asset::where('facility_scope', 'umum')->where('id', $id)->first();
         return view('homepage.detail_aset', compact('assetDetails'));
+    }
+
+    public function getDataCategoryAssetBooking(Request $request, $id)
+    {
+        $categories = AssetCategory::where('asset_id', $id)->get(['id', 'category_name', 'external_price']);
+
+        return response()->json([
+            'data' => $categories
+        ]);
     }
 }

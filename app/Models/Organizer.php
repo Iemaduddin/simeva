@@ -13,6 +13,12 @@ class Organizer extends Model
         'vision',
         'mision',
         'description',
+        'link_ig',
+        'link_x',
+        'link_youtube',
+        'link_tiktok',
+        'link_linkedin',
+        'whatsapp_number',
         'user_id',
         'organizer_type',
         'logo'

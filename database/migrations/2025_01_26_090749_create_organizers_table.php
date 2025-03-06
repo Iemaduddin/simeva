@@ -19,6 +19,12 @@ return new class extends Migration
             $table->text('vision');
             $table->text('mision');
             $table->text('description');
+            $table->text('link_ig')->nullable();
+            $table->text('link_linkedin')->nullable();
+            $table->text('link_x')->nullable();
+            $table->text('link_youtube')->nullable();
+            $table->text('link_tiktok')->nullable();
+            $table->bigInteger('whatsapp_number')->nullable();
             $table->uuid('user_id');
             $table->enum('organizer_type', ['HMJ', 'LT', 'UKM', 'Jurusan', 'Kampus']);
             $table->string('logo');

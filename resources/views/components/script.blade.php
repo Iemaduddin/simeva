@@ -28,6 +28,7 @@
     <script src="{{ asset('assets/js/app.js') }}"></script>
     <!-- notify js -->
     <script src="{{ asset('assets/js/notyf.min.js') }}"></script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             document.querySelectorAll("input[type=number]").forEach(function(input) {
