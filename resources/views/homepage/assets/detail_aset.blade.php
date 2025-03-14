@@ -147,7 +147,7 @@
 
                                 @php
                                     $statuses = [
-                                        ['color' => 'bg-color-info', 'text' => 'Sudah Dipesan (Booked)'],
+                                        ['color' => 'bg-color-blue', 'text' => 'Sudah Dipesan (Booked)'],
                                         ['color' => 'bg-color-yellow', 'text' => 'Proses Pengajuan (Submission)'],
                                         ['color' => 'bg-color-light-green', 'text' => 'Disetujui (Approved)'],
                                     ];
@@ -211,7 +211,8 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <p>Maaf, Peminjaman Aset {{ $assetDetails->name }} tidak dapat dilakukan pada hari yang dipilih.</p>
+                    <p class="text-neutral-700">Maaf, Peminjaman Aset {{ $assetDetails->name }} tidak dapat dilakukan pada
+                        hari yang dipilih.</p>
                 </div>
             </div>
         </div>
@@ -224,11 +225,52 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <p>Maaf, Aset {{ $assetDetails->name }} saat ini sedang tidak tersedia.</p>
+                    <p class="text-neutral-700">Maaf, Aset {{ $assetDetails->name }} saat ini sedang tidak tersedia.</p>
                 </div>
             </div>
         </div>
     </div>
+    <!-- Modal untuk detail event -->
+    <div class="modal fade" id="event-details-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rincian Booking</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-2 d-flex align-items-center">
+                        <div class="col-4 fw-bold">Status</div>
+                        <div class="col-8 ps-2">
+                            <span class="event-status"></span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row mb-2 d-flex align-items-center">
+                        <div class="col-4 fw-bold">Pengguna</div>
+                        <div class="col-8 ps-2">
+                            <span class="event-user-category"></span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row mb-2 d-flex align-items-center">
+                        <div class="col-4 fw-bold">Tgl. Penggunaan</div>
+                        <div class="col-8 ps-2">
+                            <span class="usage-date"></span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row mb-2 d-flex align-items-center">
+                        <div class="col-4 fw-bold">Tgl. Loading</div>
+                        <div class="col-8 ps-2">
+                            <span class="loading-date"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 @push('script')
     @include('components.script-crud')

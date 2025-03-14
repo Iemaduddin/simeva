@@ -124,9 +124,9 @@
                                             <li>
                                                 <label class="dropdown-item">
                                                     <input class="form-check-input me-2" name="available_at[]"
-                                                        type="checkbox" value="Jum'at"
-                                                        <?= in_array("Jum'at", $availableDays) ? 'checked' : '' ?>>
-                                                    Jum'at
+                                                        type="checkbox" value="Jumat"
+                                                        <?= in_array('Jumat', $availableDays) ? 'checked' : '' ?>>
+                                                    Jumat
                                                 </label>
                                             </li>
                                             <li>

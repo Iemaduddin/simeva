@@ -16,6 +16,7 @@ return new class extends Migration
             $table->uuid('id')->primary()->default(Str::uuid());
             $table->uuid('asset_id');
             $table->uuid('user_id');
+            $table->string('booking_number');
             $table->uuid('event_id')->nullable();
             $table->uuid('asset_category_id')->nullable();
             $table->dateTime('usage_date_start');
@@ -27,7 +28,7 @@ return new class extends Migration
             $table->enum('payment_type', ['dp', 'lunas']);
             $table->decimal('total_amount', 18, 2);
             $table->enum('status', ['submission_booking', 'booked', 'rejected_booking', 'submission_dp_payment', 'submission_full_payment', 'rejected_dp_payment', 'rejected_full_payment', 'approved_dp_payment', 'approved_full_payment', 'rejected', 'cancelled'])->nullable();
-            $table->text('reason_rejected')->nullable();
+            $table->text('reason')->nullable();
             $table->timestamps();
 
             // Foreign keys

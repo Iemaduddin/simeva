@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('username', 100)->unique();
             $table->string('email', 100)->unique();
             $table->string('password');
-            $table->enum('category_user', ['internal_kampus', 'eksternal_kampus']);
+            $table->enum('category_user', ['Internal Kampus', 'Eksternal Kampus']);
             $table->uuid('jurusan_id')->nullable();
             $table->string('phone_number')->nullable();
             $table->string('province')->nullable();

@@ -12,6 +12,7 @@ class AssetBooking extends Model
         'asset_id',
         'user_id',
         'event_id',
+        'booking_number',
         'asset_category_id',
         'usage_date_start',
         'usage_date_end',
@@ -23,7 +24,7 @@ class AssetBooking extends Model
         'booking_duration',
         'total_amount',
         'status',
-        'reason_rejected'
+        'reason'
     ];
 
     protected $casts = [

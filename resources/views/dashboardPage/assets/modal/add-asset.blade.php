@@ -131,8 +131,8 @@
                                                     <li>
                                                         <label class="dropdown-item">
                                                             <input class="form-check-input me-2" name='available_at[]'
-                                                                type="checkbox" value="Jum'at">
-                                                            Jum'at
+                                                                type="checkbox" value="Jumat">
+                                                            Jumat
                                                         </label>
                                                     </li>
                                                     <li>

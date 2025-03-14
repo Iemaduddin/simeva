@@ -61,13 +61,12 @@
 
             <div class="accordion-item">
                 <h2 class="accordion-header bg-main-25">
-                    <button class="accordion-button bg-main-25" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapseTutorialEvent" aria-expanded="true" aria-controls="collapseTutorialEvent">
+                    <button class="accordion-button bg-main-25 collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseTutorialEvent" aria-expanded="false" aria-controls="collapseTutorialEvent">
                         Panduan Pendaftaran Event
                     </button>
                 </h2>
-                <div id="collapseTutorialEvent" class="accordion-collapse collapse show"
-                    data-bs-parent="#accordionExampleTwo">
+                <div id="collapseTutorialEvent" class="accordion-collapse collapse" data-bs-parent="#accordionExampleTwo">
                     <div class="accordion-body p-0 bg-main-25">
                         <object class="pdf p-20 w-100"
                             data=

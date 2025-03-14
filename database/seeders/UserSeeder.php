@@ -20,12 +20,14 @@ class UserSeeder extends Seeder
             'username' => 'simevasuper',
             'email' => 'superadmin.simeva@polinema.ac.id',
             'password' => Hash::make('simevasuper2025'),
+            'category_user' => 'Internal Kampus',
         ]);
         $kaur_rt = User::create([
             'name' => 'Santosa',
             'username' => 'kaur_rt',
             'email' => 'kaurrt.simeva@polinema.ac.id',
             'password' => Hash::make('simevakaurrt2025'),
+            'category_user' => 'Internal Kampus',
         ]);
 
 
@@ -34,18 +36,21 @@ class UserSeeder extends Seeder
             'username' => 'upt_pu',
             'email' => 'uptpu.simeva@polinema.ac.id',
             'password' => Hash::make('simevauptpu2025'),
+            'category_user' => 'Internal Kampus',
         ]);
         $participantUser = User::create([
             'name' => 'Didin',
             'username' => 'didin',
             'email' => 'didin@email.com',
             'password' => Hash::make('password'),
+            'category_user' => 'Eksternal Kampus',
         ]);
         $tenantUser = User::create([
             'name' => 'Tenant',
             'username' => 'tenant',
             'email' => 'tenant@email.com',
             'password' => Hash::make('password'),
+            'category_user' => 'Eksternal Kampus',
         ]);
 
         $kodeJurusanList = ['TI', 'TS', 'TE', 'TM', 'TK', 'AK', 'AN'];

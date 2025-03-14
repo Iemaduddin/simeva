@@ -307,21 +307,69 @@ class AssetsController extends Controller
     // Home Page
     public function indexAsetBmn()
     {
-        $assets  = Asset::where('facility_scope', 'umum')->get();
-        return view('homepage.aset', compact('assets'));
+        $assets  = Asset::all();
+        $jurusans  = Jurusan::all();
+        return view('homepage.assets.aset', compact('assets', 'jurusans'));
     }
     public function getDataAssetBmn($id)
     {
-        $assetDetails  = Asset::where('facility_scope', 'umum')->where('id', $id)->first();
-        return view('homepage.detail_aset', compact('assetDetails'));
+        $assetDetails  = Asset::where('id', $id)->first();
+        return view('homepage.assets.detail_aset', compact('assetDetails'));
     }
 
-    public function getDataCategoryAssetBooking(Request $request, $id)
+    public function getDataCategoryAssetBooking($id)
     {
         $categories = AssetCategory::where('asset_id', $id)->get(['id', 'category_name', 'external_price']);
 
         return response()->json([
             'data' => $categories
         ]);
+    }
+    public function getDataCalendarAssetBooking($assetId)
+    {
+        $bookings = AssetBooking::with('user')
+            ->where('asset_id', $assetId)
+            ->whereIn('status', [
+                'submission_booking',
+                'submission_dp_payment',
+                'submission_full_payment',
+                'booked',
+                'approved_dp_payment',
+                'approved_full_payment'
+            ])
+            ->get()
+            ->map(function ($booking) {
+                // Set warna event berdasarkan status
+                $eventColor = match (true) {
+                    str_contains($booking->status, 'submission') => 'warning', // warning
+                    str_contains($booking->status, 'booked') => 'info',    // primary
+                    str_contains($booking->status, 'approved') => 'success',  // success
+                    default => '#6c757d'                                      // secondary
+                };
+                $userIcon = $booking->user->category_user === 'internal_kampus' ?
+                    'ph-student' :
+                    'ph-user-sound';
+                return [
+                    'id' => $booking->id,
+                    'title' => $booking->usage_event_name,
+                    'start' => Carbon::parse($booking->usage_date_start)->format('Y-m-d H:i:s'),
+                    'end' => Carbon::parse($booking->usage_date_end)->format('Y-m-d H:i:s'),
+                    // Warna untuk event
+                    'className' => $eventColor,
+                    'allDay' => false,
+                    'icon' => $userIcon,
+                    // Data tambahan
+                    'loadingDate' => ($booking->loading_date_start && $booking->loading_date_end)
+                        ? Carbon::parse($booking->loading_date_start)->translatedFormat('l, d M Y H:i') . ' - ' .
+                        Carbon::parse($booking->loading_date_end)->format('H:i')
+                        : '-',
+                    'status' => $booking->status,
+                    'user' => $booking->user->category_user === 'internal_kampus' ? $booking->user->organizer->shorten_name . ' (Internal Kampus)' :  $booking->user->name . ' (Eksternal Kampus)',
+                    'userCategory' => $booking->user->category_user,
+                ];
+            });
+
+
+        return response()->json($bookings);
     }
 }

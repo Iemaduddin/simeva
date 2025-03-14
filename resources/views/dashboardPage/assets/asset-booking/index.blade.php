@@ -13,67 +13,45 @@
             {{ $kode_jurusan ?? 'Umum' }}
         </h6>
         <div class="card-body px-24">
-            <ul class="nav bordered-tab border border-top-0 border-start-0 border-end-0 d-inline-flex nav-pills mb-16"
-                id="pills-tab" role="tablist">
-                <li class="nav-item d-flex justify-content-between align-items-center" role="presentation">
-
-                    <button class="nav-link tab-asset-booking px-16 py-10 active" id="pills-all-tab" data-bs-toggle="pill"
-                        data-bs-target="#pills-all" type="button" role="tab" aria-controls="pills-all"
-                        aria-selected="true" data-status-booking="all">
-                        <span class="w-12-px h-12-px bg-primary-900 rounded-circle fw-medium me-4"></span>
-                        Data Booking Aset Keseluruhan</button>
-                </li>
-                <li class="nav-item d-flex justify-content-between align-items-center" role="presentation">
-
-                    <button class="nav-link tab-asset-booking px-16 py-10" id="pills-submission-tab" data-bs-toggle="pill"
-                        data-bs-target="#pills-submission" type="button" role="tab" aria-controls="pills-submission"
-                        aria-selected="true" data-status-booking="submission">
-                        <span class="w-12-px h-12-px bg-warning-600 rounded-circle fw-medium me-4"></span>
-                        Proses Pengajuan (Submission)</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link tab-asset-booking px-16 py-10" id="pills-booked-tab" data-bs-toggle="pill"
-                        data-bs-target="#pills-booked" type="button" role="tab" aria-controls="pills-booked"
-                        aria-selected="false" data-status-booking="booked">
-                        <span class="w-12-px h-12-px bg-info-600 rounded-circle fw-medium me-4"></span>
-                        Sudah Dipesan (Booked)</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link tab-asset-booking px-16 py-10" id="pills-approved-tab" data-bs-toggle="pill"
-                        data-bs-target="#pills-approved" type="button" role="tab" aria-controls="pills-approved"
-                        aria-selected="false" data-status-booking="approved">
-                        <span class="w-12-px h-12-px bg-success-600 rounded-circle fw-medium me-4"></span>
-                        Disetujui (Approved)</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link tab-asset-booking px-16 py-10" id="pills-rejected-tab" data-bs-toggle="pill"
-                        data-bs-target="#pills-rejected" type="button" role="tab" aria-controls="pills-rejected"
-                        aria-selected="false" data-status-booking="rejected">
-                        <span class="w-12-px h-12-px bg-danger-600 rounded-circle fw-medium me-4"></span>
-                        Ditolak (Rejected)</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link tab-asset-booking px-16 py-10" id="pills-cancelled-tab" data-bs-toggle="pill"
-                        data-bs-target="#pills-cancelled" type="button" role="tab" aria-controls="pills-cancelled"
-                        aria-selected="false" data-status-booking="cancelled">
-                        <span class="w-12-px h-12-px bg-dark rounded-circle fw-medium me-4"></span>
-                        Dibatalkan (Cancelled)</button>
-                </li>
-            </ul>
             @php
-                $statusBookingTabContent = ['all', 'submission', 'booked', 'approved', 'rejected', 'cancelled'];
+                $statusBooking = [
+                    'all' => ['label' => 'Data Booking Aset Keseluruhan', 'color' => 'primary-900'],
+                    'submission_booking' => ['label' => 'Konfirmasi Booking', 'color' => 'warning-600'],
+                    'submission_payment' => ['label' => 'Konfirmasi Pembayaran', 'color' => 'success-600'],
+                    'waiting_payment' => ['label' => 'Menunggu Pembayaran', 'color' => 'info-600'],
+                    'approved' => ['label' => 'Disetujui', 'color' => 'success-600'],
+                    'done' => ['label' => 'Selesai', 'color' => 'primary-600'],
+                    'rejected' => ['label' => 'Ditolak', 'color' => 'danger-600'],
+                    'cancelled' => ['label' => 'Dibatalkan', 'color' => 'dark'],
+                ];
+
                 $tableId = $kode_jurusan
                     ? 'assetBookingFasilitasJurusan-' . $kode_jurusan . '-Table'
                     : 'assetBookingFasilitasUmumTable';
             @endphp
-
+            <ul class="nav bordered-tab border border-top-0 border-start-0 border-end-0 d-inline-flex nav-pills mb-16"
+                id="pills-tab" role="tablist">
+                @foreach ($statusBooking as $statusKey => $statusData)
+                    <li class="nav-item d-flex justify-content-between align-items-center" role="presentation">
+                        <button class="nav-link tab-asset-booking px-16 py-10 {{ $loop->first ? 'active' : '' }}"
+                            id="pills-{{ $statusKey }}-tab" data-bs-toggle="pill"
+                            data-bs-target="#pills-{{ $statusKey }}" type="button" role="tab"
+                            aria-controls="pills-{{ $statusKey }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}"
+                            data-status-booking="{{ $statusKey }}">
+                            <span
+                                class="w-12-px h-12-px bg-{{ $statusData['color'] }} rounded-circle fw-medium me-4"></span>
+                            {{ $statusData['label'] }}
+                        </button>
+                    </li>
+                @endforeach
+            </ul>
             <div class="tab-content" id="pills-tabContent">
-                @foreach ($statusBookingTabContent as $index => $status)
+                @foreach ($statusBooking as $category_status => $data)
                     @php
-                        $currentTableId = $tableId . '-' . $status; // ID tabel untuk status saat ini
+                        $currentTableId = $tableId . '-' . $category_status; // ID tabel untuk category_status saat ini
                     @endphp
-                    <div class="tab-pane fade {{ $index == 0 ? 'show active' : '' }}" id="pills-{{ $status }}"
-                        role="tabpanel" aria-labelledby="pills-{{ $status }}-tab" tabindex="0">
+                    <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="pills-{{ $category_status }}"
+                        role="tabpanel" aria-labelledby="pills-{{ $category_status }}-tab" tabindex="0">
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table basic-table bordered-table w-100 row-border sm-table"
@@ -81,17 +59,17 @@
                                     <thead>
                                         <tr>
                                             <th>No</th>
+                                            <th>Aksi</th>
                                             <th>Nama Aset</th>
                                             <th>Nama Peminjam</th>
                                             <th>Nama Event</th>
-                                            <th>Kategori Event</th>
-                                            <th>Waktu Loading</th>
+                                            {{-- <th>Kategori Event</th> --}}
+                                            {{-- <th>Waktu Loading</th> --}}
                                             <th>Waktu Pemakaian</th>
-                                            <th>Waktu Bongkar</th>
+                                            {{-- <th>Waktu Bongkar</th> --}}
                                             <th>Pembayaran</th>
                                             <th>Harga Sewa</th>
-                                            <th>Status Peminjaman</th>
-                                            <th>Action</th>
+                                            {{-- <th>Status Peminjaman</th> --}}
                                         </tr>
                                     </thead>
                                 </table>
@@ -137,6 +115,10 @@
                                 orderable: false
                             },
                             {
+                                data: 'action',
+                                name: 'action'
+                            },
+                            {
                                 data: 'asset.name',
                                 name: 'asset.name'
                             },
@@ -148,32 +130,32 @@
                                 data: 'usage_event_name',
                                 name: 'usage_event_name'
                             },
-                            {
-                                data: 'asset_category.category_name',
-                                name: 'asset_category.category_name'
-                            },
-                            {
-                                data: 'loading_date',
-                                name: 'loading_date',
-                                render: function(data, type, row) {
-                                    function formatDate(dateStr) {
-                                        if (!dateStr) return ''; // Jika null, kosongkan
-                                        let date = new Date(dateStr);
-                                        let options = {
-                                            day: '2-digit',
-                                            month: 'short',
-                                            year: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                        };
-                                        return date.toLocaleDateString('id-ID', options).replace(
-                                                '.', ':')
-                                            .replace(':', '.');
-                                    }
+                            // {
+                            //     data: 'asset_category.category_name',
+                            //     name: 'asset_category.category_name'
+                            // },
+                            // {
+                            //     data: 'loading_date',
+                            //     name: 'loading_date',
+                            //     render: function(data, type, row) {
+                            //         function formatDate(dateStr) {
+                            //             if (!dateStr) return ''; // Jika null, kosongkan
+                            //             let date = new Date(dateStr);
+                            //             let options = {
+                            //                 day: '2-digit',
+                            //                 month: 'short',
+                            //                 year: 'numeric',
+                            //                 hour: '2-digit',
+                            //                 minute: '2-digit'
+                            //             };
+                            //             return date.toLocaleDateString('id-ID', options).replace(
+                            //                     '.', ':')
+                            //                 .replace(':', '.');
+                            //         }
 
-                                    return `${formatDate(row.loading_date_start)} - <br> ${formatDate(row.loading_date_end)}`;
-                                }
-                            },
+                            //         return `${formatDate(row.loading_date_start)} - <br> ${formatDate(row.loading_date_end)}`;
+                            //     }
+                            // },
 
                             {
                                 data: 'usage_date',
@@ -196,29 +178,29 @@
                                     return `${formatDate(row.usage_date_start)} - <br> ${formatDate(row.usage_date_end)}`;
                                 }
                             },
-                            {
-                                data: 'unloading_date',
-                                name: 'unloading_date',
-                                render: function(data, type, row) {
-                                    function formatDate(dateStr) {
-                                        if (!dateStr) return ''; // Jika null, kosongkan
-                                        let date = new Date(dateStr);
-                                        let options = {
-                                            day: '2-digit',
-                                            month: 'short',
-                                            year: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                        };
-                                        return date.toLocaleDateString('id-ID', options).replace(
-                                                '.', ':')
-                                            .replace(':', '.');
-                                    }
+                            // {
+                            //     data: 'unloading_date',
+                            //     name: 'unloading_date',
+                            //     render: function(data, type, row) {
+                            //         function formatDate(dateStr) {
+                            //             if (!dateStr) return ''; // Jika null, kosongkan
+                            //             let date = new Date(dateStr);
+                            //             let options = {
+                            //                 day: '2-digit',
+                            //                 month: 'short',
+                            //                 year: 'numeric',
+                            //                 hour: '2-digit',
+                            //                 minute: '2-digit'
+                            //             };
+                            //             return date.toLocaleDateString('id-ID', options).replace(
+                            //                     '.', ':')
+                            //                 .replace(':', '.');
+                            //         }
 
-                                    return row.unloading_date ? formatDate(row.unloading_date) :
-                                        '-';
-                                }
-                            },
+                            //         return row.unloading_date ? formatDate(row.unloading_date) :
+                            //             '-';
+                            //     }
+                            // },
                             {
                                 data: 'payment_type',
                                 name: 'payment_type'
@@ -228,32 +210,6 @@
                                 name: 'total_amount',
                                 render: $.fn.dataTable.render.number('.', ',', 0, 'Rp ')
                             },
-                            {
-                                data: 'status',
-                                name: 'status',
-                                render: function(data, type, row) {
-                                    if (!data) return ''; // Jika data null atau undefined
-
-                                    // Kapitalisasi kata pertama
-                                    let capitalizedStatus = data.charAt(0).toUpperCase() + data
-                                        .slice(1);
-
-                                    // Tentukan kelas warna berdasarkan status
-                                    let statusClass = 'bg-dark'; // Default merah jika tidak cocok
-                                    if (data === 'submission') statusClass = 'bg-warning-600';
-                                    else if (data === 'booked') statusClass = 'bg-info-600';
-                                    else if (data === 'approved') statusClass = 'bg-success-600';
-                                    else if (data === 'rejected') statusClass = 'bg-danger-600';
-
-                                    return `<span class="btn rounded-10 w-75 px-10 py-10 ${statusClass} text-white text-sm fw-bold">
-                                        ${capitalizedStatus}
-                                    </span>`;
-                                }
-                            },
-                            {
-                                data: 'action',
-                                name: 'action'
-                            },
                         ],
 
                     });
@@ -262,6 +218,10 @@
             }
             $('.tab-asset-booking').on('click', function() {
                 let statusBooking = $(this).data('status-booking');
+                setTimeout(() => {
+                    $('.modal').appendTo(
+                    'body'); // Pindahkan semua modal ke body agar tetap bisa muncul di semua tab
+                }, 500);
                 if (!statusBooking) return;
                 loadTable(statusBooking);
             })

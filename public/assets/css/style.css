@@ -14185,9 +14185,21 @@ select option {
     color: var(--danger-600) !important;
 }
 
-.fc-event.info {
+/* .fc-event.info {
     background-color: var(--lilac-100) !important;
     color: var(--lilac-600) !important;
+} */
+.fc-event.info {
+    background-color: #0066ff !important;
+    color: #fff !important;
+}
+.fc-event.warning {
+    background-color: #ffab00 !important;
+    color: #fff !important;
+}
+.fc-event.success {
+    background-color: #22c55e !important;
+    color: #fff !important;
 }
 
 .fc-border-separate tr.fc-last th {

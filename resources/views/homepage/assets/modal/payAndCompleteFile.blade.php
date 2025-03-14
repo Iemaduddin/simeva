@@ -1,4 +1,4 @@
-<div class="modal fade" id="modalpayAndCompleteFile-{{ $assetBooking->id }}" tabindex="-1"
+<div class="modal fade" id="modalpayAndCompleteFile-{{ $assetBooking->id }}-{{ $status_booking }}" tabindex="-1"
     aria-labelledby="modalpayAndCompleteFileLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content radius-16 bg-base">
@@ -23,9 +23,9 @@
                 <p>🔄 <strong>Status:</strong> <span class="text-warning fw-bold">{{ $assetBooking->status }}</span>
                 </p>
                 <hr class="my-10">
-                <form id="assetBookingProfile"
+                <form id="assetBookingProfile-{{ $status_booking }}"
                     action="{{ route('assetBooking.payAndCompleteFile', $assetBooking->id) }}" method="POST"
-                    data-table="assetBookingProfile">
+                    data-table="assetBookingProfile-{{ $status_booking }}">
                     @csrf
                     <div class="row">
                         <a href="#" class="text-sm my-5">Download Surat Pernyataan dan Formulir Peminjaman</a>

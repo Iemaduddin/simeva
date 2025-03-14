@@ -1,14 +1,14 @@
-<div id="modalSubmissionAssetBooking-{{ $assetBooking->id }}" class="modal fade" tabindex="-1"
+<div id="modalResubmissionAssetBooking-{{ $assetBooking->id }}-{{ $status_booking }}" class="modal fade" tabindex="-1"
     aria-labelledby="modal-title" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content p-10">
             <div class="modal-header">
                 <h5 id="modal-title" class="modal-title">Lengkapi data berikut</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="{{ route('asset.rebooking.tenant', $assetBooking->id) }}"
-                id="assetBookingProfile"data-table="assetBookingProfile" class="needs-validation" method="POST"
-                enctype="multipart/form-data">
+                id="assetBookingProfile-{{ $status_booking }}" data-table="assetBookingProfile-{{ $status_booking }}"
+                class="needs-validation" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
                     <input type="hidden" name="asset_id" id="asset_id" value="{{ $assetBooking->asset->id }}">
@@ -125,7 +125,6 @@
 </div>
 <script>
     $(document).ready(function() {
-
         let assetId = $("#asset_id").val();
         let typeEvent = $("#type_event");
         let selectedCategoryId = "{{ $assetBooking->asset_category_id }}";
@@ -156,10 +155,12 @@
                 type: "GET",
                 success: function(response) {
                     typeEvent.empty();
-                    typeEvent.append('<option value="" hidden>Pilih Jenis Acara</option>');
+                    typeEvent.append(
+                        '<option value="" hidden>Pilih Jenis Acara</option>');
 
                     response.data.forEach(category => {
-                        let isSelected = category.id == selectedCategoryId ? "selected" :
+                        let isSelected = category.id == selectedCategoryId ?
+                            "selected" :
                             "";
                         typeEvent.append(
                             `<option value="${category.id}" data-price="${category.external_price}" ${isSelected}>
@@ -192,7 +193,5 @@
         });
 
         $("#usage_date_display").val(formattedDisplayDate);
-
-
     });
 </script>

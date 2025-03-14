@@ -26,7 +26,7 @@
                     <label for="identity_personal"><strong>Identitas Diri</strong></label><br>
                     <img id="identity_personal"
                         src="{{ asset('storage/' . $ktp->document_path) }}?v={{ $ktp->updated_at->timestamp }}"
-                    alt="Identity Personal Image" class="w-50" @else <p>Gambar tidak ditemukan
+                    alt="Identity Personal Image" class="w-30" @else <p>Gambar tidak ditemukan
                     </p>
                 @endif
                 <hr>
@@ -36,7 +36,7 @@
                     <div class="row my-10">
                         <p class="fw-medium">Pilih Tindakan</p>
                         <div class="col-md-12">
-                            <select class="form-control actionConfirmBooking" name="actionBooking">
+                            <select class="form-control form-select actionConfirmBooking" name="actionBooking">
                                 <option value="approved" selected>✅ Setujui Booking</option>
                                 <option value="rejected">❌ Tolak Booking</option>
                             </select>

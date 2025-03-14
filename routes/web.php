@@ -133,8 +133,9 @@ Route::middleware(['auth', 'role:Tenant|Participant'])->controller(ProfileContro
     });
 
     // Asset
-    Route::prefix('my-asset')->group(function () {
-        Route::get('/{id}', 'asset')->name('asset');
+    Route::prefix('my-asset-booking')->group(function () {
+        Route::get('/{id}', 'myAssetBooking')->name('profile.myAssetBooking');
+        Route::get('/get-data/{id}', 'getDataMyAssetBooking')->name('profile.getDataMyAssetBooking');
     });
 });
 Route::prefix('asset-booking')->middleware(['auth', 'role:Tenant|UPT PU'])->controller(AssetBookingController::class)->group(function () {});
@@ -193,6 +194,10 @@ Route::group(['middleware' => ['auth']], function () {
                 Route::post('/pay-complete-file-booking/{id}', 'payAndCompleteFile')->name('assetBooking.payAndCompleteFile');
                 Route::post('/pay-infull-booking/{id}', 'payInFull')->name('assetBooking.payInFull');
             });
+
+            // Tenant atau UPT PU/Admin Jurusan/Super Adminn membatalkan booking
+            Route::post('/asset-booking/{id}/cancelled', 'cancelledBooking')->name('assetBooking.cancelled')
+                ->middleware(['role:Super Admin|Kaur RT|UPT PU|Admin Jurusan|Tenant']);
         });
     });
 });
@@ -202,6 +207,7 @@ Route::prefix('aset-bmn')->controller(AssetsController::class)->group(function (
     Route::get('/', 'indexAsetBmn')->name('aset-bmn');
     Route::get('/{id}', 'getDataAssetBmn')->name('asset-bmn.getData');
     Route::get('/get-data-category/{id}', 'getDataCategoryAssetBooking')->name('asset-booking.getDataCategory');
+    Route::get('/get-data-calendar-booking/{assetId}', 'getDataCalendarAssetBooking')->name('asset-booking.getDataCalendar');
 });
 
 // Notifikasi

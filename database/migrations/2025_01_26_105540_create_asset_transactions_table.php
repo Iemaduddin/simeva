@@ -16,7 +16,6 @@ return new class extends Migration
             $table->uuid('id')->primary()->default(Str::uuid());
             $table->uuid('booking_id');
             $table->uuid('user_id');
-            $table->string('invoice_number');
             $table->decimal('amount', 18, 2);
             $table->string('va_number')->nullable();
             $table->dateTime('va_expiry')->nullable();

@@ -59,7 +59,7 @@ class BookingAssetConfirmed extends Notification
                 ->line('📌 Aset: ' . $this->booking->asset->name)
                 ->line('📅 Event: ' . $this->booking->event_name)
                 ->line('❌ Status: Ditolak')
-                ->line('📝 Alasan Penolakan: ' . $this->booking->reason_rejected)
+                ->line('📝 Alasan Penolakan: ' . $this->booking->reason)
                 ->action('Buat Booking Baru', url('/assets'))
                 ->line('Silakan hubungi kami jika membutuhkan bantuan lebih lanjut.')
                 ->line('Terima kasih atas pengertiannya.');
@@ -83,7 +83,7 @@ class BookingAssetConfirmed extends Notification
                 'title' => 'Booking Ditolak',
                 'booking' => $this->booking,
                 'user_id' => $this->user->id,
-                'message' => 'Mohon maaf, booking Anda untuk ' . $this->booking->asset->name . ' ditolak dengan alasan: ' . $this->booking->reason_rejected,
+                'message' => 'Mohon maaf, booking Anda untuk ' . $this->booking->asset->name . ' ditolak dengan alasan: ' . $this->booking->reason,
             ];
         }
     }
@@ -101,10 +101,10 @@ class BookingAssetConfirmed extends Notification
         } else {
             return new BroadcastMessage([
                 'title' => 'Booking Ditolak',
-                'message' => 'Booking ' . $this->booking->asset->name . ' ditolak: ' . $this->booking->reason_rejected,
+                'message' => 'Booking ' . $this->booking->asset->name . ' ditolak: ' . $this->booking->reason,
                 'status' => 'rejected',
                 'booking_id' => $this->booking->id,
-                'reason' => $this->booking->reason_rejected
+                'reason' => $this->booking->reason
             ]);
         }
     }

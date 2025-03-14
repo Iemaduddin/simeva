@@ -38,8 +38,7 @@
             </div>
         </div>
     </section>
-    <div class="container p-30 border border-main  rounded-12 my-20">
-        <ul class="nav bordered-tab border border-top-0 border-start-0 border-end-0 d-inline-flex nav-pills mb-16"
+    {{-- <ul class="nav bordered-tab border border-top-0 border-start-0 border-end-0 d-inline-flex nav-pills mb-16"
             id="pills-tab" role="tablist">
             @hasrole('Tenant')
                 <li class="nav-item" role="presentation">
@@ -60,253 +59,122 @@
                         aria-selected="false">Event</button>
                 </li>
             @endhasrole
-        </ul>
-        <div class="tab-content" id="pills-tabContent">
-            @hasrole('Tenant')
-                <div class="tab-pane fade show active" id="pills-asset" role="tabpanel" aria-labelledby="pills-asset-tab"
-                    tabindex="0">
-                    {{-- content --}}
-                    <div class="card basic-data-table">
-                        <div class="card-header d-flex justify-content-between">
-                            <h5 class="card-title my-10 align-content-center">Daftar Peminjaman Aset</h5>
-                        </div>
+        </ul> --}}
 
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table bordered-table mb-0 w-100 h-100 row-border order-column text-wrap sm-table"
-                                    id="assetBookingProfile">
-                                    <thead>
-                                        <tr>
-                                            <th>No</th>
-                                            <th>Nama Aset</th>
-                                            <th>Nama event</th>
-                                            <th>Kategori Event</th>
-                                            <th>Waktu Loading</th>
-                                            <th>Waktu Pemakaian</th>
-                                            <th>Waktu Bongkar</th>
-                                            <th>Pembayaran</th>
-                                            <th>Harga Sewa</th>
-                                            <th>Status Peminjaman</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($myAsset as $assetBooking)
-                                            <tr>
-                                                <td>{{ $loop->iteration }}</td>
-                                                <td>{{ optional($assetBooking->asset)->name }}</td>
-                                                <td>{{ $assetBooking->usage_event_name }}</td>
-                                                <td>{{ optional($assetBooking->asset_category)->category_name }}</td>
-                                                <td>
-                                                    {{ $assetBooking->loading_date_start ? \Carbon\Carbon::parse($assetBooking->loading_date_start)->format('d-M-Y H.i') : '' }}
-                                                    - <br>
-                                                    {{ $assetBooking->loading_date_end ? \Carbon\Carbon::parse($assetBooking->loading_date_end)->format('d-M-Y H.i') : '' }}
-                                                </td>
-                                                <td>
-                                                    {{ \Carbon\Carbon::parse($assetBooking->usage_date_start)->format('d-M-Y H.i') }}
-                                                    - <br>
-                                                    {{ \Carbon\Carbon::parse($assetBooking->usage_date_end)->format('d-M-Y H.i') }}
-                                                </td>
-                                                <td>
-                                                    {{ $assetBooking->unloading_date ? \Carbon\Carbon::parse($assetBooking->unloading_date)->format('d-M-Y H.i') : '-' }}
-                                                </td>
-
-                                                <td>{{ $assetBooking->payment_type }}</td>
-                                                <td>Rp {{ number_format($assetBooking->total_amount, 0, ',', '.') }}</td>
-                                                <td> <span
-                                                        class="btn rounded-10 px-10 py-10 {{ $assetBooking->status == 'submission' ? 'bg-color-warning' : ($assetBooking->status == 'booked' ? 'bg-color-info' : ($assetBooking->status == 'approved' ? 'bg-color-light-green' : 'bg-danger')) }} text-white text-sm fw-medium">
-                                                        {{ $assetBooking->status }}
-                                                    </span></td>
-                                                <td>
-                                                    <div class="d-flex gap-2">
-                                                        @if ($assetBooking->status === 'submission_booking')
-                                                            <span class="badge bg-secondary">⏳ Menunggu Persetujuan</span>
-                                                        @elseif ($assetBooking->status === 'rejected_booking')
-                                                            <a class='btn btn-outline-main cursor-pointer d-inline-flex align-items-center justify-content-center'
-                                                                data-bs-toggle='modal'
-                                                                data-bs-target="#modalSubmissionAssetBooking-{{ $assetBooking->id }}">
-                                                                🔄 Ajukan Ulang Booking
-                                                            </a>
-                                                            @include('dashboardPage.assets.asset-booking.modal.resubmissionBooking')
-                                                        @elseif ($assetBooking->status === 'booked')
-                                                            <a class="btn btn-sm btn-outline-main cursor-pointer d-inline-flex align-items-center justify-content-center"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#modalpayAndCompleteFile-{{ $assetBooking->id }}">
-                                                                Bayar dan Lengkapi Berkas
-                                                            </a>
-                                                            @include('dashboardpage.assets.asset-booking.modal.payAndCompleteFile')
-                                                        @elseif ($assetBooking->status === 'submission_payment')
-                                                            <span class="badge bg-secondary">⏳ Menunggu Persetujuan</span>
-                                                        @elseif ($assetBooking->status === 'submission_payment' && $assetBooking->transactions->first()->status == 'dp_paid')
-                                                            <a class="btn btn-sm btn-outline-main cursor-pointer d-inline-flex align-items-center justify-content-center"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#modalpayAndCompleteFile-{{ $assetBooking->id }}">
-                                                                📤 Upload Ulang Bukti Pembayaran dan Berkas
-                                                            </a>
-                                                        @elseif ($assetBooking->status === 'rejected_payment')
-                                                            <a class="btn btn-sm btn-outline-main cursor-pointer d-inline-flex align-items-center justify-content-center"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#modalpayAndCompleteFile-{{ $assetBooking->id }}">
-                                                                📤 Upload Ulang Bukti Pembayaran dan Berkas
-                                                            </a>
-                                                            @include('dashboardpage.assets.asset-booking.modal.payAndCompleteFile')
-                                                        @elseif ($assetBooking->status === 'approved')
-                                                            <a class="btn btn-outline-main cursor-pointer d-inline-flex align-items-center justify-content-center"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#modalConfirmAssetBooking-' . {{ $assetBooking->id }} . '">
-                                                                ⬇️ Surat Disposisi
-                                                            </a>
-                                                        @elseif ($assetBooking->status === 'rejected')
-                                                            <span class="badge bg-danger">❌ Ditolak</span>
-                                                        @elseif ($assetBooking->status === 'cancelled')
-                                                            <span class="badge bg-warning">⚠ Dibatalkan</span>
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+    {{-- content --}}
+    <div class="container border border-main  rounded-12 p-24 my-20 ">
+        <h5 class="mb-0">Informasi Pengguna</h5>
+        <span class="d-block border border-main-50 my-24 border-dashed"></span>
+        <form id="updateProfileForm" action="{{ route('profile.update', $user->id) }}" method="POST"
+            enctype="multipart/form-data">
+            @csrf
+            <div class="row gy-4">
+                <div class="col-sm-6">
+                    <label for="name" class="text-neutral-700 text-lg fw-medium mb-12">Nama Lengkap
+                        <span class="text-danger-600">*</span> </label>
+                    <input type="text"
+                        class="common-input bg-main-25 rounded-pill border-transparent focus-border-main-600" id="name"
+                        name="name" value="{{ $user->name }}" placeholder="Masukkan Nama Lengkap..." required>
+                </div>
+                <div class="col-sm-6">
+                    <label for="username" class="text-neutral-700 text-lg fw-medium mb-12">Username
+                        <span class="text-danger-600">*</span> </label>
+                    <input type="text"
+                        class="common-input bg-main-25 rounded-pill border-transparent focus-border-main-600" id="username"
+                        name="username" value="{{ $user->username }}" placeholder="Masukkan Username..." required>
+                </div>
+                <div class="col-sm-6">
+                    <label for="email" class="text-neutral-700 text-lg fw-medium mb-12">Email <span
+                            class="text-danger-600">*</span> </label>
+                    <input type="email"
+                        class="common-input bg-main-25 rounded-pill border-transparent focus-border-main-600" id="email"
+                        name="email" value="{{ $user->email }}" placeholder="Masukkan Email..." required>
+                </div>
+                <div class="col-sm-6">
+                    <label for="password" class="text-neutral-700 text-lg fw-medium mb-12">Password</label>
+                    <div class="position-relative">
+                        <input type="password"
+                            class="common-input bg-main-25 rounded-pill border-transparent focus-border-main-600"
+                            id="password" placeholder="Enter Your Password...">
+                        <span
+                            class="toggle-password position-absolute top-50 inset-inline-end-0 me-16 translate-middle-y ph-bold ph-eye-closed"
+                            id="#password"></span>
                     </div>
                 </div>
+                <div class="col-sm-6">
+                    <label for="Phone" class="text-neutral-700 text-lg fw-medium mb-12">Nomor
+                        Handphone/WA
+                        <span class="text-danger-600">*</span> </label>
+                    <input type="number"
+                        class="common-input bg-main-25 rounded-pill border-transparent focus-border-main-600" id="Phone"
+                        name="phone_number" value="{{ $user->phone_number }}" placeholder="Masukkan Nomor Handphone/WA..."
+                        required>
+                </div>
+                <div class="col-sm-6">
+                    <label for="selectProvince" class="text-neutral-700 text-lg fw-medium mb-12">Provinsi
+                        <span class="text-danger-600">*</span> </label>
+                    <select id="selectProvince"
+                        class="common-input bg-main-25 rounded-pill border-transparent focus-border-main-600 form-select py-14 select-province"
+                        name="province" data-selected="{{ $user->province }}" required>
+                        <option value="" disabled selected>Pilih Provinsi</option>
+                    </select>
+                </div>
+                <div class="col-sm-6">
+                    <label for="selectCity" class="text-neutral-700 text-lg fw-medium mb-12">Kabupaten/Kota
+                        <span class="text-danger-600">*</span> </label>
+                    <select id="selectCity"
+                        class="common-input bg-main-25 rounded-pill border-transparent focus-border-main-600 form-select py-14 select-city"
+                        name="city" data-selected="{{ $user->city }}" required>
+                        <option value="" disabled selected>Pilih Kabupaten/Kota</option>
+                    </select>
+                </div>
+                <div class="col-sm-6">
+                    <label for="selectSubdistrict" class="text-neutral-700 text-lg fw-medium mb-12">Kecamatan
+                        <span class="text-danger-600">*</span> </label>
+                    <select id="selectSubdistrict"
+                        class="common-input bg-main-25 rounded-pill border-transparent focus-border-main-600 form-select py-14 select-subdistrict"
+                        name="subdistrict" data-selected="{{ $user->subdistrict }}" required>
+                        <option value="" disabled selected>Pilih Kecamatan</option>
+                    </select>
+                </div>
+                <div class="col-sm-6">
+                    <label for="selectVillage" class="text-neutral-700 text-lg fw-medium mb-12">Desa/Kelurahan
+                        <span class="text-danger-600">*</span> </label>
+                    <select id="selectVillage"
+                        class="common-input bg-main-25 rounded-pill border-transparent focus-border-main-600 form-select py-14 select-village"
+                        name="village" data-selected="{{ $user->village }}">
+                        <option value="" disabled selected>Pilih Desa/Kelurahan</option>
+                    </select>
+                </div>
+                <div class="col-sm-6">
+                    <label for="upPhotoProfile" class="text-neutral-700 text-lg fw-medium mb-12 d-block">Foto
+                        Profil</label>
+                    <input id="upPhotoProfile"
+                        class="form-control mt-20 rounded-pill border-transparent focus-border-main-600 d-block"
+                        type="file" accept=".png,.jpeg,.jpg" name="profile_picture">
+                </div>
 
-            @endhasrole
-            <div class="tab-pane fade" id="pills-editprofile" role="tabpanel" aria-labelledby="pills-editprofile-tab"
-                tabindex="0">
-                {{-- content --}}
-                <div class="border border-main bg-main-25 rounded-12 p-24 ">
-                    <h5 class="mb-0">Informasi Pengguna</h5>
-                    <span class="d-block border border-main-50 my-24 border-dashed"></span>
-                    <form id="updateProfileForm" action="{{ route('profile.update', $user->id) }}" method="POST"
-                        enctype="multipart/form-data">
-                        @csrf
-                        <div class="row gy-4">
-                            <div class="col-sm-6">
-                                <label for="name" class="text-neutral-700 text-lg fw-medium mb-12">Nama Lengkap
-                                    <span class="text-danger-600">*</span> </label>
-                                <input type="text"
-                                    class="common-input bg-white rounded-pill border-transparent focus-border-main-600"
-                                    id="name" name="name" value="{{ $user->name }}"
-                                    placeholder="Masukkan Nama Lengkap..." required>
-                            </div>
-                            <div class="col-sm-6">
-                                <label for="username" class="text-neutral-700 text-lg fw-medium mb-12">Username
-                                    <span class="text-danger-600">*</span> </label>
-                                <input type="text"
-                                    class="common-input bg-white rounded-pill border-transparent focus-border-main-600"
-                                    id="username" name="username" value="{{ $user->username }}"
-                                    placeholder="Masukkan Username..." required>
-                            </div>
-                            <div class="col-sm-6">
-                                <label for="email" class="text-neutral-700 text-lg fw-medium mb-12">Email <span
-                                        class="text-danger-600">*</span> </label>
-                                <input type="email"
-                                    class="common-input bg-white rounded-pill border-transparent focus-border-main-600"
-                                    id="email" name="email" value="{{ $user->email }}"
-                                    placeholder="Masukkan Email..." required>
-                            </div>
-                            <div class="col-sm-6">
-                                <label for="password" class="text-neutral-700 text-lg fw-medium mb-12">Password</label>
-                                <div class="position-relative">
-                                    <input type="password"
-                                        class="common-input bg-white rounded-pill border-transparent focus-border-main-600"
-                                        id="password" placeholder="Enter Your Password...">
-                                    <span
-                                        class="toggle-password position-absolute top-50 inset-inline-end-0 me-16 translate-middle-y ph-bold ph-eye-closed"
-                                        id="#password"></span>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <label for="Phone" class="text-neutral-700 text-lg fw-medium mb-12">Nomor
-                                    Handphone/WA
-                                    <span class="text-danger-600">*</span> </label>
-                                <input type="number"
-                                    class="common-input bg-white rounded-pill border-transparent focus-border-main-600"
-                                    id="Phone" name="phone_number" value="{{ $user->phone_number }}"
-                                    placeholder="Masukkan Nomor Handphone/WA..." required>
-                            </div>
-                            <div class="col-sm-6">
-                                <label for="selectProvince" class="text-neutral-700 text-lg fw-medium mb-12">Provinsi
-                                    <span class="text-danger-600">*</span> </label>
-                                <select id="selectProvince"
-                                    class="common-input bg-white rounded-pill border-transparent focus-border-main-600 form-select py-14 select-province"
-                                    name="province" data-selected="{{ $user->province }}" required>
-                                    <option value="" disabled selected>Pilih Provinsi</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-6">
-                                <label for="selectCity" class="text-neutral-700 text-lg fw-medium mb-12">Kabupaten/Kota
-                                    <span class="text-danger-600">*</span> </label>
-                                <select id="selectCity"
-                                    class="common-input bg-white rounded-pill border-transparent focus-border-main-600 form-select py-14 select-city"
-                                    name="city" data-selected="{{ $user->city }}" required>
-                                    <option value="" disabled selected>Pilih Kabupaten/Kota</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-6">
-                                <label for="selectSubdistrict" class="text-neutral-700 text-lg fw-medium mb-12">Kecamatan
-                                    <span class="text-danger-600">*</span> </label>
-                                <select id="selectSubdistrict"
-                                    class="common-input bg-white rounded-pill border-transparent focus-border-main-600 form-select py-14 select-subdistrict"
-                                    name="subdistrict" data-selected="{{ $user->subdistrict }}" required>
-                                    <option value="" disabled selected>Pilih Kecamatan</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-6">
-                                <label for="selectVillage" class="text-neutral-700 text-lg fw-medium mb-12">Desa/Kelurahan
-                                    <span class="text-danger-600">*</span> </label>
-                                <select id="selectVillage"
-                                    class="common-input bg-white rounded-pill border-transparent focus-border-main-600 form-select py-14 select-village"
-                                    name="village" data-selected="{{ $user->village }}">
-                                    <option value="" disabled selected>Pilih Desa/Kelurahan</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-6">
-                                <label for="upPhotoProfile" class="text-neutral-700 text-lg fw-medium mb-12 d-block">Foto
-                                    Profil</label>
-                                <input id="upPhotoProfile"
-                                    class="form-control mt-20 rounded-pill border-transparent focus-border-main-600 d-block"
-                                    type="file" accept=".png,.jpeg,.jpg" name="profile_picture">
-                            </div>
-
-                            <div class="col-sm-12">
-                                <label for="address" class="text-neutral-700 text-lg fw-medium mb-12">Alamat Lengkap
-                                </label>
-                                <textarea class="common-input bg-white rounded-24 border-transparent focus-border-main-600" id="address"
-                                    name="address" placeholder="Masukkan Alamat Lengkap..." required>{{ $user->address }}</textarea>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-end mt-24">
-                            <button type="submit" class="btn btn-main rounded-pill flex-center gap-8">
-                                Perbarui Data
-                                <i class="ph-bold ph-arrow-up-right d-flex text-lg"></i>
-                            </button>
-                        </div>
-
-                    </form>
+                <div class="col-sm-12">
+                    <label for="address" class="text-neutral-700 text-lg fw-medium mb-12">Alamat Lengkap
+                    </label>
+                    <textarea class="common-input bg-main-25 rounded-24 border-transparent focus-border-main-600" id="address"
+                        name="address" placeholder="Masukkan Alamat Lengkap..." required>{{ $user->address }}</textarea>
                 </div>
             </div>
+            <div class="d-flex justify-content-end mt-24">
+                <button type="submit" class="btn btn-main rounded-pill flex-center gap-8">
+                    Perbarui Data
+                    <i class="ph-bold ph-arrow-up-right d-flex text-lg"></i>
+                </button>
+            </div>
 
-            @hasrole('Participant')
-                <div class="tab-pane fade" id="pills-event" role="tabpanel" aria-labelledby="pills-event-tab"
-                    tabindex="0">
-                    {{-- content --}}
-                </div>
-            @endhasrole
-        </div>
+        </form>
     </div>
+
+
 
 @endsection
 @push('script')
-    <script>
-        $(document).ready(function() {
-            $('#assetBookingProfile').DataTable({
-                scrollX: true,
-            });
-        });
-    </script>
     <script>
         $(document).ready(function() {
             let apiBaseUrl = "https://iemaduddin.github.io/api-wilayah-indonesia/api";

@@ -14,7 +14,6 @@ class AssetTransaction extends Model
     protected $fillable = [
         'booking_id',
         'user_id',
-        'invoice_number',
         'amount',
         'va_number',
         'va_expiry',

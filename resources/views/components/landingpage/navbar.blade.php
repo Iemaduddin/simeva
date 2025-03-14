@@ -121,7 +121,7 @@
                                     {{ $unreadNotifications->count() }}</span>
                             @endif
                         </button>
-                        <div class="dropdown-menu to-top dropdown-menu-lg bg-white p-0">
+                        <div class="dropdown-menu to-top dropdown-menu-lg bg-white p-0 scroll-sm">
                             <div
                                 class="m-16 py-12 px-16 rounded-10 bg-main-50 mb-16 d-flex align-items-center justify-content-between gap-2">
                                 <div>
@@ -151,7 +151,7 @@
 
                                         // Tentukan route berdasarkan jurusan
 
-                                        $routeName = 'profile';
+                                        $routeName = 'profile.myAssetBooking';
                                         $routeParam = ['id' => $sender->id];
 
                                     @endphp
@@ -213,14 +213,31 @@
                                     @endhasanyrole
                                     @hasanyrole(['Participant', 'Tenant'])
                                         <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
-                                                href="{{ route('profile', Auth::user()->id) }}"><i
+                                                href="{{ route('profile.myAssetBooking', Auth::user()->id) }}"><i
                                                     class="ph ph-user"></i>
-                                                Profilku</a></li>
-                                        <li><a class="dropdown-item hover-bg-main-50  text-neutral-700" href=""><i
-                                                    class="ph ph-cube"></i>
-                                                Itemku</a>
+                                                Pengaturan Akun</a></li>
+                                        @hasrole('Tenant')
+                                            <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
+                                                    href="{{ route('profile.myAssetBooking', Auth::user()->id) }}"><i
+                                                        class="ph ph-cube"></i>
+                                                    Daftar Booking</a>
+                                            </li>
+                                        @endhasrole
+                                        @hasrole('Participant')
+                                            <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
+                                                    href="{{ route('profile.myAssetBooking', Auth::user()->id) }}"><i
+                                                        class="ph ph-cube"></i>
+                                                    Kegiatanku</a>
+                                            </li>
+                                        @endhasrole
+                                        <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
+                                                href="{{ route('profile.myAssetBooking', Auth::user()->id) }}"><i
+                                                    class="ph ph-bookmark-simple"></i>
+                                                Daftar Simpan</a>
                                         </li>
                                     @endhasanyrole
+
+
                                     <li>
                                         <hr class="dropdown-divider">
                                     </li>

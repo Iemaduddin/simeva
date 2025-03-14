@@ -11,11 +11,11 @@
                     </h6>
                     <div class="d-flex align-items-center justify-content-center gap-3 mt-24">
                         <button type="button" data-bs-dismiss="modal"
-                            class="w-50 border border-danger-600 bg-hover-danger-200 text-danger-600 text-md px-40 py-11 radius-8">
+                            class="w-50 btn btn-outline-neutral-900 text-md px-40 py-11 radius-8">
                             Batal
                         </button>
                         <button type="button" id="confirmDeleteBtn"
-                            class="w-50 btn btn-primary border border-primary-600 text-md px-24 py-12 radius-8">
+                            class="w-50 btn btn-danger border border-danger text-md px-24 py-12 radius-8">
                             Hapus
                         </button>
                     </div>
@@ -35,7 +35,6 @@
             document.body.addEventListener('submit', function(e) {
                 const form = e.target;
                 if (!form.matches('form[data-table]')) {
-                    console.log('takde');
                     return; // Hanya menangani form dengan atribut data-table
                 }
 
@@ -95,7 +94,6 @@
             document.addEventListener('click', function(e) {
                 // Cek apakah form yang di-submit adalah form delete jurusan atau prodi
                 if (e.target.closest('.delete-btn')) {
-                    console.log('yes');
                     e.preventDefault(); // Mencegah aksi default
                     const button = e.target.closest('.delete-btn');
                     const form = button.closest('form');

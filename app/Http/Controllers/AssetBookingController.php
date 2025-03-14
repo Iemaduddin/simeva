@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Asset;
 use App\Models\Jurusan;
+use Illuminate\Support\Str;
 use App\Models\AssetBooking;
 use Illuminate\Http\Request;
 use App\Events\BookingConfirmed;
@@ -16,6 +17,7 @@ use App\Models\AssetBookingDocument;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
+use App\Notifications\BookingAssetCancelled;
 use App\Notifications\BookingAssetConfirmed;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\BookingAssetConfirmPayment;
@@ -50,20 +52,38 @@ class AssetBookingController extends Controller
                     $q->where('jurusan_id', $jurusan->id);
                 }
             });
+        $statusCategories = [
+            'submission_booking' => ['submission_booking'],
+            'submission_payment' => ['submission_dp_payment', 'submission_full_payment'],
+            'waiting_payment' => ['booked', 'approved_dp_payment', 'rejected_dp_payment', 'rejected_full_payment',],
+            'approved' => ['approved_full_payment'],
+            'done' => ['approved_full_payment'],
+            'rejected' => ['rejected_booking',  'rejected'],
+            'cancelled' => ['cancelled'],
+        ];
+
+        // Pastikan kategori yang diminta ada di daftar yang telah ditentukan
+        if ($statusBooking !== 'all' && !array_key_exists($statusBooking, $statusCategories)) {
+            return response()->json(['error' => 'Kategori tidak valid'], 400);
+        }
 
         // Filter berdasarkan status_booking (kecuali 'all')
-        if ($statusBooking === 'all') {
-        } elseif (str_contains($statusBooking, 'submission')) {
-            $query->whereIn('status', ['submission_booking', 'submission_payment', 'rejected_booking', 'rejected_payment']);
-        } else {
-            $query->where('status', $statusBooking);
+        if ($statusBooking !== 'all') {
+            $query->whereIn('status', $statusCategories[$statusBooking]);
+
+            if ($statusBooking === 'done') {
+                $query->whereIn('status', $statusCategories[$statusBooking])
+                    ->whereDate('usage_date_end', '<', now()); // Pastikan `usage_date_end` sudah lewat
+            }
         }
 
         // Eksekusi query
         $assetBookings = $query->get();
 
-        $tableId = $kode_jurusan ? 'assetBookingFasilitasJurusan' . $kode_jurusan . '-Table-' . $statusBooking :
-            "assetBookingFasilitasUmumTable-" . $statusBooking;
+
+        $tableId = $kode_jurusan
+            ? "assetBookingFasilitasJurusan{$kode_jurusan}-Table-{$statusBooking}"
+            : "assetBookingFasilitasUmumTable-{$statusBooking}";
 
         return DataTables::of($assetBookings)
             ->addIndexColumn()
@@ -71,11 +91,23 @@ class AssetBookingController extends Controller
                 // Render modal konfirmasi booking dan pembayaran
                 $confirmBookingModal = view('dashboardPage.assets.asset-booking.modal.confirmBooking-asset', compact('assetBooking', 'tableId'))->render();
                 $confirmPaymentAndStatementLetterModal = view('dashboardPage.assets.asset-booking.modal.confirmPaymentAndStatementLetter', compact('assetBooking', 'tableId'))->render();
+                $confirmFullPayment = view('dashboardPage.assets.asset-booking.modal.confirmFullPayment', compact('assetBooking', 'tableId'))->render();
+                $scriptCancelledBooking = view('dashboardPage.assets.asset-booking.modal.cancelled-booking', compact('assetBooking', 'tableId'))->render();
 
                 // Tombol aksi berdasarkan status
-                $buttons = '<div class="d-flex gap-2">';
+                $buttons = '<div class="d-flex align-items-center gap-2">';
                 $modals = ''; // Untuk menampung modal agar ditambahkan di luar kondisi
 
+                if ($assetBooking->status !== 'cancelled') {
+                    // Tombol Batalkan (Selalu Tampil)
+                    $buttons .= "<a class='btn btn-sm btn-outline-danger cursor-pointer' 
+                        data-bs-toggle='modal' 
+                        data-bs-target='#modalCancelBooking-{$assetBooking->id}'>
+                        Batalkan
+                    </a>";
+                    // Tambahkan modal ke dalam tombol aksi
+                    $buttons .= $scriptCancelledBooking;
+                }
                 switch ($assetBooking->status) {
                     case 'submission_booking':
                         $buttons .= "<a class='btn btn-outline-success cursor-pointer d-inline-flex align-items-center justify-content-center'
@@ -90,11 +122,7 @@ class AssetBookingController extends Controller
                         break;
 
                     case 'rejected_booking':
-                        $buttons .= "<a class='btn btn-outline-success cursor-pointer d-inline-flex align-items-center justify-content-center'
-                                        data-bs-toggle='modal' data-bs-target='#modalConfirmAssetBooking-{$assetBooking->id}'>
-                                        ✅ Konfirmasi Ulang Booking
-                                    </a>";
-                        $modals .= $confirmBookingModal;
+                        $buttons .= "<span class='badge bg-secondary'>⏳ Menunggu Booking Ulang</span>";
                         break;
 
                     case 'submission_full_payment':
@@ -120,18 +148,14 @@ class AssetBookingController extends Controller
                         break;
 
                     case 'rejected_full_payment':
-                        $buttons .= "<a class='btn btn-outline-success cursor-pointer d-inline-flex align-items-center justify-content-center'
-                                        data-bs-toggle='modal' data-bs-target='#modalConfirmPaymentAndStatementLetter-{$assetBooking->id}'>
-                                        ✅ Konfirmasi Ulang Pembayaran dan Berkas
-                                    </a>";
-                        $modals .= $confirmPaymentAndStatementLetterModal;
+                        if ($assetBooking->payment_type === 'dp') {
+                            $buttons .= "<span class='badge bg-secondary'>⏳ Menunggu Upload Ulang Bukti Pelunasan</span>";
+                        } else {
+                            $buttons .= "<span class='badge bg-secondary'>⏳ Menunggu Upload Ulang Bukti Pelunasan/Berkas</span>";
+                        }
                         break;
                     case 'rejected_dp_payment':
-                        $buttons .= "<a class='btn btn-outline-success cursor-pointer d-inline-flex align-items-center justify-content-center'
-                                        data-bs-toggle='modal' data-bs-target='#modalConfirmPaymentAndStatementLetter-{$assetBooking->id}'>
-                                        ✅ Konfirmasi Ulang Pembayaran dan Berkas
-                                    </a>";
-                        $modals .= $confirmPaymentAndStatementLetterModal;
+                        $buttons .= "<span class='badge bg-secondary'>⏳ Menunggu Upload Ulang Pembayaran/Berkas</span>";
                         break;
 
                     case 'rejected':
@@ -159,31 +183,32 @@ class AssetBookingController extends Controller
 
         $validator = Validator::make($request->all(), [
             'asset_id' => 'required|exists:assets,id',
-            'usage_date' => 'required|date_format:Y-m-d',
+            'usage_date' => 'required',
             'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
             'usage_event_name' => 'required',
-            'amount' => 'required',
+            'amount' => 'required|numeric',
             'file_personal_identity' => 'required|mimes:pdf,jpeg,png,jpg',
             'type_event' => 'required',
             'payment_type' => 'required|in:dp,lunas',
-
-
         ], [
             'asset_id.required' => 'Aset harus diisi.',
             'asset_id.exists' => 'Aset tidak ditemukan.',
 
             'usage_date.required' => 'Tanggal penggunaan harus diisi.',
-            'usage_date.date_format' => 'Format tanggal dan waktu harus dalam format Y-m-d (contoh: 2025-02-20 14:30).',
+            // 'usage_date.date_format' => 'Format tanggal harus dalam format Y-m-d (contoh: 2025-02-20).',
 
             'start_time.required' => 'Waktu mulai harus diisi.',
             'start_time.date_format' => 'Format waktu mulai harus dalam format 24 jam (HH:mm).',
 
             'end_time.required' => 'Waktu selesai harus diisi.',
             'end_time.date_format' => 'Format waktu selesai harus dalam format 24 jam (HH:mm).',
+            'end_time.after' => 'Waktu selesai harus lebih besar dari waktu mulai.',
 
             'amount.required' => 'Harga Sewa harus diisi.',
-            'usage_event_name.required' => 'Tanggal loading harus diisi.',
+            'amount.numeric' => 'Harga Sewa harus berupa angka.',
+
+            'usage_event_name.required' => 'Nama acara harus diisi.',
 
             'file_personal_identity.required' => 'File KTP harus diunggah.',
             'file_personal_identity.mimes' => 'Format file yang diperbolehkan: PDF, JPEG, PNG, JPG.',
@@ -201,19 +226,57 @@ class AssetBookingController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
+
+        // Pastikan usage_date memiliki format yang benar
+        $dates = explode(" to ", $request->usage_date);
+
+        if (count($dates) === 2) {
+            // Jika format "start to end"
+            $usageDateStart = $dates[0]; // Tanggal mulai
+            $usageDateEnd = $dates[1];   // Tanggal selesai
+        } elseif (count($dates) === 1) {
+            // Jika hanya 1 tanggal (peminjaman 1 hari)
+            $usageDateStart = $dates[0];
+            $usageDateEnd = $dates[0]; // Set tanggal selesai sama dengan tanggal mulai
+        } else {
+            return response()->json(['status' => 'error', 'message' => 'Format tanggal tidak valid.'], 400);
+        }
+
+
+        // Gabungkan dengan waktu
         try {
-            $usageDateStart = Carbon::createFromFormat('Y-m-d H:i', $request->usage_date . ' ' . $request->start_time);
-            $usageDateEnd = Carbon::createFromFormat('Y-m-d H:i', $request->usage_date . ' ' . $request->end_time);
+            $usageDateStart = Carbon::createFromFormat('Y-m-d H:i', $usageDateStart . ' ' . $request->start_time);
+            $usageDateEnd = Carbon::createFromFormat('Y-m-d H:i', $usageDateEnd . ' ' . $request->end_time);
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Format tanggal/waktu tidak valid.'], 400);
         }
+
+
+        // **Cek apakah ada booking yang bentrok dengan waktu yang dipilih**
+        $conflict = AssetBooking::where('asset_id', $request->asset_id)
+            ->where(function ($query) use ($usageDateStart, $usageDateEnd) {
+                $query->where(function ($q) use ($usageDateStart, $usageDateEnd) {
+                    $q->where('usage_date_start', '<', $usageDateEnd)
+                        ->where('usage_date_end', '>', $usageDateStart);
+                });
+            })->exists();
+
+        if ($conflict) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Aset ini sudah dipesan pada tanggal dan waktu tersebut. Silakan pilih waktu lain.'
+            ], 422);
+        }
+
         $filePath = null;
         try {
+
             $result = DB::transaction(function () use ($request, $usageDateStart, $usageDateEnd, $filePath) {
                 $user = auth()->user();
                 $booking = AssetBooking::create([
                     'asset_id' => $request->asset_id,
                     'user_id' => auth()->user()->id,
+                    'booking_number' => '',
                     'asset_category_id' => $request->type_event,
                     'usage_date_start' => $usageDateStart,
                     'usage_date_end' => $usageDateEnd,
@@ -223,13 +286,35 @@ class AssetBookingController extends Controller
                     'status' => 'submission_booking'
                 ]);
 
+                // Pastikan relasi asset sudah dimuat
+                $booking->load('asset');
+
+                $scope = optional($booking->asset)->facility_scope == 'umum' ? 'FU' : 'FJ';
+                $bookingDate = $booking->created_at->format('Ymd'); // Tanggal Booking
+
+                // Ambil 4 karakter dari UUID dengan cara yang lebih aman
+                $uuidPart1 = substr(str_replace('-', '', $booking->id), 0, 4);  // 4 karakter pertama tanpa "-"
+                $uuidPart2 = substr(str_replace('-', '', $booking->id), -4); // 4 karakter terakhir tanpa "-"
+
+                // Generate booking number
+                $bookingNo = "{$scope}{$bookingDate}{$uuidPart1}{$uuidPart2}";
+
+                // Update booking_number
+                $booking->update(['booking_number' => strtoupper($bookingNo)]);
+
                 if ($request->hasFile('file_personal_identity')) {
 
                     $asset_name = Asset::where('id', $request->asset_id)->pluck('name')->first();
                     $file = $request->file('file_personal_identity');
 
                     $extension = $file->getClientOriginalExtension();
-                    $fileName = auth()->user()->name . ".{$extension}";
+
+                    $userName = Str::slug(auth()->user()->name);
+                    $eventName = Str::slug($booking->usage_event_name); // Konversi ke format aman
+                    $usageDate = date('Y-m-d', strtotime($booking->usage_date_start)); // Pastikan format tanggal benar
+
+
+                    $fileName = "{$userName}-{$usageDate}-{$eventName}.{$extension}";
 
                     // Tentukan folder penyimpanan
                     $filePath = "Booking Aset BMN/{$asset_name}/KTP/" . $fileName;
@@ -346,7 +431,13 @@ class AssetBookingController extends Controller
                     $file = $request->file('file_personal_identity');
 
                     $extension = $file->getClientOriginalExtension();
-                    $fileName = auth()->user()->name . ".{$extension}";
+
+                    $userName = Str::slug(auth()->user()->name);
+                    $eventName = Str::slug($booking->usage_event_name); // Konversi ke format aman
+                    $usageDate = date('Y-m-d', strtotime($booking->usage_date_start)); // Pastikan format tanggal benar
+
+
+                    $fileName = "{$userName}-{$usageDate}-{$eventName}.{$extension}";
 
                     // Tentukan folder penyimpanan
                     $filePath = "Booking Aset BMN/{$asset_name}/KTP/" . $fileName;
@@ -420,27 +511,20 @@ class AssetBookingController extends Controller
             $vaNumber = null;
             $vaExpiredDate = null;
 
-            $booking = AssetBooking::findOrFail($id);
+            $booking = AssetBooking::with(['asset'])->findOrFail($id);
             $user = User::findOrFail($booking->user_id);
             if ($request->actionBooking === 'approved') {
                 $paymentAmount = ($booking->payment_type === 'dp') ? $booking->total_amount * 0.3 : $booking->total_amount;
                 $vaNumber = $request->va_number;
                 $vaExpiredDate = $request->va_expiry;
 
-                $scope = $booking->asset->facility_scope == 'umum' ? 'FU' : 'FJ';
-                $bookingDate = $booking->created_at->format('Y-m-d'); // Tanggal Booking
-                $bookingSuffix = substr($booking->id, -2); // 4 karakter terakhir asset_id
-                $assetSuffix = substr($booking->asset_id, -4); // 4 karakter terakhir asset_id
-                $userSuffix = substr($booking->user_id, -4); // 4 karakter terakhir user_id
-                $invoiceNo = "INV-{$scope}-{$bookingDate}-{$bookingSuffix}{$assetSuffix}-{$userSuffix}";
+
 
                 // ✅ Ubah status menjadi "booked" 
                 $booking->status = 'booked';
-
                 AssetTransaction::create([
                     'booking_id' => $booking->id,
                     'user_id' => $booking->user_id,
-                    'invoice_number' => strToUpper($invoiceNo),
                     'amount' => $paymentAmount,
                     'va_number' => $vaNumber,
                     'va_expiry' => $vaExpiredDate,
@@ -527,8 +611,17 @@ class AssetBookingController extends Controller
             foreach ($documents as $field => $documentName) {
                 if ($request->hasFile($field)) {
                     $file = $request->file($field);
+
                     $extension = $file->getClientOriginalExtension();
-                    $fileName = auth()->user()->name . "-DP.{$extension}";
+                    $userName = Str::slug(auth()->user()->name); // Konversi ke format aman
+                    $eventName = Str::slug($booking->usage_event_name); // Konversi ke format aman
+                    $usageDate = date('Y-m-d', strtotime($booking->usage_date_start)); // Pastikan format tanggal benar
+
+                    if ($booking->payment_type === 'dp') {
+                        $fileName = "{$userName}-{$usageDate}-{$eventName}-DP.{$extension}";
+                    } else {
+                        $fileName = "{$userName}-{$usageDate}-{$eventName}-Full.{$extension}";
+                    }
 
                     // Tentukan folder penyimpanan
                     $filePath = "Booking Aset BMN/{$asset_name}/{$documentName}/" . $fileName;
@@ -584,6 +677,9 @@ class AssetBookingController extends Controller
         if (!Auth::check()) {
             return response()->json(['error' => 'Anda harus login terlebih dahulu.'], 403);
         }
+
+        $booking = AssetBooking::with(['asset'])->findOrFail($id);
+        $validator = null;
         if ($request->actionConfirmPayment !== 'approved') {
 
             $validator = Validator::make($request->all(), [
@@ -622,42 +718,74 @@ class AssetBookingController extends Controller
                 'unloading_date.after' => 'Waktu unloading harus setelah waktu selesai loading.',
             ]);
         }
-        if ($validator->fails()) {
+        if ($validator && $validator->fails()) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Validasi gagal',
                 'errors' => $validator->errors()
             ], 422);
         }
+
         DB::beginTransaction(); // ⏳ Mulai Transaksi
         try {
 
-            $booking = AssetBooking::findOrFail($id);
-            $transaction = AssetTransaction::where('booking_id', $id)->first();
+            $transaction = AssetTransaction::where('booking_id', $id)
+                ->where('status', 'pending')->first();
             $user = User::findOrFail($booking->user_id);
-
+            $successMessage = '';
             if ($request->actionConfirmPayment === 'approved') {
-                // ✅ Ubah status menjadi "booked" 
-                $booking->status = $booking->payment_type === 'dp' ? 'Cannot use positional argument after named argument' : 'approved_full_payment';
-                $transaction->status = $booking->payment_type === 'dp' ? 'dp_paid' : 'full_paid';
+                $paymentAmount = $booking->total_amount * 0.7;
+                $vaNumber = $request->va_number;
+                $vaExpiredDate = $request->va_expiry;
+                // Tipe pembayaran DP
+                if ($booking->status === 'submission_dp_payment') {
+                    $booking->status = 'approved_dp_payment';
+                    $transaction->status = 'dp_paid';
+
+                    AssetTransaction::create([
+                        'booking_id' => $booking->id,
+                        'user_id' => $booking->user_id,
+                        'amount' => $paymentAmount,
+                        'va_number' => $vaNumber,
+                        'va_expiry' => $vaExpiredDate,
+                        'tax' => '10',
+                        'status' => 'pending',
+                    ]);
+
+                    $successMessage = 'Pembayaran berhasil dikonfirmasi';
+                    // Tipe pembayaran lunas
+                } else {
+                    $booking->status = 'approved_full_payment';
+                    $transaction->status = 'full_paid';
+                    $successMessage = 'Pembayaran dan Pengajuan Berkas berhasil dikonfirmasi';
+                }
+
+
+                $booking->update([
+                    'reason' => '',
+                    'loading_date_start' => $request->loading_date_start,
+                    'loading_date_end' => $request->loading_date_end,
+                    'unloading_date' => $request->unloading_date,
+                ]);
             } else {
                 // ✅ Ubah status menjadi "rejected" 
-                $booking->reason_rejected = $request->reason_rejected;
-                $booking->status = $booking->booking_type === 'dp' ? 'rejected_dp_payment' : 'rejected_full_payment';
+                $booking->reason = $request->reason_rejected;
+                $booking->status = $booking->status === 'submission_full_payment' ? 'rejected_full_payment' : 'rejected_dp_payment';
+                $successMessage = 'Pembayaran dan Pengajuan Berkas berhasil dikonfirmasi';
             }
-            $confirmBooking = $request->actionBooking;
+            $confirmBooking = $request->actionConfirmPayment;
 
             $booking->save();
             $transaction->save();
             // 🔥 Kirim Notifikasi ke User
-            Notification::send($user, new BookingAssetConfirmPayment($transaction->invoice_number, $booking, $confirmBooking, $user));
+            Notification::send($user, new BookingAssetConfirmPayment($booking->booking_number, $booking, $confirmBooking, $user));
 
 
             DB::commit(); // ✅ Semua sukses, simpan ke database
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Pembayaran dan Pengajuan Berkas berhasil dikonfirmasi',
+                'message' => $successMessage,
             ]);
         } catch (\Exception $e) {
             DB::rollBack(); // ❌ Jika ada error, batalkan semua perubahan
@@ -692,7 +820,7 @@ class AssetBookingController extends Controller
         try {
             $booking = AssetBooking::findOrFail($id);
             $user = User::findOrFail($booking->user_id);
-            $transaction = AssetTransaction::where('booking_id', $id)->first();
+            $transaction = AssetTransaction::where('booking_id', $id)->where('status', 'pending')->first();
 
 
             $asset_name = Asset::where('id', $booking->asset_id)->pluck('name')->first();
@@ -715,7 +843,7 @@ class AssetBookingController extends Controller
             }
 
             $booking->update([
-                'status' => 'submission_dp_payment'
+                'status' => 'submission_full_payment'
             ]);
             $upt_pu = User::role('UPT PU')->get(); // Semua Tenant
 
@@ -728,6 +856,71 @@ class AssetBookingController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Upload Bukti Pembayaran dan Berkas berhasil',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack(); // ❌ Jika ada error, batalkan semua perubahan
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function cancelledBooking(Request $request, $id)
+    {
+        if (!Auth::check()) {
+            return response()->json(['error' => 'Anda harus login terlebih dahulu.'], 403);
+        }
+
+
+        $validator = Validator::make($request->all(), [
+            'reason' => 'required',
+        ], [
+            'reason.required' => 'Alasan pembatalan harus diisi.',
+        ]);
+
+        DB::beginTransaction(); // ⏳ Mulai Transaksi
+        try {
+            $assetBooking = AssetBooking::findOrFail($id);
+
+
+            // Ambil user yang sedang login
+            $userbooking = User::findOrFail($assetBooking->user_id);
+
+            $user = Auth::user();
+            $userRole = $user->getRoleNames()->first(); // Ambil nama role
+
+            // Siapkan penerima notifikasi
+            $userReceived = collect(); // Inisialisasi collection kosong
+
+            if ($userRole === 'Tenant') {
+                if ($assetBooking->facility_scope === 'jurusan') {
+                    // Ambil admin jurusan yang sesuai dengan jurusan aset
+                    $jurusan = Jurusan::findOrFail($assetBooking->asset->jurusan_id);
+                    $userReceived = User::role('Admin Jurusan')
+                        ->where('jurusan_id', $jurusan->id)
+                        ->get();
+                } else {
+                    // Jika bukan scope jurusan, kirim ke UPT PU
+                    $userReceived = User::role('UPT PU')->get();
+                }
+            } else {
+                // Jika yang membatalkan bukan Tenant, kirim notifikasi ke Tenant yang bersangkutan
+                $userReceived = User::where('id', $assetBooking->user_id)->get();
+            }
+            $assetBooking->reason = $request->reason;
+            // Kirim notifikasi jika ada penerima
+            if ($userReceived->isNotEmpty()) {
+                Notification::send($userReceived, new BookingAssetCancelled($assetBooking, $user, $userbooking));
+            }
+            $assetBooking->status = 'cancelled';
+
+            $assetBooking->save();
+
+            DB::commit(); // ✅ Simpan perubahan jika berhasil
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Booking aset berhasil dibatalkan!',
             ]);
         } catch (\Exception $e) {
             DB::rollBack(); // ❌ Jika ada error, batalkan semua perubahan

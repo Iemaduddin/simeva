@@ -426,7 +426,13 @@
 }
 
 .btn-sm {
-    padding: 14px 20px !important;
+    padding: 10px 15px !important;
+}
+.btn-md {
+    padding: 15px 20px !important;
+}
+.btn-lg {
+    padding: 20px 25px !important;
 }
 
 .btn:active {
@@ -452,6 +458,61 @@
 .btn-outline-main:hover {
     background-color: hsl(var(--main) / 0.1) !important;
     border-color: hsl(var(--main)) !important;
+}
+.btn-outline-primary {
+    background-color: transparent !important;
+    border-color: var(--primary-600) !important;
+    color: var(--primary-600) !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-600) !important;
+    border-color: var(--primary-600) !important;
+    color: white !important;
+}
+.btn-outline-warning {
+    background-color: transparent !important;
+    border-color: var(--warning-600) !important;
+    color: var(--warning-600) !important;
+}
+
+.btn-outline-warning:hover {
+    background-color: var(--warning-600) !important;
+    border-color: var(--warning-600) !important;
+    color: white !important;
+}
+.btn-outline-success {
+    background-color: transparent !important;
+    border-color: var(--success-500) !important;
+    color: var(--success-500) !important;
+}
+
+.btn-outline-success:hover {
+    background-color: var(--success-500) !important;
+    border-color: var(--success-500) !important;
+    color: white !important;
+}
+.btn-outline-danger {
+    background-color: transparent !important;
+    border-color: var(--danger-500) !important;
+    color: var(--danger-500) !important;
+}
+
+.btn-outline-danger:hover {
+    background-color: var(--danger-500) !important;
+    border-color: var(--danger-500) !important;
+    color: white !important;
+}
+.btn-outline-purple {
+    background-color: transparent !important;
+    border-color: var(--purple-200) !important;
+    color: var(--purple-200) !important;
+}
+
+.btn-outline-purple:hover {
+    background-color: var(--purple-200) !important;
+    border-color: var(--purple-200) !important;
+    color: white !important;
 }
 
 .btn-white {
@@ -11463,9 +11524,21 @@ body::after {
     color: var(--danger-600) !important;
 }
 
-.fc-event.info {
+/* .fc-event.info {
     background-color: var(--lilac-100) !important;
     color: var(--lilac-600) !important;
+} */
+.fc-event.info {
+    background-color: #0066ff !important;
+    color: #fff !important;
+}
+.fc-event.warning {
+    background-color: #ffab00 !important;
+    color: #fff !important;
+}
+.fc-event.success {
+    background-color: #22c55e !important;
+    color: #fff !important;
 }
 
 .fc-border-separate tr.fc-last th {

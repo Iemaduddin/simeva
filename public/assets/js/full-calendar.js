@@ -264,7 +264,7 @@
             "Selasa",
             "Rabu",
             "Kamis",
-            "Jum'at",
+            "Jumat",
             "Sabtu",
         ],
         dayNamesShort: [
@@ -273,7 +273,7 @@
             "Selasa",
             "Rabu",
             "Kamis",
-            "Jum'at",
+            "Jumat",
             "Sabtu",
         ],
         buttonText: {
