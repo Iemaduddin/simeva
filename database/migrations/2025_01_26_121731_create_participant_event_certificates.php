@@ -17,7 +17,6 @@ return new class extends Migration
             $table->uuid('event_id');
             $table->uuid('user_id');
             $table->string('certificate_file_path');
-            $table->string('profile_photo')->nullable();
             $table->timestamps();
 
             $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');

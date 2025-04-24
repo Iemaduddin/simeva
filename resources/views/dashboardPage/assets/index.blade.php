@@ -81,13 +81,12 @@
                     <thead>
                         <tr>
                             <th>No</th>
+                            <th>Aksi</th>
                             <th>Nama</th>
-                            <th>Deskripsi</th>
                             <th>Tipe</th>
-                            <th>Fasilitas</th>
                             <th>Tersedia</th>
                             <th>Tipe Sewa</th>
-                            <th>Action</th>
+                            <th>Fasilitas</th>
                         </tr>
                     </thead>
                 </table>
@@ -121,20 +120,22 @@
                         searchable: false,
                         orderable: false
                     }, {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
                         data: 'name',
                         name: 'name'
                     },
                     {
-                        data: 'description',
-                        name: 'description'
-                    },
-                    {
                         data: 'type',
-                        name: 'type'
-                    },
-                    {
-                        data: 'facility',
-                        name: 'facility'
+                        name: 'type',
+                        render: function(data, type, row) {
+                            return row.type === 'building' ? 'Gedung' :
+                                'Kendaraan';
+                        }
                     },
                     {
                         data: 'available_at',
@@ -142,13 +143,15 @@
                     },
                     {
                         data: 'booking_type',
-                        name: 'booking_type'
+                        name: 'booking_type',
+                        render: function(data, type, row) {
+                            return row.booking_type === 'daily' ? 'Harian' :
+                                'Tahunan';
+                        }
                     },
                     {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false
+                        data: 'facility',
+                        name: 'facility'
                     },
                 ],
                 drawCallback: function() {
@@ -161,7 +164,7 @@
                     if (!select.dataset.choicesInitialized) {
                         new Choices(select, {
                             removeItemButton: true,
-                            delimiter: ',',
+                            delimiter: '|',
                             shouldSort: false,
                         });
                         select.dataset.choicesInitialized = "true"; // Tandai sudah diinisialisasi
@@ -171,7 +174,7 @@
                 document.querySelectorAll('.choices-text-remove-button').forEach(input => {
                     if (!input.dataset.choicesInitialized) {
                         new Choices(input, {
-                            delimiter: ',',
+                            delimiter: '|',
                             editItems: true,
                             removeItemButton: true,
                             placeholder: true,
@@ -193,7 +196,7 @@
             });
         });
     </script>
-    @include('components.script-crud')
+    {{-- @include('components.script-crud') --}}
 
     <script>
         // =============================== Wizard Step Js Start ================================

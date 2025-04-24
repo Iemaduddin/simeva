@@ -7,10 +7,9 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class AssetBookingDocument extends Model
 {
-    use HasUuids;
     protected $fillable = [
         'booking_id',
-        // 'document_name',
+        'event_id',
         'document_path',
         'document_type',
         'uploaded_by'
@@ -23,6 +22,10 @@ class AssetBookingDocument extends Model
     public function booking()
     {
         return $this->belongsTo(AssetBooking::class, 'booking_id');
+    }
+    public function event()
+    {
+        return $this->belongsTo(Event::class, 'event_id');
     }
 
     public function uploader()

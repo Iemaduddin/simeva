@@ -70,7 +70,7 @@
             <div class="row">
                 <div class="col-lg-4">
                     <div class="sidebar rounded-12 bg-main-25 p-32 border border-neutral-30">
-                        <form id="filter-form">
+                        <form id="asset-filter-form">
                             <div class="flex-between mb-24">
                                 <h4 class="mb-0">Filter</h4>
                                 <button type="button"
@@ -79,46 +79,30 @@
                                 </button>
                             </div>
 
-                            <div class="position-relative">
-                                <input type="text" id="search-input" class="common-input pe-48 rounded-pill"
-                                    placeholder="Search...">
-                                <button type="submit"
-                                    class="text-neutral-500 text-xl d-flex position-absolute top-50 translate-middle-y inset-inline-end-0 me-24 hover-text-main-600">
-                                    <i class="ph-bold ph-magnifying-glass"></i>
-                                </button>
-                            </div>
-                            <span class="d-block border border-neutral-30 border-dashed my-24"></span>
-
-                            <h6 class="text-lg mb-24 fw-medium">Lingkup Event</h6>
+                            <h6 class="text-lg mb-24 fw-medium">Jenis Aset</h6>
                             <div class="d-flex flex-column gap-16">
                                 <div class="flex-between gap-16">
-                                    <div class="form-check common-check mb-0">
-                                        <input class="form-check-input" type="checkbox" name="facility_scope" value="all"
-                                            id="all-scope" checked>
-                                        <label class="form-check-label fw-normal flex-grow-1" for="all-scope">Semua
-                                            Lingkup</label>
-                                    </div>
-                                    <span class="text-neutral-500">{{ count($assets) }}</span>
-                                </div>
-                                <div class="flex-between gap-16">
-                                    <div class="form-check common-check mb-0">
-                                        <input class="form-check-input" type="checkbox" name="facility_scope" value="umum"
-                                            id="umum-scope">
+                                    <div class="form-check common-check common-radio mb-0">
+                                        <input class="form-check-input" type="radio" name="facility_scope" value="umum"
+                                            id="umum-scope"
+                                            {{ request('facility_scope', 'umum') === 'umum' ? 'checked' : '' }}>
+
                                         <label class="form-check-label fw-normal flex-grow-1" for="umum-scope">Umum</label>
                                     </div>
                                     <span
-                                        class="text-neutral-500">{{ $assets->where('facility_scope', 'umum')->count() }}</span>
+                                        class="text-neutral-500">{{ $allAssets->where('facility_scope', 'umum')->count() }}</span>
                                 </div>
                                 @foreach ($jurusans as $jurusan)
                                     <div class="flex-between gap-16">
-                                        <div class="form-check common-check mb-0">
-                                            <input class="form-check-input" type="checkbox" name="jurusan"
-                                                value="{{ $jurusan->id }}" id="jurusan-{{ $jurusan->id }}">
+                                        <div class="form-check common-check common-radio mb-0">
+                                            <input class="form-check-input" type="radio" name="facility_scope"
+                                                value="{{ $jurusan->id }}" id="jurusan-{{ $jurusan->id }}"
+                                                {{ request('facility_scope') == $jurusan->id ? 'checked' : '' }}>
                                             <label class="form-check-label fw-normal flex-grow-1"
                                                 for="jurusan-{{ $jurusan->id }}">{{ $jurusan->nama }}</label>
                                         </div>
                                         <span
-                                            class="text-neutral-500">{{ $assets->where('jurusan_id', $jurusan->id)->count() }}</span>
+                                            class="text-neutral-500">{{ $allAssets->where('jurusan_id', $jurusan->id)->count() }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -134,119 +118,20 @@
                 <div class="col-lg-8 ps-40">
                     <div class="course-list-wrapper">
                         <div class="flex-between gap-16 flex-wrap mb-40">
-                            <span class="text-neutral-500">Showing <span id="result-count">0</span> of
-                                {{ count($assets) }} Results</span>
-                            <div class="flex-align gap-16">
-                                <div class="flex-align gap-8">
-                                    <span class="text-neutral-500 flex-shrink-0">Sort By :</span>
-                                    <select id="sort-by"
-                                        class="form-select ps-20 pe-28 py-8 fw-medium rounded-pill bg-main-25 border border-neutral-30 text-neutral-700">
-                                        <option value="newest">Newest</option>
-                                        <option value="trending">Trending</option>
-                                        <option value="popular">Popular</option>
-                                    </select>
-                                </div>
-                                <button type="button"
-                                    class="list-bar-btn text-xl w-40 h-40 bg-main-600 text-white rounded-8 flex-center d-lg-none">
-                                    <i class="ph-bold ph-funnel"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="row gy-4" id="asset-list">
-                            @foreach ($assets as $asset)
-                                <div class="col-12 course-item" data-type="{{ $asset->type }}"
-                                    data-facility="{{ $asset->facility_scope }}"
-                                    data-jurusan="{{ $asset->jurusan_id }}">
-                                    <div
-                                        class="row course-item bg-main-25 rounded-16 p-20 border border-neutral-30 list-view">
-                                        <div class="col-lg-5 ps-5 rounded-12 overflow-hidden position-relative h-100">
-                                            <a href="{{ route('asset-bmn.getData', $asset->id) }}">
-                                                <img src="assets/images/thumbs/course-img1.png" alt="Course Image"
-                                                    class="rounded-12 cover-img transition-2"
-                                                    style="width:350px; height: 400px">
-                                            </a>
-                                            <div
-                                                class="flex-align gap-8 {{ $asset->facility_scope === 'umum' ? 'bg-main-600' : 'bg-warning-600' }} rounded-pill px-24 py-12 text-white position-absolute inset-block-start-0 inset-inline-start-0 mt-20 ms-20 z-1">
-                                                <span
-                                                    class="text-lg fw-medium">{{ strToUpper($asset->facility_scope) }}</span>
-                                            </div>
-                                            <button type="button"
-                                                class="wishlist-btn w-48 h-48 bg-white text-main-two-600 flex-center position-absolute inset-block-start-0 inset-inline-end-0 mt-20 me-20 z-1 text-2xl rounded-circle transition-2">
-                                                <i class="ph ph-bookmark-simple"></i>
-                                            </button>
-                                        </div>
-                                        <div class="col-lg-7 ps-20 ">
-                                            <div class="">
-                                                <h4 class="mb-12">
-                                                    <a href="{{ route('asset-bmn.getData', $asset->id) }}"
-                                                        class="link text-line-2">{{ $asset->name }}</a>
-                                                </h4>
-                                                <span
-                                                    class="text-neutral-500 text-line-4">{{ $asset->description }}</span>
-                                                <h5 class="mt-12">Fasilitas</h5>
-                                                @php
-                                                    $facilityList = explode(',', $asset->facility);
-                                                @endphp
-                                                @foreach ($facilityList as $asset_facility)
-                                                    <div class="flex-align gap-8">
-                                                        <span class="text-neutral-700 text-2xl d-flex"><i
-                                                                class="ph-bold ph-check text-main-600"></i></span>
-                                                        <span
-                                                            class="text-neutral-700 text-md ">{{ $asset_facility }}</span>
-                                                    </div>
-                                                @endforeach
-                                                <div class="flex-align gap-8 mt-20">
-                                                    <span
-                                                        class="badge {{ $asset->status === 'OPEN' ? 'badge-success' : 'badge-danger' }}rounded-10 px-10 py-10 bg-success text-white text-sm fw-bold ">
-                                                        {{ $asset->status }}
-                                                    </span>
-                                                    <div class="row">
-                                                        <div class="col-12 fw-bold">Tersedia:</div>
-                                                        <div class="col-12">{{ $asset->available_at }}</div>
-                                                    </div>
-                                                </div>
-                                                <hr>
-                                                <a href="{{ route('asset-bmn.getData', $asset->id) }}"
-                                                    class="flex-align gap-8 text-main-600 hover-text-decoration-underline transition-1 fw-semibold"
-                                                    tabindex="0">
-                                                    Cek Jadwal
-                                                    <i class="ph ph-arrow-right"></i>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-
+                            <span id="showing-text" class="text-neutral-500">
+                                Showing {{ $assets->firstItem() }} to {{ $assets->lastItem() }} of {{ $assets->total() }}
+                                entries
+                                @if ($assets->total() > $assets->count())
+                                    (filtered from {{ $assets->total() }} total entries)
+                                @endif
+                            </span>
+                            @include('homepage.assets.components.asset-card', ['assets' => $assets])
                         </div>
 
+                        <div id="pagination-buttons">
+                            @include('homepage.assets.components.pagination-button', ['assets' => $assets])
+                        </div>
                     </div>
-                    <ul class="pagination mt-40 flex-align gap-12 flex-wrap justify-content-center">
-                        <li class="page-item">
-                            <a class="page-link text-neutral-700 fw-semibold w-40 h-40 bg-main-25 rounded-circle hover-bg-main-600 border-neutral-30 hover-border-main-600 hover-text-white flex-center p-0"
-                                href="#"><i class="ph-bold ph-caret-left"></i></a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link text-neutral-700 fw-semibold w-40 h-40 bg-main-25 rounded-circle hover-bg-main-600 border-neutral-30 hover-border-main-600 hover-text-white flex-center p-0"
-                                href="#">1</a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link text-neutral-700 fw-semibold w-40 h-40 bg-main-25 rounded-circle hover-bg-main-600 border-neutral-30 hover-border-main-600 hover-text-white flex-center p-0"
-                                href="#">2</a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link text-neutral-700 fw-semibold w-40 h-40 bg-main-25 rounded-circle hover-bg-main-600 border-neutral-30 hover-border-main-600 hover-text-white flex-center p-0"
-                                href="#">3</a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link text-neutral-700 fw-semibold w-40 h-40 bg-main-25 rounded-circle hover-bg-main-600 border-neutral-30 hover-border-main-600 hover-text-white flex-center p-0"
-                                href="#">...</a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link text-neutral-700 fw-semibold w-40 h-40 bg-main-25 rounded-circle hover-bg-main-600 border-neutral-30 hover-border-main-600 hover-text-white flex-center p-0"
-                                href="#"><i class="ph-bold ph-caret-right"></i></a>
-                        </li>
-                    </ul>
                 </div>
             </div>
         </div>
@@ -254,56 +139,132 @@
 @endsection
 @push('script')
     <script>
-        $(document).ready(function() {
-            function filterAssets() {
-                let selectedScopes = [];
-                $('input[name="facility_scope"]:checked').each(function() {
-                    selectedScopes.push($(this).val());
+        document.addEventListener('DOMContentLoaded', function() {
+            $('.form-check-input').on('change', function() {
+                fetchFilteredAssets();
+            });
+
+            $('#reset-filter').on('click', function() {
+                setTimeout(fetchFilteredAssets, 100);
+            });
+
+            // Tangani klik pagination
+            $(document).on('click', '.pagination .page-link', function(e) {
+                e.preventDefault();
+
+                const page = $(this).data('page');
+                if (!page || $(this).parent().hasClass('disabled')) return;
+
+                fetchFilteredAssets(page);
+            });
+
+            function fetchFilteredAssets(page = 1) {
+                const form = $('#asset-filter-form');
+                const data = form.serialize();
+
+                $.ajax({
+                    url: "{{ route('aset-bmn') }}?page=" + page,
+                    method: 'GET',
+                    data: data,
+                    beforeSend: function() {
+                        $('#asset-results').html('<center><p>Loading...</p></center>');
+                    },
+                    success: function(response) {
+                        $('#asset-results').html(response.assetHtml);
+                        // Update pagination
+                        $('#pagination-buttons').html(response.paginationHtml);
+
+                        // Update informasi jumlah data
+                        let showingText =
+                            `Showing ${response.from} to ${response.to} of ${response.filtered ? response.filtered : response.total} entries`;
+                        if (response.filtered && response.filtered !== response.total) {
+                            showingText += ` (filtered from ${response.total} total entries)`;
+                        }
+                        $('#showing-text').text(showingText);
+                    },
+                    error: function() {
+                        $('#asset-results').html('<p>Error loading data</p>');
+                    }
                 });
-
-                let selectedJurusan = [];
-                $('input[name="jurusan"]:checked').each(function() {
-                    selectedJurusan.push($(this).val());
-                });
-
-                let searchQuery = $('#search-input').val().toLowerCase();
-
-                let visibleCount = 0;
-
-                $('.course-item').hide().filter(function() {
-                    let assetType = $(this).data('type');
-                    let assetFacility = $(this).data('facility');
-                    let assetJurusan = $(this).data('jurusan');
-                    let assetName = $(this).find('.link').text().toLowerCase();
-
-                    let scopeMatch = (selectedScopes.includes('all') || selectedScopes.includes(
-                        assetFacility));
-                    let jurusanMatch = (selectedJurusan.length === 0 || selectedJurusan.includes(
-                        assetJurusan.toString()));
-                    let searchMatch = (searchQuery === '' || assetName.includes(searchQuery));
-
-                    let isVisible = scopeMatch && jurusanMatch && searchMatch;
-                    if (isVisible) visibleCount++;
-                    return isVisible;
-                }).show();
-
-                $('#result-count').text(visibleCount);
             }
-
-            $('#filter-form input').change(function() {
-                filterAssets();
-            });
-
-            $('#search-input').on('input', function() {
-                filterAssets();
-            });
-
-            $('#filter-form').on('reset', function() {
-                setTimeout(filterAssets, 0);
-            });
-
-            // Default: Tampilkan semua aset
-            filterAssets();
         });
     </script>
+    @if (auth()->check())
+        <script>
+            document.addEventListener("DOMContentLoaded", async function() {
+                const buttons = document.querySelectorAll(".wishlist-btn");
+                const assetIds = Array.from(buttons).map(button => button.dataset.assetId);
+
+                try {
+                    const response = await fetch("{{ route('saved.item.check') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                        },
+                        body: JSON.stringify({
+                            itemType: 'asset',
+                            asset_ids: assetIds
+                        })
+                    });
+
+                    const savedAssets = await response.json();
+
+                    buttons.forEach(button => {
+                        if (savedAssets.includes(button.dataset.assetId)) {
+                            button.classList.add("bg-main-two-600", "text-white");
+                            button.classList.remove("bg-white", "text-main-two-600");
+                        } else {
+                            button.classList.add("bg-white", "text-main-two-600");
+                            button.classList.remove("bg-main-two-600", "text-white");
+                        }
+                    });
+
+                } catch (error) {
+                    console.error("Error fetching saved:", error);
+                }
+
+                buttons.forEach(button => {
+                    button.addEventListener("click", async function() {
+                        const assetId = this.dataset.assetId;
+                        const isSaved = this.classList.contains("bg-main-two-600");
+
+                        try {
+                            const response = await fetch(
+                                "{{ route('saved.item.toggle') }}", {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRF-TOKEN": document.querySelector(
+                                            'meta[name="csrf-token"]').content,
+                                    },
+                                    body: JSON.stringify({
+                                        itemType: 'asset',
+                                        asset_id: assetId
+                                    })
+                                });
+
+                            const result = await response.json();
+
+                            if (response.ok) {
+                                if (isSaved) {
+                                    this.classList.add("bg-white", "text-main-two-600");
+                                    this.classList.remove("bg-main-two-600", "text-white");
+                                } else {
+                                    this.classList.add("bg-main-two-600", "text-white");
+                                    this.classList.remove("bg-white", "text-main-two-600");
+                                }
+                                this.style.transform = "scale(1.2)";
+                                setTimeout(() => this.style.transform = "scale(1)", 200);
+                            } else {
+                                console.error("Error:", result.message);
+                            }
+                        } catch (error) {
+                            console.error("Request failed:", error);
+                        }
+                    });
+                });
+            });
+        </script>
+    @endif
 @endpush

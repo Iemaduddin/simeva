@@ -65,7 +65,7 @@
     <div class="container border border-main  rounded-12 p-24 my-20 ">
         <h5 class="mb-0">Informasi Pengguna</h5>
         <span class="d-block border border-main-50 my-24 border-dashed"></span>
-        <form id="updateProfileForm" action="{{ route('profile.update', $user->id) }}" method="POST"
+        <form id="updateProfileForm" action="{{ route('profileUser.update', $user->id) }}" method="POST"
             enctype="multipart/form-data">
             @csrf
             <div class="row gy-4">

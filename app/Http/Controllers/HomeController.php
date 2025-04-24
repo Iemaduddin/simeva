@@ -2,396 +2,277 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Jurusan;
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Asset;
+use App\Models\Event;
+use App\Models\Jurusan;
+use App\Models\Organizer;
+use Illuminate\Support\Str;
+use App\Models\AssetBooking;
 use Illuminate\Http\Request;
+use App\Models\AssetCategory;
 
 class HomeController extends Controller
 {
     public function home()
     {
-        $events = [
-            [
-                'title' => 'Introduction to Digital Marketing',
-                'category' => 'internal_kampus',
-                'image' => 'assets/images/thumbs/course-img1.png',
-                'location' => 'Graha Polinema, Aula Pertamina, Mini Soccer',
-                'quota_left' => 0,
-                'quota' => 7,
-                'organizer' => 'BEM',
-                'organizer_logo' => 'assets/images/logo_organizers/bem.png',
-                'registration_period' => '5 Oktober 2025 - 15 Oktober 2025',
-                'event_period' => '20 Oktober 2025 - 15 November 2025',
-                'price' => '200.000',
-                'mode' => 'Offline',
-            ],
-            [
-                'title' => 'Introduction to Digital Marketing',
-                'category' => 'internal_jurusan',
-                'image' => 'assets/images/thumbs/course-img1.png',
-                'location' => 'Zoom Meeting',
-                'quota_left' => 240,
-                'quota' => 500,
-                'organizer' => 'HMTI',
-                'organizer_logo' => 'assets/images/logo_organizers/hmti.png',
-                'registration_period' => '5 Oktober 2025 - 15 Oktober 2025',
-                'event_period' => '20 Oktober 2025 - 15 November 2025',
-                'price' => 'Gratis',
-                'mode' => 'Online',
-            ],
-            [
-                'title' => 'Introduction to Digital Marketing',
-                'category' => 'umum',
-                'image' => 'assets/images/thumbs/course-img1.png',
-                'location' => 'Graha Polinema & Zoom Meeting',
-                'quota_left' => 40,
-                'quota' => 200,
-                'organizer' => 'JTI',
-                'organizer_logo' => 'assets/images/logo_organizers/jti.png',
-                'registration_period' => '5 Oktober 2025 - 15 Oktober 2025',
-                'event_period' => '20 Oktober 2025 - 15 November 2025',
-                'price' => '50.000',
-                'mode' => 'Hybrid',
-            ],
+        $assets = collect();
 
-        ];
+        // Aset Umum
+        $assetsUmum = Asset::where('facility_scope', 'umum')->limit(9)->get();
+        $assets = $assets->merge($assetsUmum);
 
-        $assets  = Asset::all();
+        // Aset per Jurusan (TI, AN, dll.)
+        $jurusans = Jurusan::all();
+        foreach ($jurusans as $jurusan) {
+            $assetsJurusan = Asset::where('facility_scope', 'jurusan')
+                ->where('jurusan_id', $jurusan->id)
+                ->limit(9)
+                ->get();
+
+            $assets = $assets->merge($assetsJurusan);
+        }
+
+
+        $categories = ['all', 'Seminar', 'Kuliah Tamu', 'Pelatihan', 'Workshop', 'Kompetisi', 'Lainnya'];
+
+
+        $eventsByCategory = [];
+
+        foreach ($categories as $category) {
+            $query = Event::latest();
+            $key = Str::slug($category, '_');
+            if ($category !== 'all') {
+                $query->where('event_category', $category);
+            }
+
+            $eventsByCategory[$key] = $query->take(12)->get();
+        }
+
         $jurusans  = Jurusan::all();
-
-        return view('homepage.home', compact('events', 'assets', 'jurusans'));
+        $logo_organizers = Organizer::pluck('logo');
+        return view('homepage.home', compact('eventsByCategory', 'assets', 'jurusans', 'logo_organizers'));
     }
 
-    public function event()
+    public function event(Request $request)
     {
-        $events = [
-            [
-                'title' => 'Seminar Nasional Himpunan Mahasiswa Teknologi Informasi Politeknik Negeri Malang Tahun 2025',
-                'category' => 'internal_kampus',
-                'image' => 'assets/images/thumbs/course-img1.png',
-                'location' => 'Graha Polinema, Aula Pertamina, Mini Soccer',
-                'quota_left' => 0,
-                'quota' => 7,
-                'organizer' => 'BEM',
-                'organizer_logo' => 'assets/images/logo_organizers/bem.png',
-                'registration_period' => '5 Oktober 2025 - 15 Oktober 2025',
-                'event_period' => '20 Oktober 2025 - 15 November 2025',
-                'price' => '200.000',
-                'mode' => 'Offline',
-            ],
-            [
-                'title' => 'Seminar Nasional Himpunan Mahasiswa Teknologi Informasi Politeknik Negeri Malang Tahun 2025',
-                'category' => 'internal_jurusan',
-                'image' => 'assets/images/thumbs/course-img1.png',
-                'location' => 'Zoom Meeting',
-                'quota_left' => 240,
-                'quota' => 500,
-                'organizer' => 'HMTI',
-                'organizer_logo' => 'assets/images/logo_organizers/hmti.png',
-                'registration_period' => '5 Oktober 2025 - 15 Oktober 2025',
-                'event_period' => '20 Oktober 2025 - 15 November 2025',
-                'price' => 'Gratis',
-                'mode' => 'Online',
-            ],
-            [
-                'title' => 'Seminar Nasional Himpunan Mahasiswa Teknologi Informasi Politeknik Negeri Malang Tahun 2025',
-                'category' => 'umum',
-                'image' => 'assets/images/thumbs/course-img1.png',
-                'location' => 'Graha Polinema & Zoom Meeting',
-                'quota_left' => 40,
-                'quota' => 200,
-                'organizer' => 'JTI',
-                'organizer_logo' => 'assets/images/logo_organizers/jti.png',
-                'registration_period' => '5 Oktober 2025 - 15 Oktober 2025',
-                'event_period' => '20 Oktober 2025 - 15 November 2025',
-                'price' => '50.000',
-                'mode' => 'Hybrid',
-            ],
+        $events = Event::with('organizers.user')->get();
+        $jurusans  = Jurusan::all();
+        $order = ['LT', 'HMJ', 'UKM', 'Kampus', 'Jurusan',];
 
-        ];
-        return view('homepage.event', compact('events'));
+        $organizers = Organizer::with('user')
+            ->get()
+            ->sortBy(function ($organizer) use ($order) {
+                return array_search($organizer->organizer_type, $order);
+            })
+            ->pluck('user.name', 'id');
+        $allEvents = Event::with('organizers')->get();
+        $query = Event::query();
+
+        if ($request->filled('scope')) {
+            $scope = $request->input('scope');
+
+            if ($scope !== 'all') {
+                if ($scope === 'Umum' || $scope === 'Internal Kampus') {
+                    $query->where('scope', $scope);
+                } else {
+                    //  (Internal Jurusan)
+                    $query->where('scope', 'Internal Jurusan')->whereHas('organizers.user', function ($q) use ($scope) {
+                        $q->whereHas('jurusan', function ($subQuery) use ($scope) {
+                            $subQuery->where('id', $scope);
+                        });
+                    });
+                }
+            }
+        }
+
+
+        if ($request->filled('organizer')) {
+            $org = $request->input('organizer');
+            if ($org !== 'all') {
+                $query->where('organizer_id', $request->input('organizer'));
+            }
+        }
+
+        if ($request->has('event_category')) {
+            $selectedCategories = $request->input('event_category');
+            if (!in_array('all', $selectedCategories)) {
+                $query->whereIn('event_category', $selectedCategories);
+            }
+        }
+        if ($request->has('is_free')) {
+            $selectedCosts = $request->input('is_free');
+
+            // Hapus nilai 'all' dari array
+            $selectedCosts = array_filter($selectedCosts, function ($val) {
+                return $val !== 'all';
+            });
+
+            if (!empty($selectedCosts)) {
+                // Konversi string 'true'/'false' menjadi boolean asli
+                $mappedCosts = array_map(function ($val) {
+                    return filter_var($val, FILTER_VALIDATE_BOOLEAN);
+                }, $selectedCosts);
+
+                $query->whereIn('is_free', $mappedCosts);
+            }
+        }
+
+
+
+        $events = $query->latest()->with(['organizers.user.jurusan'])->paginate(5);
+
+        $from = ($events->currentPage() - 1) * $events->perPage() + 1;
+        $to = $from + $events->count() - 1;  // Menggunakan count() dari paginator untuk menghitung jumlah di halaman ini
+        $total = $events->total();  // Total semua entri
+        $filtered = $events->count();  // Total data setelah filter diterapkan (jika ada)
+        // Mengambil total filter, jika ada
+        if ($request->ajax()) {
+            $eventHtml = view('homepage.events.components.event-card', compact('events'))->render();
+            $paginationHtml = view('homepage.events.components.pagination-button', compact('events'))->render();
+            return response()->json([
+                'eventHtml' => $eventHtml,
+                'paginationHtml' => $paginationHtml,
+                'from' => $events->firstItem(),
+                'to' => $events->lastItem(),
+                'total' => $events->total(), // total semua
+                'filtered' => $events->total(),
+            ]);
+        }
+
+        return view('homepage.events.event', compact('events', 'allEvents', 'jurusans', 'organizers', 'from', 'to', 'total', 'filtered'));
+    }
+
+    public function detail_event($id)
+    {
+        $event = Event::with(['prices', 'participants'])->findOrFail($id);
+        $categoryEvent = Event::where('id', $id)->value('event_category');
+
+
+        $simillarEvents = Event::where('event_category', $categoryEvent)->where('id', '!=', $id)->get();
+        return view('homepage.events.detail_event', compact('event', 'simillarEvents'));
     }
     public function organizer()
     {
-        $organizers_jurusan = [
-            [
-                'name' => 'Jurusan Teknologi Informasi',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/jti.png',
-            ],
-            [
-                'name' => 'Jurusan Teknik Mesin',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/j_tm.png',
-            ],
-            [
-                'name' => 'Jurusan Teknik Elektro',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/j_elektro.png',
-            ],
-            [
-                'name' => 'Jurusan Teknik Sipil',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/j_ts.jpg',
-            ],
-            [
-                'name' => 'Jurusan Akuntansi',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/j_akuntansi.png',
-            ],
-            [
-                'name' => 'Jurusan Administrasi Niaga',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/j_an.png',
-            ],
-            [
-                'name' => 'Jurusan Teknik Kimia',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/j_tk.png',
-            ],
-        ];
-        $organizers_lt = [
-            [
-                'name' => 'Dewan Perwakilan Mahasiswa',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/dpm.png',
-            ],
-            [
-                'name' => 'Badan Eksekutif Mahasiswa',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/bem.png',
-            ],
-        ];
-        $organizers_hmj = [
-            [
-                'name' => 'Himpunan Mahasiswa Teknologi Informasi',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/hmti.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Teknik Mesin',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/bem.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Elektro',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/bem.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Teknik Sipil',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/hms.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Akuntansi',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/hma.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Administrasi Niaga',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/himania.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Teknik Kimia',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/hmtk.png',
-            ],
-        ];
-        $organizers_ukm = [
-            [
-                'name' => 'Himpunan Mahasiswa Teknologi Informasi',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/hmti.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Teknik Mesin',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/bem.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Elektro',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/bem.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Teknik Sipil',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/hms.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Akuntansi',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/hma.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Administrasi Niaga',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/himania.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Teknik Kimia',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/hmtk.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Teknik Kimia',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/hmtk.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Teknik Kimia',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/hmtk.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Teknik Kimia',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/hmtk.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Teknik Kimia',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/hmtk.png',
-            ],
-            [
-                'name' => 'Himpunan Mahasiswa Teknik Kimia',
-                'description' => '
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Esse in expedita unde assumenda accusamus, sequi quia quasi recusandae quibusdam',
-                'image' => 'assets/images/logo_organizers/hmtk.png',
-            ],
-        ];
+        $organizers = Organizer::all();
 
-        return view('homepage.organizer', compact('organizers_jurusan', 'organizers_lt', 'organizers_hmj', 'organizers_ukm'));
+        return view('homepage.organizer', compact('organizers'));
     }
-    public function detail_organizer()
+    public function detail_organizer($id)
     {
-        $events = [
-            [
-                'title' => 'Seminar Nasional Himpunan Mahasiswa Teknologi Informasi Politeknik Negeri Malang Tahun 2025',
-                'category' => 'internal_kampus',
-                'image' => 'assets/images/thumbs/course-img1.png',
-                'location' => 'Graha Polinema, Aula Pertamina, Mini Soccer',
-                'quota_left' => 0,
-                'quota' => 7,
-                'organizer' => 'BEM',
-                'organizer_logo' => 'assets/images/logo_organizers/bem.png',
-                'registration_period' => '5 Oktober 2025 - 15 Oktober 2025',
-                'event_period' => '20 Oktober 2025 - 15 November 2025',
-                'price' => '200.000',
-                'mode' => 'Offline',
-            ],
-            [
-                'title' => 'Introduction to Digital Marketing',
-                'category' => 'internal_jurusan',
-                'image' => 'assets/images/thumbs/course-img1.png',
-                'location' => 'Zoom Meeting',
-                'quota_left' => 240,
-                'quota' => 500,
-                'organizer' => 'HMTI',
-                'organizer_logo' => 'assets/images/logo_organizers/hmti.png',
-                'registration_period' => '5 Oktober 2025 - 15 Oktober 2025',
-                'event_period' => '20 Oktober 2025 - 15 November 2025',
-                'price' => 'Gratis',
-                'mode' => 'Online',
-            ],
-            [
-                'title' => 'Introduction to Digital Marketing',
-                'category' => 'umum',
-                'image' => 'assets/images/thumbs/course-img1.png',
-                'location' => 'Graha Polinema & Zoom Meeting',
-                'quota_left' => 40,
-                'quota' => 200,
-                'organizer' => 'JTI',
-                'organizer_logo' => 'assets/images/logo_organizers/jti.png',
-                'registration_period' => '5 Oktober 2025 - 15 Oktober 2025',
-                'event_period' => '20 Oktober 2025 - 15 November 2025',
-                'price' => '50.000',
-                'mode' => 'Hybrid',
-            ],
-
-        ];
-        return view('homepage.detail_organizer', compact('events'));
+        $organizer = Organizer::findOrFail($id);
+        $events = Event::where('organizer_id', $id)->where('status', 'published')->get();
+        return view('homepage.detail_organizer', compact('organizer', 'events'));
     }
-    public function detail_event()
+
+    public function indexAsetBmn(Request $request)
     {
-        $events = [
-            [
-                'title' => 'Seminar Nasional Himpunan Mahasiswa Teknologi Informasi Politeknik Negeri Malang Tahun 2025',
-                'category' => 'internal_kampus',
-                'image' => 'assets/images/thumbs/course-img1.png',
-                'location' => 'Graha Polinema, Aula Pertamina, Mini Soccer',
-                'quota_left' => 0,
-                'quota' => 7,
-                'organizer' => 'BEM',
-                'organizer_logo' => 'assets/images/logo_organizers/bem.png',
-                'registration_period' => '5 Oktober 2025 - 15 Oktober 2025',
-                'event_period' => '20 Oktober 2025 - 15 November 2025',
-                'price' => '200.000',
-                'mode' => 'Offline',
-            ],
-            [
-                'title' => 'Introduction to Digital Marketing',
-                'category' => 'internal_jurusan',
-                'image' => 'assets/images/thumbs/course-img1.png',
-                'location' => 'Zoom Meeting',
-                'quota_left' => 240,
-                'quota' => 500,
-                'organizer' => 'HMTI',
-                'organizer_logo' => 'assets/images/logo_organizers/hmti.png',
-                'registration_period' => '5 Oktober 2025 - 15 Oktober 2025',
-                'event_period' => '20 Oktober 2025 - 15 November 2025',
-                'price' => 'Gratis',
-                'mode' => 'Online',
-            ],
-            [
-                'title' => 'Introduction to Digital Marketing',
-                'category' => 'umum',
-                'image' => 'assets/images/thumbs/course-img1.png',
-                'location' => 'Graha Polinema & Zoom Meeting',
-                'quota_left' => 40,
-                'quota' => 200,
-                'organizer' => 'JTI',
-                'organizer_logo' => 'assets/images/logo_organizers/jti.png',
-                'registration_period' => '5 Oktober 2025 - 15 Oktober 2025',
-                'event_period' => '20 Oktober 2025 - 15 November 2025',
-                'price' => '50.000',
-                'mode' => 'Hybrid',
-            ],
 
-        ];
-        return view('homepage.detail_event', compact('events'));
+        $jurusans  = Jurusan::all();
+
+        $allAssets = Asset::with('jurusan')->get();
+        $scope = $request->input('facility_scope', 'umum');
+
+        $query = Asset::query();
+
+        if ($scope === 'umum') {
+            $query->where('facility_scope', $scope);
+        } else {
+            $query->where('facility_scope', 'jurusan')
+                ->whereHas('jurusan', function ($q) use ($scope) {
+                    $q->where('id', $scope);
+                });
+        }
+
+
+
+
+        $assets = $query->latest()->with(['jurusan'])->paginate(5);
+
+        $from = ($assets->currentPage() - 1) * $assets->perPage() + 1;
+        $to = $from + $assets->count() - 1;  // Menggunakan count() dari paginator untuk menghitung jumlah di halaman ini
+        $total = $assets->total();  // Total semua entri
+        $filtered = $assets->count();  // Total data setelah filter diterapkan (jika ada)
+        // Mengambil total filter, jika ada
+        if ($request->ajax()) {
+            $assetHtml = view('homepage.assets.components.asset-card', compact('assets'))->render();
+            $paginationHtml = view('homepage.assets.components.pagination-button', compact('assets'))->render();
+            return response()->json([
+                'assetHtml' => $assetHtml,
+                'paginationHtml' => $paginationHtml,
+                'from' => $assets->firstItem(),
+                'to' => $assets->lastItem(),
+                'total' => $assets->total(), // total semua
+                'filtered' => $assets->total(),
+            ]);
+        }
+
+
+
+        return view('homepage.assets.aset', compact('assets', 'allAssets', 'jurusans', 'from', 'to', 'total', 'filtered'));
+    }
+    public function getDataAssetBmn($id)
+    {
+        $assetDetails  = Asset::where('id', $id)->first();
+        return view('homepage.assets.detail_aset', compact('assetDetails'));
     }
 
+    public function getDataCategoryAssetBooking($id)
+    {
+        $categories = AssetCategory::where('asset_id', $id)->get(['id', 'category_name', 'external_price']);
+
+        return response()->json([
+            'data' => $categories
+        ]);
+    }
+    public function getDataCalendarAssetBooking($assetId)
+    {
+        $bookings = AssetBooking::with('user')
+            ->where('asset_id', $assetId)
+            ->whereIn('status', [
+                'submission_booking',
+                'submission_dp_payment',
+                'submission_full_payment',
+                'booked',
+                'approved_dp_payment',
+                'approved_full_payment'
+            ])
+            ->get()
+            ->map(function ($booking) {
+                // Set warna event berdasarkan status
+                $eventColor = match (true) {
+                    str_contains($booking->status, 'submission') => 'warning', // warning
+                    str_contains($booking->status, 'booked') => 'info',    // primary
+                    str_contains($booking->status, 'approved') => 'success',  // success
+                    default => '#6c757d'                                      // secondary
+                };
+                $userIcon = $booking->user->category_user === 'Internal Kampus' ?
+                    'ph-student' :
+                    'ph-user-sound';
+                return [
+                    'id' => $booking->id,
+                    'title' => $booking->usage_event_name,
+                    'start' => Carbon::parse($booking->usage_date_start)->format('Y-m-d H:i:s'),
+                    'end' => Carbon::parse($booking->usage_date_end)->format('Y-m-d H:i:s'),
+                    // Warna untuk event
+                    'className' => $eventColor,
+                    'allDay' => false,
+                    'icon' => $userIcon,
+                    // Data tambahan
+                    'loadingDate' => ($booking->loading_date_start && $booking->loading_date_end)
+                        ? Carbon::parse($booking->loading_date_start)->translatedFormat('l, d M Y H:i') . ' - ' .
+                        Carbon::parse($booking->loading_date_end)->format('H:i')
+                        : '-',
+                    'status' => $booking->status,
+                    'user' => $booking->user->category_user === 'Internal Kampus' ? $booking->user->organizer->shorten_name . ' (Internal Kampus)' :  $booking->user->name . ' (Eksternal Kampus)',
+                    'userCategory' => $booking->user->category_user,
+                ];
+            });
+
+
+        return response()->json($bookings);
+    }
 
     public function calender()
     {

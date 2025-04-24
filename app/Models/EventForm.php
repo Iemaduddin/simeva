@@ -8,8 +8,8 @@ class EventForm extends Model
 {
     protected $fillable = [
         'event_id',
-        'name',
-        'description',
+        'field_label',
+        'field_type',
         'is_required'
     ];
 

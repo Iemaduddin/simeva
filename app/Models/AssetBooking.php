@@ -12,6 +12,7 @@ class AssetBooking extends Model
         'asset_id',
         'user_id',
         'event_id',
+        'external_user',
         'booking_number',
         'asset_category_id',
         'usage_date_start',

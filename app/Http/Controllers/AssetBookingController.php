@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Asset;
 use App\Models\Jurusan;
+use App\Models\Organizer;
 use Illuminate\Support\Str;
 use App\Models\AssetBooking;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ use App\Notifications\BookingAssetCancelled;
 use App\Notifications\BookingAssetConfirmed;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\BookingAssetConfirmPayment;
+use App\Notifications\BookingAssetEventConfirmed;
 use App\Notifications\BookingAssetPayAndCompleteFile;
 
 class AssetBookingController extends Controller
@@ -28,14 +30,29 @@ class AssetBookingController extends Controller
     public function assetBookingFasum()
     {
         $jurusans = Jurusan::all();
-        return view('dashboardPage.assets.asset-booking.index', ['kode_jurusan' => null, 'jurusans' => $jurusans]);
+        $assets = Asset::where('facility_scope', 'umum')->pluck('name', 'id');
+        $organizers = Organizer::with('user')->get()->pluck('user.name', 'id');
+        return view('dashboardPage.assets.asset-booking.index', ['kode_jurusan' => null, 'jurusans' => $jurusans, 'organizers' => $organizers, 'assets' => $assets]);
     }
+
     public function assetBookingFasjur($kode_jurusan)
     {
         $jurusans = Jurusan::all();
 
-        return view('dashboardPage.assets.asset-booking.index', compact('kode_jurusan', 'jurusans'));
+        $assets = Asset::query();
+        if (Auth::user()->hasRole('Admin Jurusan')) {
+            $assets->where('facility_scope', 'jurusan')
+                ->where('jurusan_id', Auth::user()->jurusan_id);
+        } else {
+            $assets->where('facility_scope', 'umum');
+        }
+
+        $assets = $assets->pluck('name', 'id');
+        $organizers = Organizer::with('user')->get()->pluck('user.name', 'id');
+        return view('dashboardPage.assets.asset-booking-event.index', ['kode_jurusan' => $kode_jurusan, 'jurusans' => $jurusans, 'assets' => $assets, 'organizers' => $organizers]);
     }
+
+    // Untuk UPT PU (Peminjaman dari luar)
     public function getDataAssetBooking(Request $request, $kode_jurusan = null)
     {
         $statusBooking = $request->status_booking;
@@ -46,12 +63,21 @@ class AssetBookingController extends Controller
 
         // Inisialisasi query utama
         $query = AssetBooking::with(['asset', 'user', 'asset_category'])
+            ->where(function ($q) {
+                $q->whereNull('event_id')
+                    ->orWhere('event_id', '');
+            })
             ->whereHas('asset', function ($q) use ($scope, $jurusan) {
                 $q->where('facility_scope', $scope);
                 if ($scope === 'jurusan' && $jurusan) {
                     $q->where('jurusan_id', $jurusan->id);
                 }
             });
+
+        if (Auth::user()->hasRole('UPT PU')) {
+            $query->whereNotNull('asset_category_id');
+        }
+
         $statusCategories = [
             'submission_booking' => ['submission_booking'],
             'submission_payment' => ['submission_dp_payment', 'submission_full_payment'],
@@ -61,7 +87,6 @@ class AssetBookingController extends Controller
             'rejected' => ['rejected_booking',  'rejected'],
             'cancelled' => ['cancelled'],
         ];
-
         // Pastikan kategori yang diminta ada di daftar yang telah ditentukan
         if ($statusBooking !== 'all' && !array_key_exists($statusBooking, $statusCategories)) {
             return response()->json(['error' => 'Kategori tidak valid'], 400);
@@ -174,6 +199,7 @@ class AssetBookingController extends Controller
             ->rawColumns(['action'])
             ->make(true);
     }
+
     // Tenant booking aset
     public function assetBooking(Request $request, $id)
     {
@@ -557,6 +583,7 @@ class AssetBookingController extends Controller
             ], 500);
         }
     }
+
     public function payAndCompleteFile(Request $request, $id)
     {
         if (!Auth::check()) {
@@ -867,6 +894,82 @@ class AssetBookingController extends Controller
     }
 
     public function cancelledBooking(Request $request, $id)
+    {
+        if (!Auth::check()) {
+            return response()->json(['error' => 'Anda harus login terlebih dahulu.'], 403);
+        }
+
+
+        $validator = Validator::make($request->all(), [
+            'reason' => 'required',
+        ], [
+            'reason.required' => 'Alasan pembatalan harus diisi.',
+        ]);
+
+        DB::beginTransaction(); // ⏳ Mulai Transaksi
+        try {
+            $assetBooking = AssetBooking::findOrFail($id);
+
+
+            // Ambil user yang sedang login
+            $userbooking = User::findOrFail($assetBooking->user_id);
+
+            $user = Auth::user();
+            $userRole = $user->getRoleNames()->first(); // Ambil nama role
+
+            // Siapkan penerima notifikasi
+            $userReceived = collect(); // Inisialisasi collection kosong
+
+            if ($userRole === 'Tenant') {
+                if ($assetBooking->facility_scope === 'jurusan') {
+                    // Ambil admin jurusan yang sesuai dengan jurusan aset
+                    $jurusan = Jurusan::findOrFail($assetBooking->asset->jurusan_id);
+                    $userReceived = User::role('Admin Jurusan')
+                        ->where('jurusan_id', $jurusan->id)
+                        ->get();
+                } else {
+                    // Jika bukan scope jurusan, kirim ke UPT PU
+                    $userReceived = User::role('UPT PU')->get();
+                }
+            } elseif ($userRole === 'Organizer') {
+                if ($assetBooking->facility_scope === 'jurusan') {
+                    // Ambil admin jurusan yang sesuai dengan jurusan aset
+                    $jurusan = Jurusan::findOrFail($assetBooking->asset->jurusan_id);
+                    $userReceived = User::role('Admin Jurusan')
+                        ->where('jurusan_id', $jurusan->id)
+                        ->get();
+                } else {
+                    // Jika bukan scope jurusan, kirim ke Kaur RT
+                    $userReceived = User::role('Kaur RT')->get();
+                }
+            } else {
+                // Jika yang membatalkan bukan Tenant dan Organizer, kirim notifikasi ke Tenant  atau Organizer yang bersangkutan
+                $userReceived = User::where('id', $assetBooking->user_id)->get();
+            }
+
+            $assetBooking->reason = $request->reason;
+            // Kirim notifikasi jika ada penerima
+            if ($userReceived->isNotEmpty()) {
+                Notification::send($userReceived, new BookingAssetCancelled($assetBooking, $user, $userbooking));
+            }
+            $assetBooking->status = 'cancelled';
+
+            $assetBooking->save();
+
+            DB::commit(); // ✅ Simpan perubahan jika berhasil
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Booking aset berhasil dibatalkan!',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack(); // ❌ Jika ada error, batalkan semua perubahan
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    public function cancelledAssetBookingEvent(Request $request, $id)
     {
         if (!Auth::check()) {
             return response()->json(['error' => 'Anda harus login terlebih dahulu.'], 403);

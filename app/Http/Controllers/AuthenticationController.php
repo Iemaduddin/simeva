@@ -64,11 +64,11 @@ class AuthenticationController extends Controller
             'phone_number' => $request->phone_number ?? '',
             'address' => $request->address ?? '',
             'password' => Hash::make($request->password),
-            'category_user' => 'eksternal_kampus'
+            'category_user' => 'Eksternal Kampus'
         ]);
 
         $request->role_type == 'participant' ?
-            $user->assignRole('participant') : $user->assignRole('tenant');
+            $user->assignRole('Participant') : $user->assignRole('Tenant');
 
         Auth::login($user);
 
@@ -119,18 +119,27 @@ class AuthenticationController extends Controller
 
             if ($user->hasRole('Super Admin')) {
                 // Arahkan ke halaman dashboard untuk Super Admin
+                notyf()->ripple(true)->info('Anda berhasil login!');
                 return redirect()->route('stakeholderUsers');
             } elseif ($user->hasRole('Participant')) {
                 // Arahkan ke halaman home untuk Participant
+                notyf()->ripple(true)->info('Anda berhasil login!');
                 return redirect()->route('home');
             } elseif ($user->hasRole('Kaur RT')) {
-                return redirect()->route('asset.fasum');
+                notyf()->ripple(true)->info('Anda berhasil login!');
+                return redirect()->route('assets.fasum');
             } elseif ($user->hasRole('UPT PU')) {
+                notyf()->ripple(true)->info('Anda berhasil login!');
                 return redirect()->route('asset.fasum.bookings');
             } elseif ($user->hasRole('Admin Jurusan')) {
+                notyf()->ripple(true)->info('Anda berhasil login!');
                 return redirect()->route('asset.fasjur.bookings', $kode_jurusan);
             } elseif ($user->hasRole('Tenant')) {
+                notyf()->ripple(true)->info('Anda berhasil login!');
                 return redirect()->route('aset-bmn');
+            } elseif ($user->hasRole('Organizer')) {
+                notyf()->ripple(true)->info('Anda berhasil login!');
+                return redirect()->route('data.events', $user->organizer->shorten_name);
             }
 
             // Jika peran tidak cocok, arahkan ke halaman default atau berikan error
@@ -200,7 +209,7 @@ class AuthenticationController extends Controller
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
-
+        notyf()->ripple(true)->info('Anda berhasil logout!');
         return redirect('/login');
     }
 }

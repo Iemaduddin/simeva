@@ -27,7 +27,7 @@
                             <th>Email</th>
                             <th>Nomor Handphone</th>
                             <th>Role</th>
-                            <th>Action</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                 </table>

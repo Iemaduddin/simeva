@@ -217,10 +217,10 @@
         // ========================= Brand Slider Js End ===================
 
         // ========================= Wishlist Button Js Start ===================
-        $(".wishlist-btn").on("click", function () {
-            $(this).removeClass("text-main-two-600");
-            $(this).toggleClass("text-white bg-main-two-600");
-        });
+        // $(".wishlist-btn").on("click", function () {
+        //     $(this).removeClass("text-main-two-600");
+        //     $(this).toggleClass("text-white bg-main-two-600");
+        // });
         // ========================= Wishlist Button Js End ===================
 
         // ========================= Instructor Button Js Start ===================

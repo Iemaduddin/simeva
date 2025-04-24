@@ -1,6 +1,6 @@
 @extends('layout.landingPageLayout')
 
-@section('title', 'Profil')
+@section('title', 'Booking Aset')
 @section('content')
     <!-- ==================== Breadcrumb Start Here ==================== -->
     <section class="breadcrumb py-120 bg-main-25 position-relative z-1 overflow-hidden mb-0">

@@ -16,7 +16,9 @@ return new class extends Migration
             $table->uuid('id')->primary()->default(Str::uuid());
             $table->uuid('event_id');
             $table->uuid('user_id');
-            $table->enum('status', ['registered', 'attended', 'completed']);
+            $table->string('ticket_code')->unique();
+            $table->enum('status', ['pending_approval', 'registered', 'attended', 'rejected']);
+            $table->text('reason')->nullable();
             $table->timestamps();
 
             $table->foreign('event_id')->references('id')->on('events');

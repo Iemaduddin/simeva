@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Organizer;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -29,7 +30,9 @@ class OrganizerUsersController extends Controller
         return DataTables::of($organizers)
             ->addIndexColumn()
             ->editColumn('name', function ($organizer) {
-                $imageUrl = asset('storage/' . $organizer->logo) . '?t=' . time(); // Tambahkan timestamp
+                $imageUrl = Storage::disk('public')->exists($organizer->logo)
+                    ? asset('storage/' . $organizer->logo) . '?t=' . time()
+                    : asset($organizer->logo) . '?t=' . time(); // Tambahkan timestamp
                 return '<div class="d-flex align-items-center">
                             <img src="' . $imageUrl . '" alt="" class="flex-shrink-0 me-12 radius-8" width="50px">
                             <h6 class="text-md mb-0 fw-medium flex-grow-1">' . $organizer->user->name . '</h6>
@@ -95,8 +98,7 @@ class OrganizerUsersController extends Controller
             'organizer_type' => 'required|in:Kampus,Jurusan,LT,HMJ,UKM',
             'shorten_name' => 'required',
             'vision' => 'required',
-            'missions' => 'required|array',
-            'missions.*' => 'required',
+            'missions' => 'required',
             'logo' => 'required|image|mimes:jpeg,png,jpg'
         ], [
             'name.required' => 'Nama Organizer harus diisi.',
@@ -109,8 +111,6 @@ class OrganizerUsersController extends Controller
             'shorten_name.required' => 'Singkatan Organizer harus diisi.',
             'vision.required' => 'Visi harus diisi.',
             'missions.required' => 'Misi harus diisi.',
-            'missions.array' => 'Misi harus bertipe array.',
-            'missions.*.required' => 'Misi harus diisi.',
             'logo.required' => 'Logo harus diisi.',
             'logo.image' => 'Logo harus berupa gambar.',
             'logo.mimes' => 'Logo harus memiliki format: .jpeg, .png, .jpg',
@@ -123,17 +123,17 @@ class OrganizerUsersController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-
+        DB::beginTransaction();
         try {
             $newUser = User::create([
                 'name' => $request->name,
                 'username' => $request->username,
                 'email' => $request->email,
-                'category_user' => 'internal_kampus',
+                'category_user' => 'Internal Kampus',
                 'password' => Hash::make($request->password)
             ]);
             $newUser->assignRole('Organizer');
-            $missions = implode(', ', $request->missions);
+            $missions =  $request->missions;
             $filePath = null;
 
             if ($request->hasFile('logo')) {
@@ -155,11 +155,13 @@ class OrganizerUsersController extends Controller
                 'organizer_type' => $request->organizer_type,
                 'logo' => $filePath
             ]);
+            DB::commit();
             return response()->json([
                 'status' => 'success',
                 'message' => 'User berhasil ditambahkan!',
             ], 201);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'status' => 'error',
                 'message' => 'Terjadi kesalahan saat menambahkan user.',
@@ -176,8 +178,7 @@ class OrganizerUsersController extends Controller
             'organizer_type' => 'required|in:Kampus,Jurusan,LT,HMJ,UKM',
             'shorten_name' => 'required',
             'vision' => 'required',
-            'missions' => 'required|array',
-            'missions.*' => 'required',
+            'missions' => 'required',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg'
         ];
 
@@ -202,8 +203,6 @@ class OrganizerUsersController extends Controller
             'shorten_name.required' => 'Singkatan Organizer harus diisi.',
             'vision.required' => 'Visi harus diisi.',
             'missions.required' => 'Misi harus diisi.',
-            'missions.array' => 'Misi harus bertipe array.',
-            'missions.*.required' => 'Misi harus diisi.',
             'logo.image' => 'Logo harus berupa gambar.',
             'logo.mimes' => 'Logo harus memiliki format: .jpeg, .png, .jpg',
         ]);
@@ -230,7 +229,7 @@ class OrganizerUsersController extends Controller
                 $user->update(['password' => Hash::make($request->password)]);
             }
 
-            $missions = implode(', ', $request->missions);
+            $missions =  $request->missions;
             $organizer = Organizer::where('user_id', $id)->first();
             $filePath = null;
             if ($request->hasFile('logo')) {

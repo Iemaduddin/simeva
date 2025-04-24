@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             JurusanProdiSeeder::class,
             UserSeeder::class,
             AssetSeeder::class,
+            TeamMemberSeeder::class,
+            MahasiswaSeeder::class,
         ]);
     }
 }

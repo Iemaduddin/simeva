@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('timelines', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(Str::uuid());
+            $table->bigIncrements('id');
             $table->uuid('event_id');
             $table->string('title', 255);
             $table->text('description')->nullable();

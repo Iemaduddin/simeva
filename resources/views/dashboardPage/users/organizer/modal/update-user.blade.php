@@ -67,13 +67,18 @@
                         <div class="col-md-4 mb-20">
                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Visi <span
                                     class="text-danger">*</span></label>
-                            <textarea class="form-control radius-8 bg-base" name="vision" required>{{ $organizer->vision }}</textarea>
+                            <textarea class="form-control radius-8 bg-base" name="vision" rows="4" cols="50" required>{{ $organizer->vision }}</textarea>
                         </div>
-
-                        <div class="col-md-4 mb-20">
+                        <div class="col-md-8 mb-20">
+                            <label class="form-label fw-semibold text-primary-light text-sm mb-8">Misi <span
+                                    class="text-danger">*</span></label>
+                            <input class="form-control misionUpdate" name="missions" value="{{ $organizer->mision }}"
+                                placeholder="Masukkan misi..." />
+                        </div>
+                        <div class="col-md-8 mb-20">
                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Deskripsi
                                 Organizer <span class="text-danger">*</span></label>
-                            <textarea class="form-control radius-8 bg-base" name="description" required>{{ $organizer->description }}</textarea>
+                            <textarea class="form-control radius-8 bg-base" name="description" rows="4" cols="50" required>{{ $organizer->description }}</textarea>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">
@@ -109,33 +114,6 @@
                                 </label>
                             </div>
                         </div>
-                        <!-- Bagian Misi -->
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div id="missions-container-update-org-{{ $organizer->id }}" class="row">
-                                    @php
-                                        $missions = explode(',', $organizer->mision); // Memecah misi menjadi array
-                                    @endphp
-                                    @foreach ($missions as $index => $mission)
-                                        <div class="col-md-4 mb-20">
-                                            <div class="mission-item-update-org position-relative mb-3">
-                                                <textarea class="form-control radius-8 bg-base" name="missions[]" required>{{ trim($mission) }}</textarea>
-                                                @if ($index > 0)
-                                                    <a href="#"
-                                                        class="text-danger fw-semibold d-inline-block mt-1 delete-mission-update-org">
-                                                        - Hapus Misi
-                                                    </a>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                                <a href="#" id="add-mission-update-org-{{ $organizer->id }}"
-                                    class="text-success fw-semibold d-inline-block">+ Tambah Misi</a>
-                            </div>
-                        </div>
-
-
                         <div class="modal-footer d-flex align-items-end justify-content-end gap-3 mt-24">
                             <button type="reset"
                                 class="border border-danger-600 bg-hover-danger-200 text-danger-600 text-md px-24 py-12 radius-8"
@@ -153,6 +131,7 @@
         </div>
     </div>
 </div>
+<script src="{{ URL::asset('assets/libs/choices.js/choices.js.min.js') }}"></script>
 
 <script>
     // ================== Password Show Hide Js Start ==========
@@ -170,5 +149,21 @@
             input.attr("type", "password");
         }
     });
+
+    $(document).on('shown.bs.modal', '.modal', function() {
+        $(this).find('.misionUpdate').each(function() {
+            if (!$(this).hasClass('choices-initialized')) {
+                new Choices(this, {
+                    removeItemButton: true,
+                    placeholderValue: 'Masukkan misi organizer...',
+                    maxItemCount: 10,
+                    searchEnabled: false,
+                    delimiter: '|',
+                });
+                $(this).addClass('choices-initialized'); // mencegah inisialisasi dobel
+            }
+        });
+    });
+
     // ========================= Password Show Hide Js End ===========================
 </script>

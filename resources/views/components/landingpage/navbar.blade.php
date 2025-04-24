@@ -1,3 +1,14 @@
+<style>
+    .text-truncate-custom {
+        max-width: 150px;
+        /* Atur sesuai kebutuhan */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block;
+        vertical-align: middle;
+    }
+</style>
 <!-- ==================== Mobile Menu Start Here ==================== -->
 <div class="mobile-menu scroll-sm d-lg-none d-block">
     <button type="button" class="close-button"><i class="ph ph-x"></i> </button>
@@ -69,7 +80,8 @@
                         <li class="nav-menu__item {{ Route::currentRouteName() === 'event' ? 'activePage' : '' }}">
                             <a href="{{ route('event') }}" class="nav-menu__link">Event</a>
                         </li>
-                        <li class="nav-menu__item {{ Route::currentRouteName() === 'organizer' ? 'activePage' : '' }}">
+                        <li
+                            class="nav-menu__item {{ Route::currentRouteName() === 'organizer' || Route::currentRouteName() === 'detail_organizer' ? 'activePage' : '' }}">
                             <a href="{{ route('organizer') }}" class="nav-menu__link">Penyelenggara</a>
                         </li>
                         <li class="nav-menu__item {{ Route::currentRouteName() === 'calender' ? 'activePage' : '' }}">
@@ -189,16 +201,37 @@
                         <a class="btn bg-main-50 border border-main-600 px-24 hover-bg-main-600 rounded-pill p-9 d-flex align-items-center justify-content-center text-2xl text-neutral-500 hover-text-white hover-border-main-600 me-5 dropdown-toggle"
                             href="#" role="button" id="userDropdown" data-bs-toggle="dropdown"
                             aria-expanded="false">
-                            @if (Auth::user()->profile_picture)
+                            @php
+                                $imageProfile = '';
+                                if (Auth::user()->hasRole('Organizer')) {
+                                    $logoPath = Auth::user()->organizer->logo;
+                                    if ($logoPath && \Illuminate\Support\Facades\Storage::exists($logoPath)) {
+                                        $imageProfile = asset('storage/' . $logoPath);
+                                    } elseif ($logoPath) {
+                                        $imageProfile = asset($logoPath);
+                                    } else {
+                                        $imageProfile = asset('assets/images/user.png');
+                                    }
+                                } else {
+                                    $profilPath = Auth::user()->profile_picture;
+                                    $imageProfile = $profilPath ? asset('storage/' . $profilPath) : '';
+                                }
+                            @endphp
+                            @if ($imageProfile !== '')
                                 <div style="width: 30px; height: 30px;">
-                                    <img id="profilePicture"
-                                        src="{{ asset('storage/' . Auth::user()->profile_picture) }}"
-                                        alt="Profile Picture" class="rounded-circle object-fit-cover w-100 h-100">
+                                    <img id="profilePicture" src="{{ $imageProfile }}" alt="Profile Picture"
+                                        class="rounded-circle object-fit-cover w-100 h-100">
                                 </div>
                             @else
                                 <i class="ph ph-user-circle"></i>
                             @endif
-                            <h6 class="ms-2 m-0 text-neutral-500 dropdown-text">{{ Auth::user()->name }}</h6>
+                            @if (Auth::user()->roles()->where('name', 'Organizer')->exists())
+                                <h6 class="ms-2 m-0 text-neutral-500 dropdown-text">
+                                    {{ Auth::user()->organizer->shorten_name }}</h6>
+                            @else
+                                <h6 class="ms-2 m-0 text-neutral-500 dropdown-text text-truncate-custom">
+                                    {{ Auth::user()->name }}</h6>
+                            @endif
                         </a>
 
 
@@ -213,28 +246,30 @@
                                     @endhasanyrole
                                     @hasanyrole(['Participant', 'Tenant'])
                                         <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
-                                                href="{{ route('profile.myAssetBooking', Auth::user()->id) }}"><i
-                                                    class="ph ph-user"></i>
+                                                href="{{ route('profileUserHomepage') }}"><i class="ph ph-user"></i>
                                                 Pengaturan Akun</a></li>
                                         @hasrole('Tenant')
                                             <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
-                                                    href="{{ route('profile.myAssetBooking', Auth::user()->id) }}"><i
-                                                        class="ph ph-cube"></i>
+                                                    href="{{ route('profile.myAssetBooking') }}"><i class="ph ph-cube"></i>
                                                     Daftar Booking</a>
+                                            </li>
+                                            <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
+                                                    href="{{ route('item.saved', 'asset') }}"><i
+                                                        class="ph ph-bookmark-simple"></i>
+                                                    Daftar Simpan</a>
                                             </li>
                                         @endhasrole
                                         @hasrole('Participant')
                                             <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
-                                                    href="{{ route('profile.myAssetBooking', Auth::user()->id) }}"><i
-                                                        class="ph ph-cube"></i>
+                                                    href="{{ route('profile.myEvent') }}"><i class="ph ph-cube"></i>
                                                     Kegiatanku</a>
                                             </li>
+                                            <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
+                                                    href="{{ route('item.saved', 'event') }}"><i
+                                                        class="ph ph-bookmark-simple"></i>
+                                                    Daftar Simpan</a>
+                                            </li>
                                         @endhasrole
-                                        <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
-                                                href="{{ route('profile.myAssetBooking', Auth::user()->id) }}"><i
-                                                    class="ph ph-bookmark-simple"></i>
-                                                Daftar Simpan</a>
-                                        </li>
                                     @endhasanyrole
 
 

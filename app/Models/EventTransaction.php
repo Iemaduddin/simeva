@@ -2,26 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class EventTransaction extends Model
 {
+
+    use HasUuids;
     protected $fillable = [
-        'user_id',
-        'event_id',
-        'event_amount',
+        'event_participant_id',
         'total_amount',
         'status',
         'payment_date',
         'proof_of_payment',
-        'signature'
-    ];
-
-    protected $casts = [
-        'event_amount' => 'decimal:2',
-        'total_amount' => 'decimal:2',
-        'payment_date' => 'datetime',
-        'status' => 'string'
     ];
 
     public function user()
@@ -29,8 +22,8 @@ class EventTransaction extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function event()
+    public function participant()
     {
-        return $this->belongsTo(Event::class);
+        return $this->belongsTo(EventParticipant::class, 'event_participant_id');
     }
 }

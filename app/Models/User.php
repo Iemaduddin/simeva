@@ -101,7 +101,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function userItems()
     {
-        return $this->hasMany(UserItem::class);
+        return $this->hasMany(UserItem::class, 'user_id');
     }
     public function certificates()
     {

@@ -4,7 +4,64 @@
     $title = 'Users Management';
     $subTitle = 'Users Management';
 @endphp
+@section('css')
+    <link href="{{ URL::asset('assets/libs/choices.js/choices.js.min.css') }}" rel="stylesheet">
+    <style>
+        /* Styling untuk menyesuaikan dengan form-control Bootstrap */
+        .choices {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
 
+        .choices__inner {
+            width: 100% !important;
+            min-height: calc(1.5em + 0.75rem + 2px) !important;
+            padding: 0.375rem 0.75rem !important;
+            font-size: 1rem !important;
+            font-weight: 400 !important;
+            line-height: 1.5 !important;
+            color: var(--bs-body-color) !important;
+            background-color: #fff !important;
+            background-clip: padding-box;
+            border: var(--bs-border-width) solid var(--bs-border-color);
+            border-radius: var(--bs-border-radius);
+            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+
+        .choices.is-focused .choices__inner {
+            border-color: #86b7fe !important;
+            outline: 0 !important;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+        }
+
+        .choices__input {
+            background-color: transparent !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            width: 100% !important;
+            vertical-align: baseline !important;
+            margin-bottom: 0 !important;
+        }
+
+        .choices__list--dropdown {
+            border: 1px solid #ced4da !important;
+            border-radius: 0.25rem !important;
+            margin-top: 2px !important;
+        }
+
+        /* Untuk multiple select */
+        .choices__list--multiple .choices__item {
+            background-color: #0d6efd !important;
+            border: 1px solid #0d6efd !important;
+            border-radius: 0.25rem !important;
+            color: white !important;
+            margin: 2px !important;
+        }
+    </style>
+@endsection
 @section('content')
     <div class="card basic-data-table">
         <div class="card-header d-flex justify-content-between">
@@ -23,6 +80,7 @@
                         <tr>
 
                             <th>No</th>
+                            <th>Aksi</th>
                             <th>Nama</th>
                             <th>Singkatan</th>
                             <th>Username</th>
@@ -30,7 +88,6 @@
                             <th>Nomor Handphone</th>
                             <th>Tipe Organizer</th>
                             <th>Deskripsi</th>
-                            <th>Action</th>
                         </tr>
                     </thead>
                 </table>
@@ -42,6 +99,8 @@
 
 @endsection
 @push('script')
+    <script src="{{ URL::asset('assets/libs/choices.js/choices.js.min.js') }}"></script>
+
     <script>
         $(document).ready(function() {
             let organizerTable = $('#organizerUserTable').DataTable({
@@ -57,7 +116,14 @@
                         name: 'DT_RowIndex',
                         searchable: false,
                         orderable: false
-                    }, {
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
                         data: 'name',
                         name: 'name'
                     },
@@ -85,12 +151,6 @@
                         data: 'description',
                         name: 'description'
                     },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false
-                    },
                 ],
             });
         });
@@ -99,6 +159,13 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
 
+            const misionInput = new Choices('#mision', {
+                removeItemButton: true, // Aktifkan tombol remove
+                placeholderValue: 'Masukkan misi organizer...', // Placeholder untuk input
+                maxItemCount: 10, // Maksimal jumlah input
+                searchEnabled: false, // Matikan fitur pencarian
+                delimiter: '|',
+            });
 
             // Event delegation untuk menangani upload file
             document.addEventListener("change", function(e) {

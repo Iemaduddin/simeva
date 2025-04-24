@@ -24,22 +24,7 @@
                             <input type="text" name="name" class="form-control radius-8"
                                 placeholder="Masukkan Nama Aset" value="{{ $asset->name }}" required>
                         </div>
-                        <div class="col-md-6 mb-20">
-                            <label class="form-label fw-semibold text-primary-light text-sm mb-8">Deskripsi<span
-                                    class="text-danger">*</span></label>
-                            <input type="text" name="description" class="form-control radius-8"
-                                placeholder="Masukkan Deskripsi" value="{{ $asset->description }}" required>
-                        </div>
-                        @if (isset($asset->jurusan_id))
-                            <div class="col-md-6 mb-20">
-                                <label class="form-label fw-semibold text-primary-light text-sm mb-8">Jurusan<span
-                                        class="text-danger">*</span></label>
-                                <input class="form-control" type="text"
-                                    value="Fasilitas {{ $asset->jurusan->kode_jurusan }}" disabled>
-                                <input type="hidden" name="jurusan" value="{{ $asset->kode_jurusan }}">
-                            </div>
-                        @endif
-                        <div class="col-md-6 mb-20">
+                        <div class="col-md-3 mb-20">
                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Tipe Aset<span
                                     class="text-danger">*</span></label>
                             <select class="form-select bg-base form-select-sm w-100" name="type" required>
@@ -50,7 +35,7 @@
                                     Kendaraan</option>
                             </select>
                         </div>
-                        <div class="col-md-6 mb-20">
+                        <div class="col-md-3 mb-20">
                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Tipe Sewa<span
                                     class="text-danger">*</span></label>
                             <select class="form-select bg-base form-select-sm w-100" name="booking_type" required>
@@ -62,109 +47,58 @@
                             </select>
                         </div>
                         <div class="col-md-6 mb-20">
-                            <label class="form-label fw-semibold text-primary-light text-sm mb-8">Harga Sewa<span
-                                    class="text-danger">*</span></label>
-                            <input type="number" name="price" class="form-control radius-8"
-                                placeholder="Masukkan Harga Sewa" value="{{ $asset->price }}" required>
+                            <label for="descriptionAssetInput"
+                                class="form-label fw-semibold text-primary-light text-sm mb-8">Deskripsi
+                                <span class="text-danger">*</span></label>
+                            <textarea id="descriptionAssetInput" name="description" class="form-control" rows="4" cols="50"
+                                placeholder="Masukkan Deskripsi..." required>{{ $asset->description }}</textarea>
                         </div>
-                        <div class="col-md-6 mb-20" id="col-available">
+                        @if (isset($asset->jurusan_id))
+                            <div class="col-md-6 mb-20">
+                                <label class="form-label fw-semibold text-primary-light text-sm mb-8">Jurusan<span
+                                        class="text-danger">*</span></label>
+                                <input class="form-control" type="text"
+                                    value="Fasilitas {{ $asset->jurusan->kode_jurusan }}" disabled>
+                                <input type="hidden" name="jurusan" value="{{ $asset->kode_jurusan }}">
+                            </div>
+                        @endif
+                        <div class="col-md-6 mb-20">
                             <label for="availableAtInput"
                                 class="form-label fw-semibold text-primary-light text-sm mb-8 text-muted">
                                 Waktu Aset Tersedia (Pihak Ekstern)
                                 <span class="text-danger">*</span>
                             </label>
-                            <div class="dropdown">
-                                <button
-                                    class="btn btn-outline-primary-600 not-active text-start dropdown-toggle toggle-icon w-100"
-                                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Pilih hari aset dapat disewa
-                                </button>
-                                <ul class="dropdown-menu w-100">
-                                    <?php
-                                    // Ambil data tersedia sebagai array
-                                    $availableDays = explode(', ', $asset->available_at ?? '');
-                                    ?>
+                            @php
+                                $availableAtArray = $asset->available_at ? explode('|', $asset->available_at) : [];
+                            @endphp
 
-                                    <div class="row">
-                                        <div class="col-sm-6">
-                                            <li>
-                                                <label class="dropdown-item">
-                                                    <input class="form-check-input me-2" name="available_at[]"
-                                                        type="checkbox" value="Senin"
-                                                        <?= in_array('Senin', $availableDays) ? 'checked' : '' ?>>
-                                                    Senin
-                                                </label>
-                                            </li>
-                                            <li>
-                                                <label class="dropdown-item">
-                                                    <input class="form-check-input me-2" name="available_at[]"
-                                                        type="checkbox" value="Selasa"
-                                                        <?= in_array('Selasa', $availableDays) ? 'checked' : '' ?>>
-                                                    Selasa
-                                                </label>
-                                            </li>
-                                            <li>
-                                                <label class="dropdown-item">
-                                                    <input class="form-check-input me-2" name="available_at[]"
-                                                        type="checkbox" value="Rabu"
-                                                        <?= in_array('Rabu', $availableDays) ? 'checked' : '' ?>>
-                                                    Rabu
-                                                </label>
-                                            </li>
-                                            <li>
-                                                <label class="dropdown-item">
-                                                    <input class="form-check-input me-2" name="available_at[]"
-                                                        type="checkbox" value="Kamis"
-                                                        <?= in_array('Kamis', $availableDays) ? 'checked' : '' ?>>
-                                                    Kamis
-                                                </label>
-                                            </li>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <li>
-                                                <label class="dropdown-item">
-                                                    <input class="form-check-input me-2" name="available_at[]"
-                                                        type="checkbox" value="Jumat"
-                                                        <?= in_array('Jumat', $availableDays) ? 'checked' : '' ?>>
-                                                    Jumat
-                                                </label>
-                                            </li>
-                                            <li>
-                                                <label class="dropdown-item">
-                                                    <input class="form-check-input me-2" name="available_at[]"
-                                                        type="checkbox" value="Sabtu"
-                                                        <?= in_array('Sabtu', $availableDays) ? 'checked' : '' ?>>
-                                                    Sabtu
-                                                </label>
-                                            </li>
-                                            <li>
-                                                <label class="dropdown-item">
-                                                    <input class="form-check-input me-2" name="available_at[]"
-                                                        type="checkbox" value="Minggu"
-                                                        <?= in_array('Minggu', $availableDays) ? 'checked' : '' ?>>
-                                                    Minggu
-                                                </label>
-                                            </li>
-                                        </div>
-                                    </div>
+                            <select id="availableAtInput"
+                                class="form-control form-control-sm choices-multiple-remove-button"
+                                name="available_at[]" placeholder="Masukkan waktu ketersediaan aset" multiple required>
+                                @foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', "Jum'at", 'Sabtu', 'Minggu'] as $day)
+                                    <option value="{{ $day }}"
+                                        {{ in_array($day, $availableAtArray) ? 'selected' : '' }}>
+                                        {{ $day }}
+                                    </option>
+                                @endforeach
+                            </select>
 
-                            </div>
                         </div>
 
 
-                        <div class="{{ isset($asset->jurusan->kode_jurusan) ? 'col-md-6' : 'col-md-12' }} mb-20">
+                        <div class="col-md-6 mb-20">
                             <label class="fw-semibold text-primary-light text-sm mb-8 text-muted">
                                 Fasilitas
                                 <span class="text-danger">*</span>
                             </label>
                             @php
-                                $facilityValue = $asset->facility ? implode(', ', explode(',', $asset->facility)) : '';
+                                $facilityValue = $asset->facility ? implode('|', explode('|', $asset->facility)) : '';
                             @endphp
                             <input class="form-control radius-8 choices-text-remove-button" type="text"
                                 name="facility" value="{{ $facilityValue }}" style="overflow: hidden;" />
                         </div>
 
-                        <div class="col-md-12 mb-20">
+                        <div class="col-md-6 mb-20">
                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Gambar Aset</label>
                             <div class="upload-image-wrapper d-flex align-items-center gap-3 flex-wrap">
 

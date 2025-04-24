@@ -49,7 +49,7 @@
                                             <th>No</th>
                                             <th>Nama Jurusan</th>
                                             <th>Kode Jurusan</th>
-                                            <th>Action</th>
+                                            <th>Aksi</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -82,7 +82,7 @@
                                             <th>Nama Prodi</th>
                                             <th>Kode Prodi</th>
                                             <th>Jurusan</th>
-                                            <th>Action</th>
+                                            <th>Aksi</th>
                                         </tr>
                                     </thead>
                                 </table>

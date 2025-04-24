@@ -8,7 +8,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class BookingAssetConfirmPayment extends Notification
+class BookingAssetConfirmPayment extends Notification implements ShouldQueue
 {
     use Queueable;
 

@@ -3,8 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Event;
+use App\Models\Organizer;
 use App\Models\AssetBooking;
 use Illuminate\Http\Request;
+use App\Models\EventParticipant;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
@@ -12,8 +17,9 @@ use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
 {
-    public function profile($id)
+    public function profileUserHomepage()
     {
+        $id = Auth::id();
         if ($id !== auth()->id()) {
             abort(403, 'Unauthorized access'); // Kembalikan error jika bukan pemilik profil
         }
@@ -22,22 +28,39 @@ class ProfileController extends Controller
         $user = User::findOrFail($id);
         return view('homepage.profile', compact('user', 'myAsset'));
     }
+    public function profileUserDashboard()
+    {
+        $id = Auth::id();
+        if ($id !== auth()->id()) {
+            abort(403, 'Unauthorized access'); // Kembalikan error jika bukan pemilik profil
+        }
+        $user = User::with('organizer')->findOrFail($id);
+        return view('dashboardPage.users.edit-profile', compact('user'));
+    }
 
-    public function updateProfile(Request $request, $id)
+    public function updateUser(Request $request, $id)
     {
         // Ambil data user yang ingin diupdate
         $user = User::findOrFail($id);
-        $rules = [
-            'name' => 'required',
-            'phone_number' => 'required|numeric',
-            'province' => 'required',
-            'city' => 'required',
-            'subdistrict' => 'required',
-            'village' => 'required',
-            'address' => 'required',
-            'profile_picture' => 'image|mimes:jpeg,png,jpg',
-        ];
-
+        $organizer = Organizer::where('user_id', $id)->first();
+        if (Auth::user()->hasRole('Tenant') || Auth::user()->hasRole('Participant')) {
+            $rules = [
+                'name' => 'required',
+                'phone_number' => 'required|numeric',
+                'province' => 'required',
+                'city' => 'required',
+                'subdistrict' => 'required',
+                'village' => 'required',
+                'address' => 'required',
+                'profile_picture' => 'image|mimes:jpeg,png,jpg',
+            ];
+        } else {
+            $rules = [
+                'name' => 'required',
+                'phone_number' => 'required|numeric',
+                'profile_picture' => 'image|mimes:jpeg,png,jpg',
+            ];
+        }
         if ($request->username !== $user->username) {
             $rules['username'] = 'required|unique:users,username';
         } else {
@@ -49,6 +72,7 @@ class ProfileController extends Controller
             $rules['email'] = 'required|email';
         }
         // Validasi input
+
         $validator = Validator::make($request->all(), $rules, [
             'name.required' => 'Nama harus diisi.',
             'username.required' => 'Username harus diisi.',
@@ -68,14 +92,12 @@ class ProfileController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validasi gagal',
-                'errors' => $validator->errors()
-            ], 422);
+            $firstError = $validator->errors()->first(); // Ambil error pertama dari validasi
+            notyf()->ripple(true)->error($firstError);
+            return redirect()->back()->withErrors($validator)->withInput();
         }
         // Validasi input
-
+        DB::beginTransaction();
         try {
 
             // Update password jika diisi
@@ -112,35 +134,135 @@ class ProfileController extends Controller
             if ($request->filled('password')) {
                 $user->update(['password' => Hash::make($request->password)]);
             }
-
-            $user->update([
-                'name' => $request->name,
-                'username' => $request->username,
-                'email' => $request->email,
-                'category_user' => 'eksternal_kampus',
-                'phone_number' => $request->phone_number,
-                'province' => $request->province,
-                'city' => $request->city,
-                'subdistrict' => $request->subdistrict,
-                'village' => $request->village,
-                'address' => $request->address,
-            ]);
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Memperbarui Data Profil berhasil!',
-                'profile_picture' => $user->profile_picture,
-            ], 201);
+            if (Auth::user()->hasAnyRole(['Tenant', 'Participant'])) {
+                $user->update([
+                    'name' => $request->name,
+                    'username' => $request->username,
+                    'email' => $request->email,
+                    'category_user' => 'Eksternal Kampus',
+                    'phone_number' => $request->phone_number,
+                    'province' => $request->province,
+                    'city' => $request->city,
+                    'subdistrict' => $request->subdistrict,
+                    'village' => $request->village,
+                    'address' => $request->address,
+                ]);
+            } else {
+                $user->update([
+                    'name' => $request->name,
+                    'username' => $request->username,
+                    'email' => $request->email,
+                    'category_user' => 'Internal Kampus',
+                ]);
+                $organizer->update(['whatsapp_number' => $request->phone_number]);
+            }
+            DB::commit();
+            if (Auth::user()->hasAnyRole(['Tenant', 'Participant'])) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Memperbarui Data Profil berhasil!',
+                    'profile_picture' => $user->profile_picture,
+                ], 201);
+            } else {
+                notyf()->ripple(true)->success('Memperbarui Data Profil berhasil!');
+                return redirect()->back();
+            }
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan saat memperbarui data profil.',
-                'error' => $e->getMessage()
-            ], 500);
+            DB::rollBack();
+            if (Auth::user()->hasAnyRole(['Tenant', 'Participant'])) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Terjadi kesalahan saat memperbarui data profil.',
+                    'error' => $e->getMessage()
+                ], 500);
+            } else {
+                notyf()->ripple(true)->error('Terjadi kesalahan dalam mengupdate data profil!');
+                return redirect()->back();
+            }
+        }
+    }
+    public function updateOrganizer(Request $request, $id)
+    {
+        // Ambil data organizer yang ingin diupdate
+        $organizer = Organizer::findOrFail($id);
+        $validator = Validator::make($request->all(), [
+            'shorten_name' => 'required|unique:organizers,shorten_name,' . $organizer->id,
+            'vision' => 'required',
+            'mision' => 'required',
+            'description' => 'required',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg',
+            'link_media_social' => 'array',
+            'social_links.instagram' => 'nullable|url',
+            'social_links.youtube' => 'nullable|url',
+            'social_links.tiktok' => 'nullable|url',
+            'social_links.x' => 'nullable|url',
+
+        ], [
+            'shorten_name.required' => 'Nama singkatan harus diisi!.',
+            'shorten_name.unique' => 'Nama singkatan sudah ada yang menggunakan, gunakan yang lain!.',
+            'vision.required' => 'Visi Organisasi harus diisi!.',
+            'mision.required' => 'Misi Organisasi harus diisi!.',
+            'description.required' => 'Deskripsi harus diisi!.',
+            'logo.image' => 'Foto harus berupa file gambar.',
+            'logo.mimes' => 'Foto harus memiliki format: .jpeg, .png, .jpg.',
+            'link_media_social.array' => 'Link media sosial harus bertipe array',
+            'social_links.instagram.url' => 'Link Instagram harus berupa URL yang valid.',
+            'social_links.youtube.url'   => 'Link Youtube harus berupa URL yang valid.',
+            'social_links.tiktok.url'    => 'Link TikTok harus berupa URL yang valid.',
+            'social_links.x.url'         => 'Link X harus berupa URL yang valid.',
+
+        ]);
+        // Validasi input
+        if ($validator->fails()) {
+            $firstError = $validator->errors()->first(); // Ambil error pertama dari validasi
+            notyf()->ripple(true)->error($firstError);
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+        DB::beginTransaction();
+        try {
+
+            if ($request->hasFile('logo')) {
+
+                $file = $request->file('logo');
+
+                // Hapus profile_picture lama jika ada
+                if ($organizer->logo && Storage::exists('public/' . $organizer->logo)) {
+                    Storage::delete('public/' . $organizer->logo);
+                }
+
+                // Simpan file baru
+                $extension = $file->getClientOriginalExtension();
+                $fileName =  $organizer->shorten_name . '.' . $extension;
+                $filePath = "Foto Profil/Organizer/{$fileName}";
+
+
+                $file->storeAs("Foto Profil/Organizer/", $fileName, 'public');
+                $organizer->update(['logo' => $filePath]);
+            }
+
+            // VALIDASIII UNTUK SHORTEN NAME HARUS UNIQUE
+            $organizer->update([
+                'shorten_name' => $request->shorten_name,
+                'vision' => $request->vision,
+                'mision' => $request->mision,
+                'description' => $request->description,
+                'link_media_social' => $request->link_media_social
+            ]);
+
+            DB::commit();
+            notyf()->ripple(true)->success('Memperbarui Data Organizer berhasil!');
+            return redirect()->back();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            notyf()->ripple(true)->error('Terjadi kesalahan dalam mengupdate data organizer!');
+            return redirect()->back();
         }
     }
 
-    public function myAssetBooking($id)
+    public function myAssetBooking()
     {
+        $id = Auth::id();
+
         if ($id !== auth()->id()) {
             abort(403, 'Unauthorized access'); // Kembalikan error jika bukan pemilik profil
         }
@@ -254,5 +376,16 @@ class ProfileController extends Controller
             })
             ->rawColumns(['nama_aset', 'waktu_pemakaian', 'aksi'])
             ->make(true);
+    }
+    public function myEvent()
+    {
+        $id = Auth::id();
+
+        if ($id !== auth()->id()) {
+            abort(403, 'Unauthorized access'); // Kembalikan error jika bukan pemilik profil
+        }
+        $myEvents = EventParticipant::where('user_id', $id)->with('user', 'event.steps')->get();
+        $user = User::findOrFail($id);
+        return view('homepage.events.my_event', compact('user', 'myEvents'));
     }
 }

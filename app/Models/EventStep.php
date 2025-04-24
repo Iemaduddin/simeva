@@ -2,18 +2,23 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class EventStep extends Model
 {
+    use HasUuids;
     protected $fillable = [
         'event_id',
+        'asset_id',
         'step_name',
-        'step_order',
+        'event_date',
+        'event_time_start',
+        'event_time_end',
         'description',
-        'amount',
-        'status',
-        'is_free'
+        'execution_system',
+        'location_type',
+        'location',
     ];
 
     protected $casts = [
@@ -26,14 +31,19 @@ class EventStep extends Model
     {
         return $this->belongsTo(Event::class);
     }
-
-    public function participantSteps()
+    public function asset()
     {
-        return $this->hasMany(ParticipantStep::class);
+        return $this->belongsTo(Asset::class);
+    }
+
+
+    public function event_speaker()
+    {
+        return $this->hasMany(EventSpeaker::class, 'event_step_id');
     }
 
     public function attendances()
     {
-        return $this->hasMany(ParticipantAttendance::class);
+        return $this->hasMany(EventAttendance::class, 'event_step_id', 'id');
     }
 }

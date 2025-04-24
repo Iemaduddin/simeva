@@ -8,13 +8,13 @@ class EventPrice extends Model
 {
     protected $fillable = [
         'event_id',
-        'participant_category',
+        'category_name',
+        'scope',
         'price'
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
-        'participant_category' => 'string'
     ];
 
     public function event()

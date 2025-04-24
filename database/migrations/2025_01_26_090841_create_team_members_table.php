@@ -14,9 +14,11 @@ return new class extends Migration
     {
         // Team Members Table
         Schema::create('team_members', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(Str::uuid());
+            $table->bigIncrements('id');
+            $table->string('name', 100);
             $table->uuid('organizer_id');
-            $table->string('position', 100)->nullable();
+            $table->enum('level', ['SC', 'OC']);
+            $table->string('position', 100);
             $table->timestamps();
 
             $table->foreign('organizer_id')->references('id')->on('organizers')->onDelete('cascade');

@@ -14,18 +14,15 @@ return new class extends Migration
     {
         Schema::create('event_transactions', function (Blueprint $table) {
             $table->uuid('id')->primary()->default(Str::uuid());
-            $table->uuid('user_id');
-            $table->uuid('event_id');
-            $table->decimal('event_amount', 10, 2);
+            $table->uuid('event_participant_id');
             $table->decimal('total_amount', 10, 2);
-            $table->enum('status', ['paid', 'pending', 'failed']);
-            $table->timestamp('payment_date')->nullable();
+            $table->enum('status', ['paid', 'pending']);
+            $table->timestamp('payment_date');
             $table->string('proof_of_payment')->nullable();
-            $table->string('signature')->nullable();
+            // $table->string('signature')->nullable();
             $table->timestamps();
 
-            $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign('event_id')->references('id')->on('users');
+            $table->foreign('event_participant_id')->references('id')->on('event_participants');
         });
     }
 

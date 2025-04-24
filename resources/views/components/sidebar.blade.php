@@ -50,6 +50,7 @@
                         <span>Jurusan & Prodi</span>
                     </a>
                 </li>
+
                 <li class="sidebar-menu-group-title">Asset Management</li>
                 <li class="dropdown mt-2">
                     <a href="javascript:void(0)">
@@ -127,7 +128,7 @@
                         </li>
                         <li>
                             <a href="{{ route('asset.fasjur.bookings', 'TE') }}"><i
-                                    class="ri-circle-fill circle-icon text-warning-700 w-auto"></i> Fasilitas
+                                    class="ri-circle-fill circle-icon text-warning-800 w-auto"></i> Fasilitas
                                 Elektro </a>
                         </li>
                         <li>
@@ -156,14 +157,57 @@
                     </a>
                 </li>
             @endhasrole
+            @hasrole('Kaur RT')
+                <li>
+                    <a href="{{ route('assets.fasum') }}">
+                        <iconify-icon icon="bi:building-gear" class="menu-icon"></iconify-icon>
+                        <span>Data Asset Fasum</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('asset.fasum.eventBookings') }}"><iconify-icon icon="icons8:library"
+                            class="menu-icon"></iconify-icon>
+                        <span>Asset Bookings </span>
+
+                    </a>
+                </li>
+            @endhasrole
             @hasrole('Admin Jurusan')
                 @php
                     $kode_jurusan_user = Auth::user()->jurusan->kode_jurusan;
                 @endphp
                 <li>
+                    <a href="{{ route('assets.fasjur', $kode_jurusan_user) }}"><iconify-icon icon="bi:building-gear"
+                            class="menu-icon"></iconify-icon>
+                        <span>Data Asset {{ $kode_jurusan_user }} </span>
+
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('asset.fasjur.bookings', $kode_jurusan_user) }}"><iconify-icon icon="icons8:library"
                             class="menu-icon"></iconify-icon>
                         <span>Asset {{ $kode_jurusan_user }} Bookings </span>
+
+                    </a>
+                </li>
+            @endhasrole
+            @hasrole('Organizer')
+                @php
+                    $shorten_name = Auth::user()->organizer->shorten_name;
+                @endphp
+                @if (Auth::user()->organizer->organizer_type !== 'Kampus' && Auth::user()->organizer->organizer_type !== 'Jurusan')
+                    <li>
+                        <a href="{{ route('data.team-members', $shorten_name) }}"><iconify-icon
+                                icon="fluent:people-team-20-regular" class="menu-icon"></iconify-icon>
+                            <span> Kelola Anggota Tim</span>
+
+                        </a>
+                    </li>
+                @endif
+                <li>
+                    <a href="{{ route('data.events', $shorten_name) }}"><iconify-icon icon="ic:baseline-event-note"
+                            class="menu-icon"></iconify-icon>
+                        <span> Kelola Event </span>
 
                     </a>
                 </li>

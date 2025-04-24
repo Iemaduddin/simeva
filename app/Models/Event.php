@@ -9,6 +9,7 @@ class Event extends Model
 {
     use HasUuids;
     protected $fillable = [
+        'organizer_id',
         'title',
         'theme',
         'description',
@@ -24,12 +25,14 @@ class Event extends Model
         'event_mode',
         'event_category',
         'benefit',
+        'pamphlet_path',
+        'banner_path',
         'sponsored_by',
         'media_partner',
         'additional_links',
         'event_leader',
         'contact_person',
-        'is_draft',
+        'is_free',
         'is_publish',
         'status'
     ];
@@ -47,13 +50,6 @@ class Event extends Model
         'status' => 'string'
     ];
 
-
-    public function speakers()
-    {
-        return $this->belongsToMany(Speaker::class, 'event_speakers')
-            ->withPivot('role')
-            ->withTimestamps();
-    }
 
     public function timelines()
     {
@@ -74,18 +70,30 @@ class Event extends Model
     {
         return $this->hasMany(EventPrice::class);
     }
+    public function bookings()
+    {
+        return $this->hasMany(AssetBooking::class);
+    }
 
     public function forms()
     {
         return $this->hasMany(EventForm::class);
     }
-
-    public function calendar()
+    public function organizers()
     {
-        return $this->hasOne(Calendar::class);
+        return $this->belongsTo(Organizer::class, 'organizer_id');
     }
+    public function documents()
+    {
+        return $this->hasMany(AssetBookingDocument::class, 'event_id');
+    }
+
     public function certificates()
     {
         return $this->hasMany(ParticipantEventCertificate::class, 'event_id');
+    }
+    public function userItems()
+    {
+        return $this->hasMany(UserItem::class, 'event_id');
     }
 }

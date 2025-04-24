@@ -20,8 +20,10 @@ return new class extends Migration
             $table->enum('facility_scope', ['jurusan', 'umum']);
             $table->uuid('jurusan_id')->nullable();
             $table->text('facility')->nullable();
+            $table->decimal('price', 10, 2)->nullable();
             $table->string('available_at')->nullable();
             $table->text('asset_images');
+            $table->text('address')->nullable();
             $table->enum('booking_type', ['daily', 'annual'])->default('daily');
             $table->enum('status', ['OPEN', 'CLOSED'])->default('OPEN');
             $table->timestamps();

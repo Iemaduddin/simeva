@@ -17,6 +17,7 @@ class Asset extends Model
         'facility',
         'available_at',
         'asset_images',
+        'address',
         'booking_type',
         'status'
     ];
@@ -38,5 +39,9 @@ class Asset extends Model
     public function bookings()
     {
         return $this->hasMany(AssetBooking::class);
+    }
+    public function userItems()
+    {
+        return $this->hasMany(UserItem::class, 'asset_id');
     }
 }

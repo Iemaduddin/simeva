@@ -12,12 +12,14 @@
                 <div class="modal-body">
                     <p class="fw-bold">Apakah Anda yakin ingin membatalkan booking ini?</p>
 
-                    @if (
-                        $assetBooking->status === 'submission_dp_payment' ||
-                            $assetBooking->status === 'submission_full_payment' ||
-                            $assetBooking->status === 'approved_dp_payment' ||
-                            $assetBooking->status === 'approved_full_payment')
-                        <p class="text-danger">Anda harus mengembalikan uang tenant sesuai dengan kesepakatan.</p>
+                    @if ($assetBooking->event_id === null)
+                        @if (
+                            $assetBooking->status === 'submission_dp_payment' ||
+                                $assetBooking->status === 'submission_full_payment' ||
+                                $assetBooking->status === 'approved_dp_payment' ||
+                                $assetBooking->status === 'approved_full_payment')
+                            <p class="text-danger">Anda harus mengembalikan uang tenant sesuai dengan kesepakatan.</p>
+                        @endif
                     @endif
 
                     <!-- Input Alasan Pembatalan -->

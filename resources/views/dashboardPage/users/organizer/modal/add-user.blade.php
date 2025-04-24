@@ -69,12 +69,20 @@
                          <div class="col-md-4 mb-20">
                              <label class="form-label fw-semibold text-primary-light text-sm mb-8">Visi <span
                                      class="text-danger">*</span></label>
-                             <textarea class="form-control radius-8 bg-base" name="vision" placeholder="Masukkan Visi" required></textarea>
+                             <textarea class="form-control radius-8 bg-base" name="vision" rows="4" cols="50" placeholder="Masukkan Visi"
+                                 required></textarea>
                          </div>
-                         <div class="col-md-4 mb-20">
+                         <div class="col-md-8 mb-20">
+                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Misi <span
+                                     class="text-danger">*</span></label>
+                             <input class="form-control" name="missions" id="mision"
+                                 placeholder="Masukkan misi..." />
+                         </div>
+                         <div class="col-md-8 mb-20">
                              <label class="form-label fw-semibold text-primary-light text-sm mb-8">Deskripsi
                                  Organizer <span class="text-danger">*</span></label>
-                             <textarea class="form-control radius-8 bg-base" name="description" placeholder="Masukkan Deskripsi" required></textarea>
+                             <textarea class="form-control radius-8 bg-base" name="description" rows="4" cols="50"
+                                 placeholder="Masukkan Deskripsi" required></textarea>
                          </div>
                          <!-- Kolom kanan: Deskripsi Organizer -->
                          <div class="col-md-4">
@@ -98,12 +106,12 @@
                                      <iconify-icon icon="solar:camera-outline"
                                          class="text-xl text-secondary-light"></iconify-icon>
                                      <span class="fw-semibold text-secondary-light">Upload</span>
-                                     <input id="upload-file" type="file" name="logo" accept=".jpg, .jpeg, .png"
-                                         hidden>
+                                     <input id="upload-file" type="file" name="logo"
+                                         accept=".jpg, .jpeg, .png" hidden>
                                  </label>
                              </div>
                          </div>
-                         <div class="row">
+                         {{-- <div class="row">
                              <div class="col-md-12 ">
                                  <div id="missions-container" class="row">
                                      <div class="col-md-4 mb-20">
@@ -119,7 +127,7 @@
                                  <a href="#" id="add-mission" class="text-success fw-semibold d-inline-block">+
                                      Tambah Misi</a>
                              </div>
-                         </div>
+                         </div> --}}
 
 
 
@@ -158,8 +166,16 @@
          uploadedImgContainer.classList.add("d-none");
          fileInput.value = "";
      });
+
+     //  const misionInput = new Choices('#mision', {
+     //      removeItemButton: true, // Aktifkan tombol remove
+     //      placeholderValue: 'Masukkan misi organizer...', // Placeholder untuk input
+     //      maxItemCount: 10, // Maksimal jumlah input
+     //      searchEnabled: false, // Matikan fitur pencarian
+     //      delimiter: '|',
+     //  });
  </script>
- <script>
+ {{-- <script>
      document.getElementById('add-mission').addEventListener('click', function(e) {
          e.preventDefault(); // Mencegah reload halaman
          const missionContainer = document.getElementById('missions-container');
@@ -229,4 +245,4 @@
 
      // Pastikan event listener untuk tautan hapus ditambahkan saat halaman dimuat
      addDeleteListeners();
- </script>
+ </script> --}}

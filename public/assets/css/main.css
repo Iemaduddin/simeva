@@ -10767,9 +10767,9 @@ body::after {
         padding: 24px;
     }
 }
-.wishlist-btn:active {
+/* .wishlist-btn:active {
     transform: scale(1.2);
-}
+} */
 
 /* ===================== Course Item Css End ============================ */
 /* =========================== ABout Css Start ============================ */

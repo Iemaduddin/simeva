@@ -404,7 +404,26 @@
                 <div class="dropdown">
                     <button class="d-flex justify-content-center align-items-center rounded-circle" type="button"
                         data-bs-toggle="dropdown">
-                        <img src="{{ asset('assets/images/user.png') }}" alt="image"
+                        @php
+                            $imageProfile = '';
+                            if (Auth::user()->hasRole('Organizer')) {
+                                $logoPath = Auth::user()->organizer->logo;
+                                if ($logoPath && \Illuminate\Support\Facades\Storage::exists($logoPath)) {
+                                    $imageProfile = asset('storage/' . $logoPath);
+                                } elseif ($logoPath) {
+                                    $imageProfile = asset($logoPath);
+                                } else {
+                                    $imageProfile = asset('assets/images/user.png');
+                                }
+                            } else {
+                                $profilPath = Auth::user()->profile_picture;
+                                $imageProfile = $profilPath
+                                    ? asset('storage/' . $profilPath)
+                                    : asset('assets/images/user.png');
+                            }
+
+                        @endphp
+                        <img src="{{ $imageProfile }}" alt="image"
                             class="w-40-px h-40-px object-fit-cover rounded-circle">
                     </button>
                     <div class="dropdown-menu to-top dropdown-menu-sm">
@@ -424,14 +443,14 @@
                             </button>
                         </div>
                         <ul class="to-top-list">
-                            {{-- <li>
+                            <li>
                                 <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3"
-                                    href="{{ route('viewProfile') }}">
-                                    <iconify-icon icon="solar:user-linear" class="icon text-xl"></iconify-icon> My
+                                    href="{{ route('profileUserDashboard') }}">
+                                    <iconify-icon icon="mage:user" class="icon text-xl"></iconify-icon> My
                                     Profile
                                 </a>
                             </li>
-                            <li>
+                            {{-- <li>
                                 <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3"
                                     href="{{ route('email') }}">
                                     <iconify-icon icon="tabler:message-check" class="icon text-xl"></iconify-icon>

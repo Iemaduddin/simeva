@@ -74,6 +74,25 @@
                                         placeholder="Masukkan Deskripsi..." required></textarea>
                                 </div>
                                 <div class="col-md-6 mb-20">
+                                    <label for="availableAtInput"
+                                        class="form-label fw-semibold text-primary-light text-sm mb-8 text-muted">
+                                        Waktu Aset Tersedia (Pihak Ekstern)
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="availableAtInput"
+                                        class="form-control form-control-sm choices-multiple-remove-button"
+                                        name="available_at[]" placeholder="Masukkan waktu ketersediaan aset" multiple
+                                        required>
+                                        <option value="Senin">Senin</option>
+                                        <option value="Selasa">Selasa</option>
+                                        <option value="Rabu">Rabu</option>
+                                        <option value="Kamis">Kamis</option>
+                                        <option value="Jum'at">Jum'at</option>
+                                        <option value="Sabtu" selected>Sabtu</option>
+                                        <option value="Minggu" selected>Minggu</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-20">
                                     <label for="facilityInput"
                                         class="fw-semibold text-primary-light text-sm mb-8 text-muted">
                                         Fasilitas
@@ -83,77 +102,7 @@
                                         id="facilityInput" type="text" name="facility[]" style="overflow: hidden;"
                                         required />
                                 </div>
-                                <div class="col-md-6 mb-20" id="col-available">
-                                    <label for="availableAtInput"
-                                        class="form-label fw-semibold text-primary-light text-sm mb-8 text-muted">
-                                        Waktu Aset Tersedia (Pihak Ekstern)
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="dropdown">
-                                        <button
-                                            class="btn btn-outline-primary-600 not-active text-start dropdown-toggle toggle-icon w-100"
-                                            type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            Pilih hari aset dapat disewa
-                                        </button>
-                                        <ul class="dropdown-menu w-100">
-                                            <div class="row">
-                                                <div class="col-sm-6">
-                                                    <li>
-                                                        <label class="dropdown-item">
-                                                            <input class="form-check-input me-2" name='available_at[]'
-                                                                type="checkbox" value="Senin">
-                                                            Senin
-                                                        </label>
-                                                    </li>
-                                                    <li>
-                                                        <label class="dropdown-item">
-                                                            <input class="form-check-input me-2" name='available_at[]'
-                                                                type="checkbox" value="Selasa">
-                                                            Selasa
-                                                        </label>
-                                                    </li>
-                                                    <li>
-                                                        <label class="dropdown-item">
-                                                            <input class="form-check-input me-2" name='available_at[]'
-                                                                type="checkbox" value="Rabu">
-                                                            Rabu
-                                                        </label>
-                                                    </li>
-                                                    <li>
-                                                        <label class="dropdown-item">
-                                                            <input class="form-check-input me-2" name='available_at[]'
-                                                                type="checkbox" value="Kamis">
-                                                            Kamis
-                                                        </label>
-                                                    </li>
-                                                </div>
-                                                <div class="col-sm-6">
-                                                    <li>
-                                                        <label class="dropdown-item">
-                                                            <input class="form-check-input me-2" name='available_at[]'
-                                                                type="checkbox" value="Jumat">
-                                                            Jumat
-                                                        </label>
-                                                    </li>
-                                                    <li>
-                                                        <label class="dropdown-item">
-                                                            <input class="form-check-input me-2" name='available_at[]'
-                                                                type="checkbox" value="Sabtu">
-                                                            Sabtu
-                                                        </label>
-                                                    </li>
-                                                    <li>
-                                                        <label class="dropdown-item">
-                                                            <input class="form-check-input me-2" name='available_at[]'
-                                                                type="checkbox" value="Minggu">
-                                                            Minggu
-                                                        </label>
-                                                    </li>
-                                                </div>
-                                            </div>
-                                        </ul>
-                                    </div>
-                                </div>
+
                                 <div class="col-md-6 mb-20">
                                     <label for="upload-file-multiple"
                                         class="form-label fw-semibold text-primary-light text-sm mb-8">Gambar
@@ -200,36 +149,50 @@
                                                 <label for="categoryNameInput"
                                                     class="form-label fw-semibold text-primary-light text-sm mb-8">Jenis
                                                     Tarif Aset
-                                                    <span class="text-danger">*</span></label>
+                                                    @if (!$kode_jurusan)
+                                                        <span class="text-danger">*</span>
+                                                    @endif
+                                                </label>
                                                 <input id="categoryNameInput" type="text" name="category_name[]"
                                                     class="form-control form-control-sm radius-8"
-                                                    placeholder="Masukkan Jenis Tarif Aset" required>
+                                                    placeholder="Masukkan Jenis Tarif Aset"
+                                                    @if (!$kode_jurusan) required @endif>
                                             </div>
                                             <div class="col-md-2 mb-20">
                                                 <label for="externalPriceInput"
                                                     class="form-label fw-semibold text-primary-light text-sm mb-8">Tarif
-                                                    Aset (Eksternal) <span class="text-danger">*</span></label>
-                                                <input id="externalPriceInput" type="number" name="external_price[]"
-                                                    class="form-control form-control-sm radius-8"
-                                                    placeholder="Masukkan Tarif" required>
+                                                    Aset (Eksternal) @if (!$kode_jurusan)
+                                                        <span class="text-danger">*</span>
+                                                    @endif
+                                                    <input id="externalPriceInput" type="number"
+                                                        name="external_price[]"
+                                                        class="form-control form-control-sm radius-8"
+                                                        placeholder="Masukkan Tarif"
+                                                        @if (!$kode_jurusan) required @endif>
                                             </div>
                                             <div class="col-md-2 mb-20">
                                                 <label for="internalPercentageInput"
                                                     class="form-label fw-semibold text-primary-light text-sm mb-8">Tarif
-                                                    Aset Internal (%)<span class="text-danger">*</span></label>
-                                                <input id="internalPercentageInput" type="number"
-                                                    name="internal_price_percentage[]"
-                                                    class="form-control form-control-sm radius-8"
-                                                    placeholder="Masukkan Tarif" value="75" required>
+                                                    Aset Internal (%) @if (!$kode_jurusan)
+                                                        <span class="text-danger">*</span>
+                                                    @endif
+                                                    <input id="internalPercentageInput" type="number"
+                                                        name="internal_price_percentage[]"
+                                                        class="form-control form-control-sm radius-8"
+                                                        placeholder="Masukkan Tarif" value="75"
+                                                        @if (!$kode_jurusan) required @endif>
                                             </div>
                                             <div class="col-md-2 mb-20">
                                                 <label for="socialPercentageInput"
                                                     class="form-label fw-semibold text-primary-light text-sm mb-8">Tarif
-                                                    Aset Sosial (%)<span class="text-danger">*</span></label>
-                                                <input id="socialPercentageInput" type="number"
-                                                    name="social_price_percentage[]"
-                                                    class="form-control form-control-sm radius-8"
-                                                    placeholder="Masukkan Tarif" value="50" required>
+                                                    Aset Sosial (%) @if (!$kode_jurusan)
+                                                        <span class="text-danger">*</span>
+                                                    @endif
+                                                    <input id="socialPercentageInput" type="number"
+                                                        name="social_price_percentage[]"
+                                                        class="form-control form-control-sm radius-8"
+                                                        placeholder="Masukkan Tarif" value="50"
+                                                        @if (!$kode_jurusan) required @endif>
                                             </div>
                                         </div>
                                     </div>

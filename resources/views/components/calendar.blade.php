@@ -295,7 +295,7 @@
                 element.tooltip({
                     title: `Status: ${event.status.includes('submission') ? 'Proses Pengajuan' :
                 event.status.includes('booked') ? 'Sudah Dipesan' : 'Disetujui'}\n
-                Peminjam: ${event.userCategory === 'internal_kampus' ? 'Internal' : 'Eksternal'}`,
+                Peminjam: ${event.userCategory === 'Internal Kampus' ? 'Internal' : 'Eksternal'}`,
                     placement: 'top',
                     container: 'body'
                 });
@@ -316,7 +316,7 @@
                     if (eventOnDay) {
                         // Menggunakan class alih-alih CSS langsung
                         $cell.removeClass('bg-primary')
-                            .addClass(eventOnDay.userCategory === 'internal_kampus' ?
+                            .addClass(eventOnDay.userCategory === 'Internal Kampus' ?
                                 'bg-primary-100' : 'bg-success-100');
                     }
                 });

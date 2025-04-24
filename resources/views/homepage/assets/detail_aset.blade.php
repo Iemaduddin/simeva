@@ -46,7 +46,7 @@
             <div class="row justify-content-center">
                 <div class="col-lg-8">
                     <div class="breadcrumb__wrapper">
-                        <h1 class="breadcrumb__title display-4 fw-semibold text-center"> Rincian Event</h1>
+                        <h1 class="breadcrumb__title display-4 fw-semibold text-center"> Rincian Aset BMN</h1>
                         <ul class="breadcrumb__list d-flex align-items-center justify-content-center gap-4">
                             <li class="breadcrumb__item">
                                 <a href="{{ route('home') }}"
@@ -65,7 +65,7 @@
                                 <i class="text-neutral-500 d-flex ph-bold ph-caret-right"></i>
                             </li>
                             <li class="breadcrumb__item">
-                                <span class="text-main-two-600"> Rincian Event </span>
+                                <span class="text-main-two-600"> Rincian Aset BMN </span>
                             </li>
                         </ul>
                     </div>

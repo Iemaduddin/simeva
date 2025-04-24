@@ -12,20 +12,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('participant_attendance', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(Str::uuid());
-            $table->uuid('user_id');
-            $table->uuid('event_id');
-            // $table->uuid('event_step_id')->nullable();
+        Schema::create('event_attendance', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->uuid('event_participant_id')->nullable();
+            $table->unsignedBigInteger('team_member_id')->nullable();
+            $table->uuid('event_step_id');
             $table->boolean('attendance_arrival')->default(false);
             $table->boolean('attendance_departure')->default(false);
             $table->timestamp('attendance_arrival_time')->nullable();
             $table->timestamp('attendance_departure_time')->nullable();
             $table->timestamps();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
-            // $table->foreign('event_step_id')->references('id')->on('event_steps')->onDelete('cascade');
+            $table->foreign('event_participant_id')->references('id')->on('event_participants')->onDelete('cascade');
+            $table->foreign('team_member_id')->references('id')->on('team_members')->onDelete('cascade');
+            $table->foreign('event_step_id')->references('id')->on('event_steps')->onDelete('cascade');
         });
     }
 
@@ -34,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('participant_attendance');
+        Schema::dropIfExists('event_attendance');
     }
 };

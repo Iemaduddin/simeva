@@ -13,11 +13,7 @@ class Organizer extends Model
         'vision',
         'mision',
         'description',
-        'link_ig',
-        'link_x',
-        'link_youtube',
-        'link_tiktok',
-        'link_linkedin',
+        'link_media_social',
         'whatsapp_number',
         'user_id',
         'organizer_type',
@@ -25,7 +21,8 @@ class Organizer extends Model
     ];
 
     protected $casts = [
-        'organizer_type' => 'string'
+        'organizer_type' => 'string',
+        'link_media_social' => 'array',
     ];
 
     public function user()
@@ -36,5 +33,10 @@ class Organizer extends Model
     public function teamMembers()
     {
         return $this->hasMany(TeamMember::class);
+    }
+
+    public function events()
+    {
+        return $this->hasMany(Event::class, 'organizer_id');
     }
 }

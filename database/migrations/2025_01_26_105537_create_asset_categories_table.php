@@ -13,12 +13,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('asset_categories', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(Str::uuid());
+            $table->bigIncrements('id');
             $table->uuid('asset_id');
             $table->string('category_name');
-            $table->decimal('external_price', 10, 2);
-            $table->decimal('internal_price_percentage', 4, 2);
-            $table->decimal('social_price_percentage', 4, 2);
+            $table->decimal('external_price', 10, 2)->nullable();
+            $table->decimal('internal_price_percentage', 4, 2)->nullable();
+            $table->decimal('social_price_percentage', 4, 2)->nullable();
             $table->timestamps();
 
             $table->foreign('asset_id')->references('id')->on('assets')->onDelete('cascade');

@@ -2,30 +2,24 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\BlogController;
 use App\Http\Controllers\HomeController;
 
-use Illuminate\Support\Facades\Password;
-use App\Http\Controllers\ChartController;
-use App\Http\Controllers\FormsController;
-use App\Http\Controllers\TableController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\AssetsController;
-use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserItemController;
+use App\Http\Controllers\TeamMemberController;
 use App\Http\Controllers\AssetBookingController;
+use App\Http\Controllers\EventSpeakerController;
 use App\Http\Controllers\JurusanProdiController;
-use App\Http\Controllers\AiapplicationController;
-use App\Http\Controllers\ComponentpageController;
 use App\Http\Controllers\NotificationsController;
-use App\Http\Controllers\RoleandaccessController;
 use App\Http\Controllers\AuthenticationController;
-use App\Http\Controllers\CryptocurrencyController;
 use App\Http\Controllers\MahasiswaUsersController;
 use App\Http\Controllers\OrganizerUsersController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\AttendanceEventController;
 use App\Http\Controllers\StakeholderUsersController;
+use App\Http\Controllers\AssetBookingEventController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 // Authentication
@@ -74,11 +68,18 @@ Route::middleware('auth')->group(function () {
 Route::controller(HomeController::class)->group(function () {
     Route::get('/', 'home')->name('home');
     Route::get('event', 'event')->name('event');
-    Route::get('detail_event', 'detail_event')->name('detail_event');
+    Route::get('detail_event/{id}', 'detail_event')->name('detail_event');
     Route::get('organizer', 'organizer')->name('organizer');
-    Route::get('detail_organizer', 'detail_organizer')->name('detail_organizer');
+    Route::get('detail_organizer/{id}', 'detail_organizer')->name('detail_organizer');
     Route::get('calender', 'calender')->name('calender');
     Route::get('tutorial', 'tutorial')->name('tutorial');
+
+    Route::prefix('aset-bmn')->group(function () {
+        Route::get('/', 'indexAsetBmn')->name('aset-bmn');
+        Route::get('/{id}', 'getDataAssetBmn')->name('asset-bmn.getData');
+        Route::get('/get-data-category/{id}', 'getDataCategoryAssetBooking')->name('asset-booking.getDataCategory');
+        Route::get('/get-data-calendar-booking/{assetId}', 'getDataCalendarAssetBooking')->name('asset-booking.getDataCalendar');
+    });
 });
 
 // Users Management
@@ -125,17 +126,26 @@ Route::group(['middleware' => ['auth', 'role:Super Admin']], function () {
         Route::delete('/destroy-prodi/{id}', 'destroyProdi')->name('destroy.prodi');
     });
 });
-Route::middleware(['auth', 'role:Tenant|Participant'])->controller(ProfileController::class)->group(function () {
+
+// Profile management
+Route::controller(ProfileController::class)->group(function () {
+
     // Data Profile
-    Route::prefix('profile')->group(function () {
-        Route::get('/{id}', 'profile')->name('profile');
-        Route::post('/update-data-user/{id}', 'updateProfile')->name('profile.update');
+    Route::middleware(['auth'])->prefix('profile')->group(function () {
+        Route::get('/account-setting', 'profileUserHomepage')->name('profileUserHomepage');
+        Route::get('/edit-user', 'profileUserDashboard')->name('profileUserDashboard');
+        Route::post('/update-data-user/{id}', 'updateUser')->name('profileUser.update');
+        Route::post('/update-data-organizer/{id}', 'updateOrganizer')->name('profileOrganizer.update');
     });
 
     // Asset
-    Route::prefix('my-asset-booking')->group(function () {
-        Route::get('/{id}', 'myAssetBooking')->name('profile.myAssetBooking');
+    Route::middleware(['auth', 'role:Tenant'])->prefix('my-asset-booking')->group(function () {
+        Route::get('/', 'myAssetBooking')->name('profile.myAssetBooking');
         Route::get('/get-data/{id}', 'getDataMyAssetBooking')->name('profile.getDataMyAssetBooking');
+    });
+    // Event
+    Route::middleware(['auth', 'role:Participant'])->prefix('my-event')->group(function () {
+        Route::get('/', 'myEvent')->name('profile.myEvent');
     });
 });
 Route::prefix('asset-booking')->middleware(['auth', 'role:Tenant|UPT PU'])->controller(AssetBookingController::class)->group(function () {});
@@ -152,7 +162,7 @@ Route::group(['middleware' => ['auth']], function () {
                 Route::get('/fasilitas-umum', 'indexAssetFasum')->name('assets.fasum');
             });
 
-            Route::group(['middleware' => ['role:Super Admin|Admin Jurusan']], function () {
+            Route::group(['middleware' => ['role:Super Admin|Kaur RT|Admin Jurusan']], function () {
                 Route::get('/fasilitas-jurusan/{kode_jurusan}', 'indexAssetFasjur')->name('assets.fasjur');
                 Route::get('/get-data-asset/{kode_jurusan?}', 'getDataAsset')->name('assets.getData');
             });
@@ -167,8 +177,8 @@ Route::group(['middleware' => ['auth']], function () {
         Route::prefix('bookings')->controller(AssetBookingController::class)->group(function () {
 
             // Dashboard Booking Fasilitas Umum (Super Admin, Kaur RT, UPT PU)
-            Route::group(['middleware' => ['role:Super Admin|Kaur RT|UPT PU']], function () {
-                Route::get('/fasilitas-umum', 'assetBookingFasum')->name('asset.fasum.bookings');
+            Route::group(['middleware' => ['role:Super Admin|UPT PU']], function () {
+                Route::get('/fasilitas-bmn', 'assetBookingFasum')->name('asset.fasum.bookings');
             });
 
             // Dashboard Booking Fasilitas Jurusan (Super Admin & Admin Jurusan)
@@ -197,17 +207,105 @@ Route::group(['middleware' => ['auth']], function () {
 
             // Tenant atau UPT PU/Admin Jurusan/Super Adminn membatalkan booking
             Route::post('/asset-booking/{id}/cancelled', 'cancelledBooking')->name('assetBooking.cancelled')
-                ->middleware(['role:Super Admin|Kaur RT|UPT PU|Admin Jurusan|Tenant']);
+                ->middleware(['role:Super Admin|Kaur RT|UPT PU|Admin Jurusan|Tenant|Organizer']);
+        });
+    });
+});
+
+// Team Members Management
+Route::group(['middleware' => ['auth', 'role:Super Admin|Organizer']], function () {
+    Route::prefix('team_members')->controller(TeamMemberController::class)->group(function () {
+        Route::get('/data/{shorten_name}', 'teamMemberPage')->name('data.team-members');
+        Route::get('/get-data/{shorten_name}', 'getDataTeamMembers')->name('team-members.getData');
+        Route::post('/add-team-member', 'addTeamMember')->name('add.team-member');
+        Route::put('/update-team-member/{id}', 'updateTeamMember')->name('update.team-member');
+        Route::delete('/destroy-team-member/{id}', 'destroyTeamMember')->name('destroy.team-member');
+    });
+});
+// Events Management
+Route::prefix('events')->group(function () {
+    Route::controller(EventController::class)->group(function () {
+        // ✅ Route untuk Super Admin & Organizer
+        Route::middleware(['auth', 'role:Super Admin|Organizer'])->group(function () {
+            Route::get('/data/{shorten_name}', 'eventPage')->name('data.events');
+            Route::get('/get-data/{shorten_name}', 'getDataEvents')->name('events.getData');
+            Route::get('/add-event', 'addEventPage')->name('add.event.page');
+            Route::post('/store-event', 'storeEvent')->name('store.event');
+            Route::get('/update-event/{id}', 'updateEventPage')->name('update.event.page');
+            Route::put('/store-update-event/{id}', 'updateEvent')->name('update.event');
+            Route::get('/detail-event/{id}', 'detailEventPage')->name('detail.event.page');
+            Route::delete('/destroy-event/{id}', 'destroyEvent')->name('destroy.event');
+
+            // Data Participant
+            Route::get('/get-data-participants/{id}', 'getDataParticipants')->name('events.getDataParticipants');
+            Route::post('/confirm-registration-participants/{id}', 'confirmRegistration')->name('events.confirmRegistration');
+        });
+
+        // ✅ Route untuk peserta (Participant) saja
+        Route::middleware(['auth', 'role:Participant'])->group(function () {
+            Route::post('/register/{id}', 'registerEvent')->name('register.event');
+            Route::post('/repeat-register/{id}', 'repeatRegisterEvent')->name('repeatRegister.event');
+        });
+
+        Route::get('/e-ticket/{participant}', 'eTicket')->name('e-ticket.event')->middleware(['auth', 'role:Organizer|Participant']);
+    });
+    Route::controller(AssetBookingEventController::class)->group(function () {
+        // Asset Booking Event
+        Route::middleware(['auth', 'role:Organizer'])->group(function () {
+            Route::get('/get-data-assetBooking/{id}', 'getDataAssetBookingEventsOrg')->name('assetBookingEvent.getData');
+            Route::put('/asset-booking/{id}', 'updateAssetBooking')->name('assetBookingEvent.update');
+            Route::post('/upload-doc-asset-booking/{eventId}', 'uploadDocumentAssetBooking')->name('assetBookingEvent.uploadDocument');
+        });
+        Route::group(['middleware' => ['auth', 'role:Super Admin|Kaur RT|Admin Jurusan']], function () {
+            Route::post('/confirm-asset-booking-event/{eventId}', 'confirmAssetBookingEvent')->name('assetBookingEvent.confirm');
+            Route::post('/cancel-asset-booking-event/{eventId}', 'cancelAssetBookingEvent')->name('assetBookingEvent.cancel');
+            Route::get('/get-data-asset-booking-event/{kode_jurusan?}', 'getDataAssetBookingEvent')->name('assets.getDataBookingEvent');
+            Route::post('/confirm-doc-asset-booking-event/{eventId}', 'confirmDocument')->name('assetBookingEvent.confirmDocument');
+            Route::post('/confirm-done-asset-booking-event/{id}', 'confirmDone')->name('assetBookingEvent.confirmDone');
+
+            // Tambah Aset Booking secara manual
+            Route::post('/add-asset-booking', 'assetBookingManualInternal')->name('assetBookingEvent.addManual');
+        });
+        // Dashboard Booking Fasilitas Umum (Kaur RT)
+        Route::group(['middleware' => ['auth', 'role:Super Admin|Kaur RT']], function () {
+            Route::get('/fasilitas-umum', 'indexAssetBookingEvent')->name('asset.fasum.eventBookings');
+        });
+    });
+    Route::middleware(['auth', 'role:Super Admin|Organizer'])->group(function () {
+        Route::controller(AttendanceEventController::class)->group(function () {
+            // get data member 
+            Route::get('/get-data-members', 'getDataMembers')->name('events.getDataMembers');
+            // Presensi Panitia Satu Persatu
+            Route::post('/attendance-member/{memberId}/{checkType}', action: 'attendanceMember')->name('events.attendanceMember');
+            // Presensi Semua Panitia (Sekaligus)
+            Route::post('/attendance-member-all/{eventStepId}/{checkType}', action: 'attendanceMemberAll')->name('events.attendanceMemberAll');
+
+            // get data participant 
+            Route::get('/get-data-event-participants', 'getDataEventParticipants')->name('events.getDataEventParticipants');
+            // Presensi Participant (Scan or Input)
+            Route::post('/attendance-participant', action: 'attendanceParticipant')->name('events.attendanceParticipant');
+
+            // get data attendance
+            Route::get('/get-data-participant-attendance/{id}', 'getDataParticipantAttendance')->name('events.getDataParticipantAttendance');
+        });
+        Route::controller(EventSpeakerController::class)->group(function () {
+            // Data Speaker
+            Route::get('/get-data-speakers/{id}', 'getDataSpeakers')->name('events.getDataSpeakers');
+            Route::post('/add-speaker', 'addSpeaker')->name('add.speaker');
+            Route::put('/update-speaker/{id}', 'updateSpeaker')->name('update.speaker');
+            Route::delete('/destroy-speaker/{id}', 'destroySpeaker')->name('destroy.speaker');
+            // Surat Undangan
+            Route::get('invitation-speaker/{id}', 'invitationSpeaker')->name('invitation.speaker');
         });
     });
 });
 
 
-Route::prefix('aset-bmn')->controller(AssetsController::class)->group(function () {
-    Route::get('/', 'indexAsetBmn')->name('aset-bmn');
-    Route::get('/{id}', 'getDataAssetBmn')->name('asset-bmn.getData');
-    Route::get('/get-data-category/{id}', 'getDataCategoryAssetBooking')->name('asset-booking.getDataCategory');
-    Route::get('/get-data-calendar-booking/{assetId}', 'getDataCalendarAssetBooking')->name('asset-booking.getDataCalendar');
+Route::middleware(['role:Tenant|Participant'])->controller(UserItemController::class)->group(function () {
+    Route::get('/item-saved/{itemType}', 'savedItem')->name('item.saved');
+    Route::post('/saved/toggle', 'toggleSavedItem')->name('saved.item.toggle');
+    Route::post('/saved/check', 'checkSavedItem')->name('saved.item.check');
+    Route::post('/saved/remove-all', 'removeAllItem')->name('saved.item.removeAll');
 });
 
 // Notifikasi

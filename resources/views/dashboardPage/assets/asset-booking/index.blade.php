@@ -9,9 +9,16 @@
 @section('content')
     <div id="asset-container" data-kode-jurusan="{{ $kode_jurusan }}"></div>
     <div class="card basic-data-table ">
-        <h6 class="card-header card-title mb-0 align-content-center px-20 pt-20">Aset Fasilitas
-            {{ $kode_jurusan ?? 'Umum' }}
-        </h6>
+        <div class="card-header d-flex justify-content-between">
+            <h6 class=" card-title mb-0 align-content-center px-20 pt-20">Aset Fasilitas
+                {{ $kode_jurusan ?? 'Umum' }}
+            </h6>
+            <button class="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2"
+                data-bs-toggle="modal" data-bs-target="#modalAddManualBooking">
+                <iconify-icon icon="ic:baseline-plus" class="icon text-xl line-height-1"></iconify-icon>
+                Tambah Booking
+            </button>
+        </div>
         <div class="card-body px-24">
             @php
                 $statusBooking = [
@@ -81,6 +88,7 @@
             </div>
         </div>
     </div>
+    @include('dashboardPage.assets.asset-booking.modal.add-manual-booking')
 @endsection
 @push('script')
     <script src="{{ asset('assets/libs/flatpickr.js/flatpickr.js') }}"></script>
@@ -220,7 +228,8 @@
                 let statusBooking = $(this).data('status-booking');
                 setTimeout(() => {
                     $('.modal').appendTo(
-                    'body'); // Pindahkan semua modal ke body agar tetap bisa muncul di semua tab
+                        'body'
+                    ); // Pindahkan semua modal ke body agar tetap bisa muncul di semua tab
                 }, 500);
                 if (!statusBooking) return;
                 loadTable(statusBooking);

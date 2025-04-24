@@ -12,14 +12,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('event_prices_table', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(Str::uuid());
-            $table->uuid('event_id');
-            $table->enum('participant_category', ['internal', 'external']);
-            $table->decimal('price', 10, 2);
+        // Event Speakers Table
+        Schema::create('event_speakers', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->uuid('event_step_id');
+            $table->string('name');
+            $table->string('role');
             $table->timestamps();
 
-            $table->foreign('event_id')->references('id')->on('events');
+            $table->foreign('event_step_id')->references('id')->on('event_steps')->onDelete('cascade');
         });
     }
 
@@ -28,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('event_prices_table');
+        Schema::dropIfExists('event_speakers');
     }
 };

@@ -11,7 +11,7 @@
                 <p>👤 <strong>Nama Aset:</strong> {{ $assetBooking->asset->name }}</p>
                 <p> <strong>Peminjam:</strong> {{ $assetBooking->user->name }}</p>
                 <p>📅 <strong>Event:</strong> {{ $assetBooking->usage_event_name }}</p>
-                <p>📌 <strong>Kategori Event:</strong> {{ $assetBooking->asset_category->category_name }}</p>
+                <p>📌 <strong>Kategori Event:</strong> {{ $assetBooking->asset_category->category_name ?? '-' }}</p>
                 <p>📆 <strong>Waktu Pakai:</strong>
                     {{ \Carbon\Carbon::parse($assetBooking->usage_date_start)->format('d-M-Y H.i') }}
                     -
