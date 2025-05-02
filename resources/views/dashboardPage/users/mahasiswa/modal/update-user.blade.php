@@ -42,10 +42,10 @@
                                     class="text-danger">*</span></label>
                             <div class="position-relative">
                                 <input type="password" class="form-control radius-8 bg-base" name="password"
-                                    id="password" placeholder="Masukkan Password">
+                                    id="password-{{ $mahasiswa->user->id }}" placeholder="Masukkan Password">
                                 <span
                                     class="toggle-password ri-eye-line cursor-pointer position-absolute end-0 top-50 translate-middle-y me-16 text-secondary-light"
-                                    data-toggle="#password"></span>
+                                    data-toggle="password-{{ $mahasiswa->user->id }}"></span>
                             </div>
                         </div>
                         <div class="col-md-4 mb-20">
@@ -161,7 +161,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">
-                                Foto Mahasiswa <span class="text-danger">*</span>
+                                Foto Mahasiswa
                             </label>
                             <div class="upload-image-wrapper d-flex align-items-center gap-3">
                                 <!-- Container Preview Gambar -->

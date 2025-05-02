@@ -44,7 +44,7 @@
                                      id="password" placeholder="Masukkan Password" required>
                                  <span
                                      class="toggle-password ri-eye-line cursor-pointer position-absolute end-0 top-50 translate-middle-y me-16 text-secondary-light"
-                                     data-toggle="#password"></span>
+                                     data-toggle="password"></span>
                              </div>
                          </div>
                          <div class="col-md-4 mb-20">
@@ -146,8 +146,8 @@
                              <textarea class="form-control radius-8 bg-base" name="address" placeholder="Masukkan Alamat Lengkap" required></textarea>
                          </div>
                          <div class="col-md-4">
-                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Logo
-                                 Organizer</label>
+                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Foto
+                                 Mahasiswa</label>
                              <div class="upload-image-wrapper d-flex align-items-center gap-3">
                                  <div
                                      class="uploaded-img d-none position-relative h-80-px w-80-px border input-form-light radius-8 overflow-hidden border-dashed bg-neutral-50">
@@ -207,4 +207,21 @@
          uploadedImgContainer.classList.add("d-none");
          fileInput.value = "";
      });
+ </script>
+ <script>
+     // ================== Password Show Hide Js Start ==========
+     $(document).on("click", ".toggle-password", function() {
+         const inputId = $(this).data("toggle"); // tanpa #
+         const input = $("#" + inputId);
+
+         // Toggle type input
+         if (input.attr("type") === "password") {
+             input.attr("type", "text");
+             $(this).removeClass("ri-eye-line").addClass("ri-eye-off-line");
+         } else {
+             input.attr("type", "password");
+             $(this).removeClass("ri-eye-off-line").addClass("ri-eye-line");
+         }
+     });
+     // ========================= Password Show Hide Js End ===========================
  </script>

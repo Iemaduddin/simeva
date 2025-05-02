@@ -44,7 +44,7 @@
                              </button>
                              <button type="submit"
                                  class="btn btn-primary border border-primary-600 text-md px-24 py-12 radius-8">
-                                 Tambah
+                                 Perbarui
                              </button>
                          </div>
                      </div>

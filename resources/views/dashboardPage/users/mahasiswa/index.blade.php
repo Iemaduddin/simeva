@@ -56,6 +56,7 @@
                                         <thead>
                                             <tr>
                                                 <th>No</th>
+                                                <th>Aksi</th>
                                                 <th>NIM</th>
                                                 <th>Nama</th>
                                                 <th>Username</th>
@@ -64,7 +65,6 @@
                                                 <th>Tgl Lahir</th>
                                                 <th>JK</th>
                                                 {{-- <th>Status</th> --}}
-                                                <th>Aksi</th>
                                             </tr>
                                         </thead>
                                     </table>
@@ -91,6 +91,7 @@
                     $(tableId).DataTable({
                         processing: true,
                         serverSide: true,
+                        scrollX: true,
                         ajax: {
                             url: "{{ route('mahasiswaUsers.getData') }}",
                             type: 'GET',
@@ -105,6 +106,11 @@
                                 orderable: false
                             },
                             {
+                                data: 'action',
+                                name: 'action',
+                                orderable: false,
+                                searchable: false
+                            }, {
                                 data: 'nim',
                                 name: 'nim'
                             },
@@ -132,12 +138,6 @@
                                 data: 'jenis_kelamin',
                                 name: 'jenis_kelamin'
                             },
-                            {
-                                data: 'action',
-                                name: 'action',
-                                orderable: false,
-                                searchable: false
-                            }
                         ]
                     });
                     loadedTabs[kodeJurusan] = true;

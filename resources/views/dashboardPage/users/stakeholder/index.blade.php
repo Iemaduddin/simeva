@@ -22,12 +22,12 @@
                     <thead>
                         <tr>
                             <th>No</th>
+                            <th>Aksi</th>
                             <th>Nama</th>
                             <th>Username</th>
                             <th>Email</th>
                             <th>Nomor Handphone</th>
                             <th>Role</th>
-                            <th>Aksi</th>
                         </tr>
                     </thead>
                 </table>
@@ -52,7 +52,14 @@
                         name: 'DT_RowIndex',
                         searchable: false,
                         orderable: false
-                    }, {
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
                         data: 'name',
                         name: 'name'
                     },
@@ -71,12 +78,6 @@
                     {
                         data: 'role',
                         name: 'role'
-                    },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false
                     },
                 ],
             });

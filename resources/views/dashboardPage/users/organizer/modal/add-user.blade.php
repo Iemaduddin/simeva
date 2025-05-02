@@ -45,7 +45,7 @@
                                      id="password" placeholder="Masukkan Password" required>
                                  <span
                                      class="toggle-password ri-eye-line cursor-pointer position-absolute end-0 top-50 translate-middle-y me-16 text-secondary-light"
-                                     data-toggle="#password"></span>
+                                     data-toggle="password"></span>
                              </div>
                          </div>
 

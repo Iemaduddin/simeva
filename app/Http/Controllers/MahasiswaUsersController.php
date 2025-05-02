@@ -39,7 +39,7 @@ class MahasiswaUsersController extends Controller
             ->editColumn('name', function ($mahasiswa) {
                 $imageUrl = asset('storage/' . $mahasiswa->user->profile_picture) . '?t=' . time();
                 $imageDefault = asset('assets/images/avatar');
-                return '<div class="d-flex align-items-center">
+                return '<div class="d-flex align-items-center ' . ($mahasiswa->user->is_blocked ? 'bg-danger-400' : '') . '">
                             <img src="' . ($mahasiswa->user->profile_picture ? $imageUrl : $imageDefault) . '" alt="" class="flex-shrink-0 me-12 radius-8" width="50px">
                             <h6 class="text-md mb-0 fw-medium flex-grow-1">' . $mahasiswa->user->name . '</h6>
                         </div>';
@@ -49,22 +49,44 @@ class MahasiswaUsersController extends Controller
             ->editColumn('phone_number', fn($mahasiswa) => $mahasiswa->user->phone_number)
             ->addColumn('action', function ($mahasiswa) use ($kodeJurusan, $jurusans, $prodis) {
                 $updateModal = view('dashboardPage.users.mahasiswa.modal.update-user', compact('mahasiswa', 'jurusans', 'prodis', 'kodeJurusan'))->render();
-                return '<div class="d-flex gap-8">
-                    <a class="w-40-px h-40-px cursor-pointer bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center"
-                        data-bs-toggle="modal" data-bs-target="#modalUpdateMahasiswaUser-' . $mahasiswa->user_id . '">
-                        <iconify-icon icon="lucide:edit"></iconify-icon>
-                    </a>
-                    ' . $updateModal . '
-                    
-                    <form action="' . route('destroy.mahasiswaUser', ['id' => $mahasiswa->user_id]) . '" method="POST" class="delete-form" data-table="mahasiswaUserTable-' . $kodeJurusan . '">
+                $html = '<div class="d-flex gap-8">';
+                $html .= '<button class="w-40-px h-40-px cursor-pointer bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center"
+                data-bs-toggle="modal" data-bs-target="#modalUpdateMahasiswaUser-' . $mahasiswa->user_id . '">
+                <iconify-icon icon="lucide:edit" width="20"></iconify-icon>
+            </button>';
+                $html .= $updateModal;
+                if ($mahasiswa->user->is_blocked) {
+                    $html .= '
+                        <form action="' . route('block.mahasiswaUser', ['type' => 'unblock', 'id' => $mahasiswa->user->id]) . '" method="POST" class="block-form" data-table="mahasiswaUserTable-' . $kodeJurusan . '">
+                            <input type="hidden" name="_method" value="PUT">
+                            <input type="hidden" name="_token" value="' . csrf_token() . '">
+                            <button type="button" class="block-btn w-40-px h-40-px bg-warning-focus text-warning-main rounded-circle d-inline-flex align-items-center justify-content-center" title="Unblock" data-action="unblock">
+                                <iconify-icon icon="gg:unblock" width="25"></iconify-icon>
+                            </button>
+                        </form>';
+                } else {
+                    // Tombol Block
+                    $html .= '
+                        <form action="' . route('block.mahasiswaUser', ['type' => 'block', 'id' => $mahasiswa->user->id]) . '" method="POST" class="block-form" data-table="mahasiswaUserTable-' . $kodeJurusan . '">
+                            <input type="hidden" name="_method" value="PUT">
+                            <input type="hidden" name="_token" value="' . csrf_token() . '">
+                            <button type="button" class="block-btn w-40-px h-40-px bg-danger-focus text-danger-main rounded-circle d-inline-flex align-items-center justify-content-center" title="Block" data-action="block">
+                                <iconify-icon icon="ic:sharp-block" width="20"></iconify-icon>
+                            </button>
+                        </form>';
+                }
+
+                $html .= '<form action="' . route('destroy.mahasiswaUser', ['id' => $mahasiswa->user_id]) . '" method="POST" class="delete-form" data-table="mahasiswaUserTable-' . $kodeJurusan . '">
                         <input type="hidden" name="_method" value="DELETE">
                         <input type="hidden" name="_token" value="' . csrf_token() . '">
                         <button type="button"
                         class="delete-btn w-40-px h-40-px bg-danger-focus text-danger-main rounded-circle d-inline-flex align-items-center justify-content-center">
                         <iconify-icon icon="mingcute:delete-2-line"></iconify-icon>
                     </button>
-                    </form>
-                    </div>';
+                    </form>';
+
+                $html .= '</div>';
+                return $html;
             })
             ->rawColumns(['name', 'action'])
             ->make(true);
@@ -78,7 +100,7 @@ class MahasiswaUsersController extends Controller
             'username' => 'required|unique:users',
             'email' => 'required|email|unique:users',
             'password' => 'required',
-            'phone_number' => 'required|integer',
+            'phone_number' => 'required|numeric',
             'tanggal_lahir' => 'required|date',
             'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
             'jurusan' => 'required',
@@ -98,7 +120,7 @@ class MahasiswaUsersController extends Controller
             'email.unique' => 'Email sudah digunakan.',
             'password.required' => 'Password harus diisi.',
             'phone_number.required' => 'Nomor HP Mahasiswa harus diisi.',
-            'phone_number.integer' => 'Nomor HP Mahasiswa harus mengandung angka 0-9.',
+            'phone_number.numeric' => 'Nomor HP Mahasiswa harus mengandung angka 0-9.',
             'tanggal_lahir.required' => 'Tanggal Lahir Mahasiswa harus diisi.',
             'tanggal_lahir.date' => 'Tanggal Lahir Mahasiswa harus berupa tanggal.',
             'jenis_kelamin.required' => 'Jenis Kelamin Mahasiswa harus diisi.',
@@ -329,5 +351,25 @@ class MahasiswaUsersController extends Controller
         })->get(['id', 'nama_prodi', 'kode_prodi']); // Ambil data yang diperlukan saja
 
         return response()->json($prodis);
+    }
+
+    public function blockMahasiswaUser($type, $id)
+    {
+        try {
+            // Ambil data user yang ingin dihapus
+            $user = User::findOrFail($id);
+            // Hapus user
+            $user->update(['is_blocked' => $type == 'block' ? true : false]);
+            return response()->json([
+                'status' => 'success',
+                'message' => $type == 'block' ? 'Blokir user berhasil!' :  'Membuka blokir user berhasil!',
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $type == 'block' ? 'Terjadi kesalahan saat memblokir user.' : 'Terjadi kesalahan saat membuka blokir user.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
