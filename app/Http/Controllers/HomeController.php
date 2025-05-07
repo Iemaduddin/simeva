@@ -7,11 +7,14 @@ use App\Models\User;
 use App\Models\Asset;
 use App\Models\Event;
 use App\Models\Jurusan;
+use App\Models\Calendar;
+use App\Models\EventStep;
 use App\Models\Organizer;
 use Illuminate\Support\Str;
 use App\Models\AssetBooking;
 use Illuminate\Http\Request;
 use App\Models\AssetCategory;
+use Yajra\DataTables\Facades\DataTables;
 
 class HomeController extends Controller
 {
@@ -41,7 +44,7 @@ class HomeController extends Controller
         $eventsByCategory = [];
 
         foreach ($categories as $category) {
-            $query = Event::latest();
+            $query = Event::where('status', 'published')->latest();
             $key = Str::slug($category, '_');
             if ($category !== 'all') {
                 $query->where('event_category', $category);
@@ -57,7 +60,7 @@ class HomeController extends Controller
 
     public function event(Request $request)
     {
-        $events = Event::with('organizers.user')->get();
+        $events = Event::with('organizers.user')->where('status', 'published')->get();
         $jurusans  = Jurusan::all();
         $order = ['LT', 'HMJ', 'UKM', 'Kampus', 'Jurusan',];
 
@@ -146,11 +149,11 @@ class HomeController extends Controller
 
     public function detail_event($id)
     {
-        $event = Event::with(['prices', 'participants'])->findOrFail($id);
+        $event = Event::with(['prices', 'participants', 'steps.event_speaker'])->findOrFail($id);
         $categoryEvent = Event::where('id', $id)->value('event_category');
 
 
-        $simillarEvents = Event::where('event_category', $categoryEvent)->where('id', '!=', $id)->get();
+        $simillarEvents = Event::where('event_category', $categoryEvent)->where('id', '!=', $id)->where('status', 'published')->get();
         return view('homepage.events.detail_event', compact('event', 'simillarEvents'));
     }
     public function organizer()
@@ -175,6 +178,15 @@ class HomeController extends Controller
         $scope = $request->input('facility_scope', 'umum');
 
         $query = Asset::query();
+
+        if ($request->has('booking_type')) {
+            $selectedBooking = $request->input('booking_type');
+
+            if (!empty($selectedBooking)) {
+
+                $query->whereIn('booking_type', $selectedBooking);
+            }
+        }
 
         if ($scope === 'umum') {
             $query->where('facility_scope', $scope);
@@ -214,8 +226,11 @@ class HomeController extends Controller
     }
     public function getDataAssetBmn($id)
     {
+        $assetBookings = AssetBooking::where('asset_id', $id)
+            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', 'rejected')->get();
         $assetDetails  = Asset::where('id', $id)->first();
-        return view('homepage.assets.detail_aset', compact('assetDetails'));
+        return view('homepage.assets.detail_aset', compact('assetDetails', 'assetBookings'));
     }
 
     public function getDataCategoryAssetBooking($id)
@@ -273,11 +288,105 @@ class HomeController extends Controller
 
         return response()->json($bookings);
     }
+    // public function getAnnualAssetBooking($assetId)
+    // {
+    //     $assetBookings = AssetBooking::where('asset_id', $assetId)
+    //         ->where('status', '!=', 'cancelled')
+    //         ->where('status', '!=', 'rejected')->get();
 
+    //     $currentYear = now()->year;
+    //     $data = [];
+
+    //     for ($year = $currentYear; $year < $currentYear + 10; $year++) {
+    //         $row = [
+    //             'year' => $year,
+    //             'jan' => '',
+    //             'feb' => '',
+    //             'mar' => '',
+    //             'apr' => '',
+    //             'may' => '',
+    //             'jun' => '',
+    //             'jul' => '',
+    //             'aug' => '',
+    //             'sep' => '',
+    //             'oct' => '',
+    //             'nov' => '',
+    //             'dec' => '',
+    //         ];
+
+    //         for ($month = 1; $month <= 12; $month++) {
+    //             $foundBooking = $assetBookings->first(function ($booking) use ($year, $month) {
+    //                 $start = Carbon::parse($booking->usage_date_start);
+    //                 $end = Carbon::parse($booking->usage_date_end);
+
+    //                 return ($start->year <= $year && $end->year >= $year) &&
+    //                     ($start->year < $year || $start->month <= $month) &&
+    //                     ($end->year > $year || $end->month >= $month);
+    //             });
+
+    //             if ($foundBooking) {
+    //                 $html = '<button class="btn btn-sm bg-color-blue" data-bs-toggle="modal" data-bs-target="#detail-booking-asset-annual">'
+    //                     . $foundBooking->usage_event_name . '</button>';
+
+    //                 $monthKey = strtolower(date('M', mktime(0, 0, 0, $month, 10))); // jan, feb, etc
+    //                 $row[$monthKey] = $html;
+    //             }
+    //         }
+
+    //         $data[] = $row;
+    //     }
+
+    //     return response()->json([
+    //         'data' => $data
+    //     ]);
+    // }
     public function calender()
     {
         return view('homepage.calender');
     }
+
+    // public function getDataCalendar(Request $request)
+    // {
+
+    //     $selectedCategories = $request->input('category', []);
+
+    //     $calendarData = Calendar::with('event')
+    //         ->where('is_public', true)
+    //         ->get()
+    //         ->map(function ($calendar) {
+    //             return [
+    //                 'id' => 'calendar_' . $calendar->id,
+    //                 'title' => $calendar->title ?? ($calendar->event ? $calendar->event->name : 'No Title'),
+    //                 'start' => Carbon::parse($calendar->start_date)->toISOString(),
+    //                 'end' => Carbon::parse($calendar->end_date)->toISOString(),
+    //                 'category' => 'Lainnya',
+    //                 'allDay' => $calendar->all_day,
+    //             ];
+    //         })->toArray();
+
+
+    //     $eventStepData = EventStep::with('event')
+    //         ->whereHas('event', function ($query) use ($selectedCategories) {
+    //             $query->where('is_publish', true);
+    //             if (!in_array('All', $selectedCategories)) {
+    //                 $query->whereIn('event_category', $selectedCategories);
+    //             }
+    //         })
+    //         ->get()
+    //         ->map(function ($step) {
+    //             return [
+    //                 'id' => 'eventstep_' . $step->id,
+    //                 'title' => $step->event->title . ' - ' . $step->step_name,
+    //                 'start' => Carbon::parse($step->event_date . ' ' . $step->event_time_start)->toISOString(),
+    //                 'end' => Carbon::parse($step->event_date . ' ' . $step->event_time_end)->toISOString(),
+    //                 'category' => $step->event->event_category,
+    //                 'allDay' => false,
+    //             ];
+    //         })->toArray();
+
+    //     $calendars = collect(array_merge($calendarData, $eventStepData));
+    //     return response()->json($calendars);
+    // }
 
     public function tutorial()
     {

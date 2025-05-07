@@ -13,7 +13,7 @@
 
         <div class="container">
             <div class="row gy-5 align-items-center">
-                <div class="col-xl-6    ">
+                <div class="col-xl-6">
                     <div class="banner-content pe-md-4">
                         <h2 class="text-main-600 wow bounceInLeft">Penjadwalan dan Pemanfaatan</h2>
                         <h3 class="wow bounceInLeft">Aset Barang Milik Negara Polinema
@@ -107,6 +107,39 @@
                                 @endforeach
                             </div>
                             <span class="d-block border border-neutral-30 border-dashed my-24"></span>
+
+                            <h6 class="text-lg mb-24 fw-medium">Jenis Booking</h6>
+                            <div class="d-flex flex-column gap-16">
+                                <div class="flex-between gap-16">
+                                    <div class="form-check common-check mb-0">
+                                        <input class="form-check-input" type="checkbox" name="booking_type[]" value="all"
+                                            id="all-booking-type" checked>
+                                        <label class="form-check-label fw-normal flex-grow-1" for="all-costs">Semua</label>
+                                    </div>
+                                    <span class="text-neutral-500">{{ $allAssets->count() }}</span>
+                                </div>
+                                <div class="flex-between gap-16">
+                                    <div class="form-check common-check mb-0">
+                                        <input class="form-check-input" type="checkbox" name="booking_type[]" value="daily"
+                                            id="daily" checked>
+                                        <label class="form-check-label fw-normal flex-grow-1"
+                                            for="daily">Harian</label>
+                                    </div>
+                                    <span
+                                        class="text-neutral-500">{{ $allAssets->where('booking_type', 'daily')->count() }}</span>
+                                </div>
+                                <div class="flex-between gap-16">
+                                    <div class="form-check common-check mb-0">
+                                        <input class="form-check-input" type="checkbox" name="booking_type[]"
+                                            value="annual" id="annual" checked>
+                                        <label class="form-check-label fw-normal flex-grow-1"
+                                            for="annual">Tahunan</label>
+                                    </div>
+                                    <span
+                                        class="text-neutral-500">{{ $allAssets->where('booking_type', 'annual')->count() }}</span>
+                                </div>
+                            </div>
+                            <span class="d-block border border-neutral-30 border-dashed my-24"></span>
                             <button type="reset"
                                 class="btn btn-outline-main rounded-pill flex-center gap-16 fw-semibold w-100">
                                 <i class="ph-bold ph-arrow-clockwise d-flex text-lg"></i>
@@ -119,10 +152,11 @@
                     <div class="course-list-wrapper">
                         <div class="flex-between gap-16 flex-wrap mb-40">
                             <span id="showing-text" class="text-neutral-500">
-                                Showing {{ $assets->firstItem() }} to {{ $assets->lastItem() }} of {{ $assets->total() }}
-                                entries
+                                Menampilkan {{ $assets->firstItem() }} hingga {{ $assets->lastItem() }} dari
+                                {{ $assets->total() }}
+                                aset
                                 @if ($assets->total() > $assets->count())
-                                    (filtered from {{ $assets->total() }} total entries)
+                                    (Difilter dari {{ $assets->total() }} total aset)
                                 @endif
                             </span>
                             @include('homepage.assets.components.asset-card', ['assets' => $assets])
@@ -138,6 +172,32 @@
     </section>
 @endsection
 @push('script')
+    <script>
+        $(function() {
+            // Tangani klik checkbox "Semua Kategori"
+            $('input[name="booking_type[]"][value="all"]').on('change', function() {
+                const isChecked = $(this).is(':checked');
+
+                // Centang atau uncheck semua checkbox lain yang punya name sama tapi bukan "all"
+                $('input[name="booking_type[]"]').not('[value="all"]').prop('checked', isChecked);
+            });
+
+            // Kalau user uncheck salah satu kategori, otomatis uncheck juga "Semua Kategori"
+            $('input[name="booking_type[]"]').not('[value="all"]').on('change', function() {
+                if (!$(this).is(':checked')) {
+                    $('input[name="booking_type[]"][value="all"]').prop('checked', false);
+                }
+
+                // Kalau semua kategori dicentang manual, aktifkan kembali checkbox all
+                const allOthers = $('input[name="booking_type[]"]').not('[value="all"]');
+                const allChecked = allOthers.length === allOthers.filter(':checked').length;
+
+                if (allChecked) {
+                    $('input[name="booking_type[]"][value="all"]').prop('checked', true);
+                }
+            });
+        });
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             $('.form-check-input').on('change', function() {
@@ -176,9 +236,9 @@
 
                         // Update informasi jumlah data
                         let showingText =
-                            `Showing ${response.from} to ${response.to} of ${response.filtered ? response.filtered : response.total} entries`;
+                            `Menampilkan ${response.from !== null ?response.from : 0} hingga ${response.to!== null ?response.to : 0} dari ${response.filtered ? response.filtered : response.total} aset`;
                         if (response.filtered && response.filtered !== response.total) {
-                            showingText += ` (filtered from ${response.total} total entries)`;
+                            showingText += ` (Difilter dari ${response.total} total aset)`;
                         }
                         $('#showing-text').text(showingText);
                     },
