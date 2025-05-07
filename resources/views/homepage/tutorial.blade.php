@@ -57,39 +57,48 @@
                 a sint culpa dolor eius, ipsum nobis, repudiandae architecto quidem, voluptate pariatur. Laudantium culpa
                 eligendi voluptates esse nulla architecto temporibus facere.</p>
         </div>
-        <div class="accordion common-accordion style-three" id="accordionExampleTwo">
+        <div class="row gy-5 accordion common-accordion style-three">
+            <div class="col-xl-6">
 
-            <div class="accordion-item">
-                <h2 class="accordion-header bg-main-25">
-                    <button class="accordion-button bg-main-25 collapsed" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapseTutorialEvent" aria-expanded="false" aria-controls="collapseTutorialEvent">
-                        Panduan Pendaftaran Event
-                    </button>
-                </h2>
-                <div id="collapseTutorialEvent" class="accordion-collapse collapse" data-bs-parent="#accordionExampleTwo">
-                    <div class="accordion-body p-0 bg-main-25">
-                        <object class="pdf p-20 w-100"
-                            data=
+                <div class="accordion-item">
+                    <h2 class="accordion-header bg-main-25">
+                        <button class="accordion-button bg-main-25 collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseTutorialEvent" aria-expanded="false"
+                            aria-controls="collapseTutorialEvent">
+                            Panduan Pendaftaran Event
+                        </button>
+                    </h2>
+                    <div id="collapseTutorialEvent" class="accordion-collapse collapse"
+                        data-bs-parent="#accordionExampleTwo">
+                        <div class="accordion-body p-0 bg-main-25">
+                            <object class="pdf p-20 w-100"
+                                data=
             "https://media.geeksforgeeks.org/wp-content/cdn-uploads/20210101201653/PDF.pdf"
-                            height="1000px">
-                        </object>
+                                height="1000px">
+                            </object>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="accordion-item">
-                <h2 class="accordion-header bg-main-25">
-                    <button class="accordion-button bg-main-25 collapsed" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapseTutorialAsset" aria-expanded="false" aria-controls="collapseTutorialAsset">
-                        Panduan Peminjaman Aset oleh Pihak Eksternal
-                    </button>
-                </h2>
-                <div id="collapseTutorialAsset" class="accordion-collapse collapse" data-bs-parent="#accordionExampleTwo">
-                    <div class="accordion-body p-0 bg-main-25">
-                        <object class="pdf p-20 w-100"
-                            data=
+            <div class="col-xl-6">
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header bg-main-25">
+                        <button class="accordion-button bg-main-25 collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseTutorialAsset" aria-expanded="false"
+                            aria-controls="collapseTutorialAsset">
+                            Panduan Peminjaman Aset oleh Pihak Eksternal
+                        </button>
+                    </h2>
+                    <div id="collapseTutorialAsset" class="accordion-collapse collapse"
+                        data-bs-parent="#accordionExampleTwo">
+                        <div class="accordion-body p-0 bg-main-25">
+                            <object class="pdf p-20 w-100"
+                                data=
             "https://media.geeksforgeeks.org/wp-content/cdn-uploads/20210101201653/PDF.pdf"
-                            height="1000px">
-                        </object>
+                                height="1000px">
+                            </object>
+                        </div>
                     </div>
                 </div>
             </div>
