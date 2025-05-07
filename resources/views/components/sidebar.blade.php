@@ -17,6 +17,14 @@
                     <span>Dashboard</span>
                 </a>
             </li>
+            @hasanyrole(['Super Admin', 'Organizer'])
+                <li>
+                    <a href="{{ route('calendarEvent') }}">
+                        <iconify-icon icon="oui:calendar" class="menu-icon"></iconify-icon>
+                        <span>Calendar</span>
+                    </a>
+                </li>
+            @endhasanyrole
             @hasrole('Super Admin')
                 <li class="sidebar-menu-group-title">Users Management</li>
                 <li class="dropdown mt-2">
@@ -39,14 +47,15 @@
                                     class="ri-circle-fill circle-icon text-warning-main w-auto"></i> Mahasiswa</a>
                         </li>
                         <li>
-                            <a href="{{ route('home') }}"><i class="ri-circle-fill circle-icon text-info-main w-auto"></i>
+                            <a href="{{ route('tenantUsers') }}"><i
+                                    class="ri-circle-fill circle-icon text-info-main w-auto"></i>
                                 Tenant</a>
                         </li>
                     </ul>
                 </li>
                 <li>
                     <a href="{{ route('jurusanProdi') }}">
-                        <iconify-icon icon="icons8:library" class="menu-icon"></iconify-icon>
+                        <iconify-icon icon="hugeicons:building-05" class="menu-icon"></iconify-icon>
                         <span>Jurusan & Prodi</span>
                     </a>
                 </li>
@@ -148,8 +157,21 @@
                         </li>
                     </ul>
                 </li>
+                <li class="sidebar-menu-group-title">Events Management</li>
+                <li>
+                    <a href="{{ route('data.listEvent') }}">
+                        <iconify-icon icon="carbon:event" class="menu-icon"></iconify-icon>
+                        <span>List Event</span>
+                    </a>
+                </li>
             @endhasrole
             @hasrole('UPT PU')
+                <li>
+                    <a href="{{ route('tenantUsers') }}">
+                        <iconify-icon icon="fluent:person-home-28-regular" class="menu-icon"></iconify-icon>
+                        <span>Tenant Management</span>
+                    </a>
+                </li>
                 <li>
                     <a href="{{ route('asset.fasum.bookings') }}">
                         <iconify-icon icon="icons8:library" class="menu-icon"></iconify-icon>
@@ -184,8 +206,8 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('asset.fasjur.bookings', $kode_jurusan_user) }}"><iconify-icon icon="icons8:library"
-                            class="menu-icon"></iconify-icon>
+                    <a href="{{ route('asset.fasjur.bookings', $kode_jurusan_user) }}"><iconify-icon
+                            icon="icons8:library" class="menu-icon"></iconify-icon>
                         <span>Asset {{ $kode_jurusan_user }} Bookings </span>
 
                     </a>
