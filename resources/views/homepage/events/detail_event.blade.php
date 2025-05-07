@@ -103,19 +103,6 @@
                             <h2 class="mt-24 mb-24">{{ $event->title }}</h2>
                             <p class="text-neutral-700">{{ $event->description }}</p>
                             <span class="d-block border-bottom border-main-100 my-32"></span>
-                            @if ($event->speakers)
-                                <h3 class="mb-16">Narasumber</h3>
-                                <ul class="list-dotted d-flex flex-column gap-15">
-                                    @foreach ($event->speakers->groupBy('role') as $role => $speakers)
-                                        <li>
-                                            <strong>{{ $role }}</strong>:
-                                            {{ $speakers->pluck('name')->implode(', ') }}
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @endif
-
-                            <span class="d-block borderottom border-main-100 my-32"></span>
                             @if (!is_null($event->benefit))
                                 @php
                                     $benefits = explode('|', $event->benefit);
@@ -128,12 +115,44 @@
                                 </ul>
                             @endif
                             <span class="d-block border-bottom border-main-100 my-32"></span>
+                            @if ($event->steps->whereNotNull('event_speaker')->count() > 0)
+                                <h3 class="mb-16">Narasumber</h3>
+
+                                @foreach ($event->steps as $step)
+                                    @if ($step->event_speaker && $step->event_speaker->count() > 0)
+                                        <h6 class="mt-3">
+                                            {{ \Carbon\Carbon::parse($step->event_date)->isoFormat('dddd, D MMMM Y') }}
+                                        </h6>
+                                        <ul class="list-dotted d-flex flex-column gap-15">
+                                            @php
+                                                $speakers = $step->event_speaker->groupBy('role');
+                                            @endphp
+
+                                            @foreach ($speakers as $role => $speakerGroup)
+                                                <li>
+                                                    <strong>{{ $role }}</strong>:
+                                                    @if ($speakerGroup->count() > 1)
+                                                        <ul class="ps-3 mt-1">
+                                                            @foreach ($speakerGroup as $speaker)
+                                                                <li>{{ $speaker->name }}</li>
+                                                            @endforeach
+                                                        </ul>
+                                                    @else
+                                                        {{ $speakerGroup->first()->name }}
+                                                    @endif
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    @endif
+                                @endforeach
+                            @endif
+                            {{-- <span class="d-block borderottom border-main-100 my-32"></span>
                             <h5 class="mb-16">Lokasi Event</h5>
                             <iframe
                                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d527.5579684472881!2d112.61664396543006!3d-7.946824388343488!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7882742cd7191f%3A0x56a5edb7ccb2769b!2sGraha%20Polinema!5e0!3m2!1sen!2sid!4v1737298921865!5m2!1sen!2sid"
                                 width="800" height="350" style="border:0;" allowfullscreen="" loading="lazy"
                                 referrerpolicy="no-referrer-when-downgrade"></iframe>
-                            <p class="mt-10 text-center text-neutral-700">Graha Politeknik Negeri Malang</p>
+                            <p class="mt-10 text-center text-neutral-700">Graha Politeknik Negeri Malang</p> --}}
                         </div>
                     </div>
                     <!-- Details Content End -->
@@ -169,6 +188,7 @@
                                     <ul class="list-dotted d-flex flex-column gap-15">
                                         @foreach ($event->steps as $step)
                                             @php
+                                                $day = \Carbon\Carbon::parse($step->event_date)->isoFormat('dddd');
                                                 $tanggal = \Carbon\Carbon::parse($step->event_date)->translatedFormat(
                                                     'd F Y',
                                                 );
@@ -181,13 +201,15 @@
                                             @endphp
                                             <li class="ms-40 text-neutral-700 fw-bold mt-10">
                                                 {{ $step->step_name }} <br>
-                                                {{ $tanggal }} ({{ $jamMulai }} - {{ $jamSelesai }})
+                                                {{ $day }}, {{ $tanggal }} ({{ $jamMulai }} -
+                                                {{ $jamSelesai }})
                                             </li>
                                         @endforeach
                                     </ul>
                                 @else
                                     @php
                                         $eventStep = $event->steps->first();
+                                        $day = \Carbon\Carbon::parse($step->event_date)->isoFormat('dddd');
                                         $tanggal = \Carbon\Carbon::parse($eventStep->event_date)->translatedFormat(
                                             'd F Y',
                                         );
@@ -200,56 +222,135 @@
                                     @endphp
 
                                     <p class="ms-40 text-neutral-700 fw-bold">
-                                        {{ $tanggal }} ({{ $jamMulai }} - {{ $jamSelesai }})
+                                        {{ $day }}, {{ $tanggal }} ({{ $jamMulai }} -
+                                        {{ $jamSelesai }})
                                     </p>
 
                                 @endif
                             </div>
 
-                            @if (!is_null($event->steps) && count($event->steps) > 1)
-                                @php
-                                    $stepEvent = $event->steps->first();
-                                    $location_decode = json_decode($stepEvent->location ?? '[]', true);
-                                    if (
-                                        $location_decode[0]['type'] === 'offline' &&
-                                        $stepEvent->location_type === 'campus'
-                                    ) {
-                                        $asset = \App\Models\Asset::where('id', $location_decode[0]['location'])->value(
-                                            'name',
-                                        );
-                                        $event_location = $asset;
-                                    } elseif (
-                                        $location_decode[0]['type'] === 'offline' &&
-                                        $stepEvent->location_type === 'manual'
-                                    ) {
-                                        $event_location = $location_decode[0]['location'];
-                                    } elseif ($location_decode[0]['type'] === 'online') {
-                                        $event_location = $location_decode[0]['location'];
-                                    } elseif (
-                                        $location_decode[0]['type'] === 'hybrid' &&
-                                        $stepEvent->location_type === 'campus'
-                                    ) {
-                                        $asset = \App\Models\Asset::where(
-                                            'id',
-                                            $location_decode[0]['location_offline'],
-                                        )->value('name');
-                                        $event_location =
-                                            'Offline: ' .
-                                            $asset .
-                                            '\n' .
-                                            'Online: ' .
-                                            $location_decode[0]['location_online'];
-                                    }
-                                @endphp
-                                <div class="border-bottom border-neutral-40 pb-20 mb-20 flex-between flex-wrap">
-                                    <div class="flex-align gap-12">
-                                        <span class="text-neutral-700 text-2xl d-flex"><i
-                                                class="ph-bold ph-map-pin-area"></i></span>
-                                        <span class="text-neutral-700 text-lg fw-normal">Tempat</span>
-                                    </div>
-                                    <p class="ms-40 text-neutral-700 fw-bold">{{ $event_location }}</p>
+                            <div class="border-bottom border-neutral-40 pb-20 mb-20">
+                                <div class="flex-align gap-12 mb-12">
+                                    <span class="text-neutral-700 text-2xl d-flex"><i
+                                            class="ph-bold ph-map-pin-area"></i></span>
+                                    <span class="text-neutral-700 text-lg fw-normal">Tempat</span>
                                 </div>
-                            @endif
+
+                                @if (!is_null($event->steps) && $event->steps->count() > 0)
+                                    @foreach ($event->steps as $stepEvent)
+                                        @php
+                                            $event_location = '';
+                                            $location_decode = json_decode($stepEvent->location ?? '[]', true);
+
+                                            if (isset($location_decode[0])) {
+                                                if (
+                                                    $location_decode[0]['type'] === 'offline' &&
+                                                    $stepEvent->location_type === 'campus'
+                                                ) {
+                                                    $asset = \App\Models\Asset::where(
+                                                        'id',
+                                                        $location_decode[0]['location'],
+                                                    )->first();
+                                                    $assetName = \App\Models\Asset::where(
+                                                        'id',
+                                                        $location_decode[0]['location'],
+                                                    )->value('name');
+                                                    $jurusan = null;
+                                                    if ($asset->jurusan_id) {
+                                                        $jurusan = $asset->jurusan->nama;
+                                                    }
+                                                    $isBooked = \App\Models\AssetBooking::where('asset_id', $asset->id)
+                                                        ->where('event_id', $event->id)
+                                                        ->whereIn('status', [
+                                                            'booked',
+                                                            'approved',
+                                                            'submission_full_payment',
+                                                        ])
+                                                        ->exists();
+
+                                                    if ($isBooked) {
+                                                        $event_location = $assetName . ' ' . $jurusan ?? '';
+                                                    } else {
+                                                        $event_location = '-';
+                                                    }
+                                                } elseif (
+                                                    $location_decode[0]['type'] === 'offline' &&
+                                                    $stepEvent->location_type === 'manual'
+                                                ) {
+                                                    $event_location =
+                                                        $location_decode[0]['location'] .
+                                                        ' (' .
+                                                        $location_decode[0]['address'] .
+                                                        ')';
+                                                } elseif ($location_decode[0]['type'] === 'online') {
+                                                    $event_location = $location_decode[0]['location'];
+                                                } elseif (
+                                                    $location_decode[0]['type'] === 'hybrid' &&
+                                                    $stepEvent->location_type === 'campus'
+                                                ) {
+                                                    $asset = \App\Models\Asset::where(
+                                                        'id',
+                                                        $location_decode[0]['location_offline'],
+                                                    )->first();
+                                                    $assetName = \App\Models\Asset::where(
+                                                        'id',
+                                                        $location_decode[0]['location_offline'],
+                                                    )->value('name');
+                                                    $jurusan = null;
+                                                    if ($asset->jurusan_id) {
+                                                        $jurusan = $asset->jurusan->nama;
+                                                    }
+                                                    $isBooked = \App\Models\AssetBooking::where('asset_id', $asset->id)
+                                                        ->where('event_id', $event->id)
+                                                        ->whereIn('status', [
+                                                            'booked',
+                                                            'approved',
+                                                            'submission_full_payment',
+                                                        ])
+                                                        ->exists();
+
+                                                    if ($isBooked) {
+                                                        $event_location =
+                                                            'Offline: ' .
+                                                            $assetName .
+                                                            ' ' .
+                                                            $jurusan .
+                                                            '<br>Online: ' .
+                                                            $location_decode[0]['location_online'];
+                                                    } else {
+                                                        $event_location =
+                                                            'Offline: - ' .
+                                                            ' ' .
+                                                            $jurusan .
+                                                            '<br>Online: ' .
+                                                            $location_decode[0]['location_online']; // kalau tidak booked → kosong
+                                                    }
+                                                }
+                                            }
+                                        @endphp
+
+                                        @if (!empty($event_location) && count($event->steps) > 1)
+                                            <div class="ms-40 mb-10">
+                                                <p class="text-neutral-600 mb-2">
+                                                    <strong>{{ \Carbon\Carbon::parse($stepEvent->event_date)->isoFormat('dddd, D MMMM Y') }}</strong>
+                                                </p>
+                                                <p class="text-neutral-700">{!! $event_location !!}</p>
+                                            </div>
+                                        @elseif (!empty($event_location) && count($event->steps) == 1)
+                                            <div class="ms-40 mb-10">
+                                                <p class="text-neutral-600 mb-2">
+                                                    <strong>{{ \Carbon\Carbon::parse($stepEvent->event_date)->isoFormat('dddd, D MMMM Y') }}</strong>
+                                                </p>
+                                                <p class="text-neutral-700">{{ $event_location }}</p>
+                                            </div>
+                                        @else
+                                            <div class="ms-40 mb-10">
+                                                <p class="text-neutral-700">{{ $event_location }}</p>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                @endif
+                            </div>
                             <div class="border-bottom border-neutral-40 pb-20 mb-20 flex-between flex-wrap">
                                 <div class="flex-align gap-12">
                                     <span class="text-neutral-700 text-2xl d-flex"><i
@@ -311,6 +412,15 @@
                                                 Daftar Sekarang
                                                 <i class="ph-bold ph-arrow-up-right d-flex text-lg"></i>
                                             </button>
+                                        </center>
+                                    @elseif (
+                                        $event->participants->contains('user_id', Auth::id()) &&
+                                            optional($event->participants->firstWhere('user_id', Auth::id()))->status == 'pending_approval')
+                                        <center>
+                                            <div class="alert alert-warning mt-3">
+                                                <strong>Anda sudah mendaftar di event ini. Silahkan menunggu verifikasi dari
+                                                    penyelenggara.</strong>
+                                            </div>
                                         </center>
                                     @else
                                         <center>

@@ -3,6 +3,7 @@
 @php
     $title = 'Event Management';
     $subTitle = 'Event Management';
+    $subSubTitle = 'Detail Event';
 @endphp
 @section('content')
 
@@ -76,7 +77,37 @@
                                     </ul>
                                 @endif
                                 <hr class="my-16">
-                                <p class="text-neutral-500 mb-16">{{ $event->description }}</p>
+                                @if ($event->steps->whereNotNull('event_speaker')->count() > 0)
+                                    <h5 class="mb-16">Narasumber</h5>
+
+                                    @foreach ($event->steps as $step)
+                                        @if ($step->event_speaker && $step->event_speaker->count() > 0)
+                                            <p class="mt-3 fw-bold text-xl">
+                                                {{ \Carbon\Carbon::parse($step->event_date)->isoFormat('dddd, D MMMM Y') }}
+                                            </p>
+                                            <ul class="list-dotted d-flex flex-column gap-15">
+                                                @php
+                                                    $speakers = $step->event_speaker->groupBy('role');
+                                                @endphp
+
+                                                @foreach ($speakers as $role => $speakerGroup)
+                                                    <li>
+                                                        <strong>{{ $role }}</strong>:
+                                                        @if ($speakerGroup->count() > 1)
+                                                            <ul class="ps-3 mt-1">
+                                                                @foreach ($speakerGroup as $speaker)
+                                                                    <li>- {{ $speaker->name }}</li>
+                                                                @endforeach
+                                                            </ul>
+                                                        @else
+                                                            {{ $speakerGroup->first()->name }}
+                                                        @endif
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @endif
+                                    @endforeach
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -85,171 +116,253 @@
                 <!-- Sidebar Start -->
                 <div class="col-lg-4">
                     <div class="d-flex flex-column gap-24">
-                        <!-- Latest Blog -->
-                        <div class="card">
-                            <div class="card-header border-bottom">
-                                <h6 class="text-xl mb-0">Latest Posts</h6>
-                            </div>
-                            <div class="card-body d-flex flex-column gap-24 p-24">
-                                <div class="d-flex flex-wrap">
-                                    <a href="" class="blog__thumb w-100 radius-12 overflow-hidden">
-                                        <img src="{{ asset('assets/images/blog/blog5.png') }}" alt=""
-                                            class="w-100 h-100 object-fit-cover">
-                                    </a>
-                                    <div class="blog__content">
-                                        <h6 class="mb-8">
-                                            <a href=""
-                                                class="text-line-2 text-hover-primary-600 text-md transition-2">How
-                                                to hire a right
-                                                business executive for your company</a>
-                                        </h6>
-                                        <p class="text-line-2 text-sm text-neutral-500 mb-0">Lorem ipsum dolor sit
-                                            amet consectetur
-                                            adipisicing elit. Omnis dolores explicabo corrupti, fuga necessitatibus
-                                            fugiat adipisci
-                                            quidem eveniet enim minus.</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex flex-wrap">
-                                    <a href="" class="blog__thumb w-100 radius-12 overflow-hidden">
-                                        <img src="{{ asset('assets/images/blog/blog6.png') }}" alt=""
-                                            class="w-100 h-100 object-fit-cover">
-                                    </a>
-                                    <div class="blog__content">
-                                        <h6 class="mb-8">
-                                            <a href=""
-                                                class="text-line-2 text-hover-primary-600 text-md transition-2">The
-                                                Gig Economy:
-                                                Adapting to a Flexible Workforce</a>
-                                        </h6>
-                                        <p class="text-line-2 text-sm text-neutral-500 mb-0">Lorem ipsum dolor sit
-                                            amet consectetur
-                                            adipisicing elit. Omnis dolores explicabo corrupti, fuga necessitatibus
-                                            fugiat adipisci
-                                            quidem eveniet enim minus.</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex flex-wrap">
-                                    <a href="" class="blog__thumb w-100 radius-12 overflow-hidden">
-                                        <img src="{{ asset('assets/images/blog/blog7.png') }}" alt=""
-                                            class="w-100 h-100 object-fit-cover">
-                                    </a>
-                                    <div class="blog__content">
-                                        <h6 class="mb-8">
-                                            <a href=""
-                                                class="text-line-2 text-hover-primary-600 text-md transition-2">The
-                                                Future of
-                                                Remote Work: Strategies for Success</a>
-                                        </h6>
-                                        <p class="text-line-2 text-sm text-neutral-500 mb-0">Lorem ipsum dolor sit
-                                            amet consectetur
-                                            adipisicing elit. Omnis dolores explicabo corrupti, fuga necessitatibus
-                                            fugiat adipisci
-                                            quidem eveniet enim minus.</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex flex-wrap">
-                                    <a href="" class="blog__thumb w-100 radius-12 overflow-hidden">
-                                        <img src="{{ asset('assets/images/blog/blog6.png') }}" alt=""
-                                            class="w-100 h-100 object-fit-cover">
-                                    </a>
-                                    <div class="blog__content">
-                                        <h6 class="mb-8">
-                                            <a href=""
-                                                class="text-line-2 text-hover-primary-600 text-md transition-2">Lorem
-                                                ipsum dolor
-                                                sit amet consectetur adipisicing.</a>
-                                        </h6>
-                                        <p class="text-line-2 text-sm text-neutral-500 mb-0">Lorem ipsum dolor sit
-                                            amet consectetur
-                                            adipisicing elit. Omnis dolores explicabo corrupti, fuga necessitatibus
-                                            fugiat adipisci
-                                            quidem eveniet enim minus.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Category -->
                         <div class="card">
-                            <div class="card-header border-bottom">
-                                <h6 class="text-xl mb-0">Tags</h6>
-                            </div>
-                            <div class="card-body p-24">
-                                <ul>
-                                    <li
-                                        class="w-100 d-flex align-items-center justify-content-between flex-wrap gap-8 border-bottom border-dashed pb-12 mb-12">
-                                        <a href="" class="text-hover-primary-600 transition-2"> Techbology
-                                        </a>
-                                        <span
-                                            class="text-neutral-500 w-28-px h-28-px rounded-circle bg-neutral-100 d-flex justify-content-center align-items-center transition-2 text-xs fw-semibold">
-                                            01 </span>
-                                    </li>
-                                    <li
-                                        class="w-100 d-flex align-items-center justify-content-between flex-wrap gap-8 border-bottom border-dashed pb-12 mb-12">
-                                        <a href="" class="text-hover-primary-600 transition-2"> Business
-                                        </a>
-                                        <span
-                                            class="text-neutral-500 w-28-px h-28-px rounded-circle bg-neutral-100 d-flex justify-content-center align-items-center transition-2 text-xs fw-semibold">
-                                            01 </span>
-                                    </li>
-                                    <li
-                                        class="w-100 d-flex align-items-center justify-content-between flex-wrap gap-8 border-bottom border-dashed pb-12 mb-12">
-                                        <a href="" class="text-hover-primary-600 transition-2"> Consulting
-                                        </a>
-                                        <span
-                                            class="text-neutral-500 w-28-px h-28-px rounded-circle bg-neutral-100 d-flex justify-content-center align-items-center transition-2 text-xs fw-semibold">
-                                            01 </span>
-                                    </li>
-                                    <li
-                                        class="w-100 d-flex align-items-center justify-content-between flex-wrap gap-8 border-bottom border-dashed pb-12 mb-12">
-                                        <a href="" class="text-hover-primary-600 transition-2"> Course </a>
-                                        <span
-                                            class="text-neutral-500 w-28-px h-28-px rounded-circle bg-neutral-100 d-flex justify-content-center align-items-center transition-2 text-xs fw-semibold">
-                                            01 </span>
-                                    </li>
-                                    <li class="w-100 d-flex align-items-center justify-content-between flex-wrap gap-8">
-                                        <a href="" class="text-hover-primary-600 transition-2"> Real Estate
-                                        </a>
-                                        <span
-                                            class="text-neutral-500 w-28-px h-28-px rounded-circle bg-neutral-100 d-flex justify-content-center align-items-center transition-2 text-xs fw-semibold">
-                                            01 </span>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
+                            <div class="border border-neutral-30 rounded-12 bg-main-25 p-24 bg-main-25">
+                                <div class="d-flex justify-content-center mb-20">
+                                    <img src="{{ asset($event->organizers->logo) }}" class="rounded-circle"
+                                        alt="logo_organizers" style="width: 200px;height:200px">
+                                </div>
+                                <div class="border-bottom border-neutral-40 pb-20 mb-20 flex-between flex-wrap">
+                                    <h6 class="text-center">{{ $event->organizers->user->name }}</h6>
+                                </div>
+                                <div class="border-bottom border-neutral-40 pb-20 mb-20 flex-between flex-wrap">
+                                    <div class="flex-align gap-12">
+                                        <span class="text-neutral-700 text-2xl d-flex">
+                                            <iconify-icon icon="ph:note" class="menu-icon"></iconify-icon>
+                                            <span class="text-neutral-700 text-lg fw-normal ms-3">Pendaftaran</span>
+                                        </span>
+                                    </div>
+                                    <p class="ms-40 text-neutral-700 fw-bold">
+                                        {{ \Carbon\Carbon::parse($event->registration_date_start)->translatedFormat('d F Y (H.i)') }}
+                                        -
+                                        {{ \Carbon\Carbon::parse($event->registration_date_end)->translatedFormat('d F Y (H.i)') }}
+                                    </p>
+                                </div>
+                                <div class="border-bottom border-neutral-40 pb-20 mb-20 flex-between flex-wrap">
+                                    <div class="flex-align gap-12">
+                                        <span class="text-neutral-700 text-2xl d-flex"><iconify-icon icon="ph:timer"
+                                                class="menu-icon"></iconify-icon>
+                                            <span class="text-neutral-700 text-lg fw-normal ms-3">Pelaksanaan</span>
+                                        </span>
+                                    </div>
+                                    @if (!is_null($event->steps) && count($event->steps) > 1)
+                                        <ul class="list-dotted d-flex flex-column gap-15">
+                                            @foreach ($event->steps as $step)
+                                                @php
+                                                    $day = \Carbon\Carbon::parse($step->event_date)->isoFormat('dddd');
+                                                    $tanggal = \Carbon\Carbon::parse(
+                                                        $step->event_date,
+                                                    )->translatedFormat('d F Y');
+                                                    $jamMulai = \Carbon\Carbon::parse(
+                                                        $step->event_time_start,
+                                                    )->translatedFormat('H.i');
+                                                    $jamSelesai = \Carbon\Carbon::parse(
+                                                        $step->event_time_end,
+                                                    )->translatedFormat('H.i');
+                                                @endphp
+                                                <li class="ms-40 text-neutral-700 fw-bold mt-10">
+                                                    <span class="w-6-px h-6-px bg-dark rounded-circle"></span>
+                                                    &nbsp;{{ $step->step_name }} <br>
+                                                    &nbsp;&nbsp;&nbsp; {{ $day }}, {{ $tanggal }}
+                                                    ({{ $jamMulai }}
+                                                    -
+                                                    {{ $jamSelesai }})
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        @php
+                                            $eventStep = $event->steps->first();
+                                            $day = \Carbon\Carbon::parse($step->event_date)->isoFormat('dddd');
+                                            $tanggal = \Carbon\Carbon::parse($eventStep->event_date)->translatedFormat(
+                                                'd F Y',
+                                            );
+                                            $jamMulai = \Carbon\Carbon::parse(
+                                                $eventStep->event_time_start,
+                                            )->translatedFormat('H.i');
+                                            $jamSelesai = \Carbon\Carbon::parse(
+                                                $eventStep->event_time_end,
+                                            )->translatedFormat('H.i');
+                                        @endphp
 
-                        <!-- Tags -->
-                        <div class="card">
-                            <div class="card-header border-bottom">
-                                <h6 class="text-xl mb-0">Tags</h6>
-                            </div>
-                            <div class="card-body p-24">
-                                <div class="d-flex align-items-center flex-wrap gap-8">
-                                    <a href=""
-                                        class="btn btn-sm btn-primary-600 bg-primary-50 bg-hover-primary-600 text-primary-600 border-0 d-inline-flex align-items-center gap-1 text-sm px-16 py-6">
-                                        Development </a>
-                                    <a href=""
-                                        class="btn btn-sm btn-primary-600 bg-primary-50 bg-hover-primary-600 text-primary-600 border-0 d-inline-flex align-items-center gap-1 text-sm px-16 py-6">
-                                        Design </a>
-                                    <a href=""
-                                        class="btn btn-sm btn-primary-600 bg-primary-50 bg-hover-primary-600 text-primary-600 border-0 d-inline-flex align-items-center gap-1 text-sm px-16 py-6">
-                                        Technology </a>
-                                    <a href=""
-                                        class="btn btn-sm btn-primary-600 bg-primary-50 bg-hover-primary-600 text-primary-600 border-0 d-inline-flex align-items-center gap-1 text-sm px-16 py-6">
-                                        Popular </a>
-                                    <a href=""
-                                        class="btn btn-sm btn-primary-600 bg-primary-50 bg-hover-primary-600 text-primary-600 border-0 d-inline-flex align-items-center gap-1 text-sm px-16 py-6">
-                                        Codignator </a>
-                                    <a href=""
-                                        class="btn btn-sm btn-primary-600 bg-primary-50 bg-hover-primary-600 text-primary-600 border-0 d-inline-flex align-items-center gap-1 text-sm px-16 py-6">
-                                        Javascript </a>
-                                    <a href=""
-                                        class="btn btn-sm btn-primary-600 bg-primary-50 bg-hover-primary-600 text-primary-600 border-0 d-inline-flex align-items-center gap-1 text-sm px-16 py-6">
-                                        Bootstrap </a>
-                                    <a href=""
-                                        class="btn btn-sm btn-primary-600 bg-primary-50 bg-hover-primary-600 text-primary-600 border-0 d-inline-flex align-items-center gap-1 text-sm px-16 py-6">
-                                        PHP </a>
+                                        <p class="ms-40 text-neutral-700 fw-bold">
+                                            {{ $day }}, {{ $tanggal }} ({{ $jamMulai }} -
+                                            {{ $jamSelesai }})
+                                        </p>
+
+                                    @endif
+                                </div>
+
+                                <div class="border-bottom border-neutral-40 pb-20 mb-20">
+                                    <div class="flex-align gap-12 mb-12">
+                                        <span class="text-neutral-700 text-2xl d-flex">
+                                            <iconify-icon icon="ph-map-pin-area" class="menu-icon"></iconify-icon>
+                                            <span class="text-neutral-700 text-lg fw-normal ms-3">Tempat</span>
+                                        </span>
+                                    </div>
+
+                                    @if (!is_null($event->steps) && $event->steps->count() > 0)
+                                        @foreach ($event->steps as $stepEvent)
+                                            @php
+                                                $event_location = '';
+                                                $location_decode = json_decode($stepEvent->location ?? '[]', true);
+
+                                                if (isset($location_decode[0])) {
+                                                    if (
+                                                        $location_decode[0]['type'] === 'offline' &&
+                                                        $stepEvent->location_type === 'campus'
+                                                    ) {
+                                                        $asset = \App\Models\Asset::where(
+                                                            'id',
+                                                            $location_decode[0]['location'],
+                                                        )->first();
+                                                        $assetName = \App\Models\Asset::where(
+                                                            'id',
+                                                            $location_decode[0]['location'],
+                                                        )->value('name');
+                                                        $jurusan = null;
+                                                        if ($asset->jurusan_id) {
+                                                            $jurusan = $asset->jurusan->nama;
+                                                        }
+                                                        $isBooked = \App\Models\AssetBooking::where(
+                                                            'asset_id',
+                                                            $asset->id,
+                                                        )
+                                                            ->where('event_id', $event->id)
+                                                            ->whereIn('status', [
+                                                                'booked',
+                                                                'approved',
+                                                                'submission_full_payment',
+                                                            ])
+                                                            ->exists();
+
+                                                        if ($isBooked) {
+                                                            $event_location = $assetName . ' ' . $jurusan ?? '';
+                                                        } else {
+                                                            $event_location =
+                                                                $assetName .
+                                                                ' ' .
+                                                                ($jurusan ?? '') .
+                                                                ' (Belum Disetujui)';
+                                                        }
+                                                    } elseif (
+                                                        $location_decode[0]['type'] === 'offline' &&
+                                                        $stepEvent->location_type === 'manual'
+                                                    ) {
+                                                        $event_location =
+                                                            $location_decode[0]['location'] .
+                                                            ' (' .
+                                                            $location_decode[0]['address'] .
+                                                            ')';
+                                                    } elseif ($location_decode[0]['type'] === 'online') {
+                                                        $event_location = $location_decode[0]['location'];
+                                                    } elseif (
+                                                        $location_decode[0]['type'] === 'hybrid' &&
+                                                        $stepEvent->location_type === 'campus'
+                                                    ) {
+                                                        $asset = \App\Models\Asset::where(
+                                                            'id',
+                                                            $location_decode[0]['location_offline'],
+                                                        )->first();
+                                                        $assetName = \App\Models\Asset::where(
+                                                            'id',
+                                                            $location_decode[0]['location_offline'],
+                                                        )->value('name');
+                                                        $jurusan = null;
+                                                        if ($asset->jurusan_id) {
+                                                            $jurusan = $asset->jurusan->nama;
+                                                        }
+                                                        $isBooked = \App\Models\AssetBooking::where(
+                                                            'asset_id',
+                                                            $asset->id,
+                                                        )
+                                                            ->where('event_id', $event->id)
+                                                            ->whereIn('status', [
+                                                                'booked',
+                                                                'approved',
+                                                                'submission_full_payment',
+                                                            ])
+                                                            ->exists();
+
+                                                        if ($isBooked) {
+                                                            $event_location =
+                                                                'Offline: ' .
+                                                                $assetName .
+                                                                ' ' .
+                                                                $jurusan .
+                                                                '<br>Online: ' .
+                                                                $location_decode[0]['location_online'];
+                                                        } else {
+                                                            $event_location =
+                                                                'Offline: ' .
+                                                                $assetName .
+                                                                ($isValidBooking
+                                                                    ? ' ' . ($jurusan ?? '')
+                                                                    : ' (Belum Disetujui)') .
+                                                                '<br>Online: ' .
+                                                                $location_decode[0]['location_online'];
+                                                        }
+                                                    }
+                                                }
+                                            @endphp
+
+                                            @if (!empty($event_location) && count($event->steps) > 1)
+                                                <div class="ms-40 mb-10">
+                                                    <p class="text-neutral-600 mb-2">
+                                                        <strong>{{ \Carbon\Carbon::parse($stepEvent->event_date)->isoFormat('dddd, D MMMM Y') }}</strong>
+                                                    </p>
+                                                    <p class="text-neutral-700">{!! $event_location !!}</p>
+                                                </div>
+                                            @elseif (!empty($event_location) && count($event->steps) == 1)
+                                                <div class="ms-40 mb-10">
+                                                    <p class="text-neutral-600 mb-2">
+                                                        <strong>{{ \Carbon\Carbon::parse($stepEvent->event_date)->isoFormat('dddd, D MMMM Y') }}</strong>
+                                                    </p>
+                                                    <p class="text-neutral-700">{{ $event_location }}</p>
+                                                </div>
+                                            @else
+                                                <div class="ms-40 mb-10">
+                                                    <p class="text-neutral-700">{{ $event_location }}</p>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    @endif
+                                </div>
+                                <div class="border-bottom border-neutral-40 pb-10 mb-10 flex-between flex-wrap">
+                                    <div class="flex-align gap-12">
+                                        <span class="text-neutral-700 text-2xl d-flex">
+
+                                            <iconify-icon icon="ph:user-circle" class="menu-icon"></iconify-icon>
+                                            <span class="text-neutral-700 text-lg fw-normal ms-3">Kuota</span>
+                                        </span>
+                                    </div>
+                                    <p class="ms-40 text-neutral-700 fw-bold">
+                                        {{ $event->remaining_quota }}/{{ $event->quota }} </p>
+                                </div>
+
+                                <div class="border-bottom border-neutral-40 pb-10 mb-10 flex-between flex-wrap">
+                                    <div class="flex-align gap-12">
+                                        <span class="text-neutral-700 text-2xl d-flex">
+                                            <iconify-icon icon="ph-currency-circle-dollar"
+                                                class="menu-icon"></iconify-icon>
+                                            <span class="text-neutral-700 text-lg fw-normal ms-3">Biaya </span>
+                                        </span>
+                                    </div>
+
+                                    @if (!is_null($event->prices) && count($event->prices) > 1)
+                                        <ul class="list-dotted d-flex flex-column gap-15">
+                                            @foreach ($event->prices as $itemPrice)
+                                                <li class="ms-40 text-neutral-700 fw-bold mt-10">
+                                                    {{ $itemPrice->category_name }} <br>
+                                                    {{ $itemPrice->price && $itemPrice->price != 0 ? 'Rp' . number_format($itemPrice->price, 0, ',', '.') : 'Gratis' }}
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        <p class="ms-40 text-neutral-700 fw-bold">
+                                            {{ optional($event->prices)->price ?? 'Gratis' }}</p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -347,8 +460,14 @@
             <div class="row gy-4">
                 <div class="col-md-12">
                     <div class="card basic-data-table">
-                        <div class="card-header border-bottom">
-                            <h6 class="text-xl mb-0">Daftar Peserta</h6>
+                        <div class="card-header d-flex justify-content-between">
+                            <h5 class="card-title mb-0 align-content-center">Daftar Peserta</h5>
+                            <button
+                                class="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2"
+                                data-bs-toggle="modal" data-bs-target="#modalAddParticipant">
+                                <iconify-icon icon="ic:baseline-plus" class="icon text-xl line-height-1"></iconify-icon>
+                                Tambah Peserta
+                            </button>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -592,6 +711,7 @@
     </div>
     @include('dashboardPage.events.speaker.add-speaker')
     @include('dashboardPage.events.modal.uploadDocumentAssetEvent')
+    @include('dashboardPage.events.participants.add-participant')
 @endsection
 @push('script')
     <script>
@@ -745,6 +865,125 @@
                     });
 
                     participantTableInitialized = true;
+                }
+            });
+        });
+    </script>
+    <script>
+        // ================== Password Show Hide Js Start ==========
+        $(document).on("click", ".toggle-password", function() {
+            const inputId = $(this).data("toggle"); // tanpa #
+            const input = $("#" + inputId);
+
+            // Toggle type input
+            if (input.attr("type") === "password") {
+                input.attr("type", "text");
+                $(this).removeClass("ri-eye-line").addClass("ri-eye-off-line");
+            } else {
+                input.attr("type", "password");
+                $(this).removeClass("ri-eye-off-line").addClass("ri-eye-line");
+            }
+        });
+        // ========================= Password Show Hide Js End ===========================
+    </script>
+    {{-- Handle Provinsi, Kota, Kec., Kel./Desa --}}
+    <script>
+        $(document).ready(function() {
+            let apiBaseUrl = "https://iemaduddin.github.io/api-wilayah-indonesia/api";
+            let cachedProvinces = null;
+
+            function loadDropdown(url, target, selected = null, callback = null) {
+                target.empty().append('<option value="" disabled selected>Pilih</option>');
+                $.get(url, function(data) {
+                    data.forEach(item => {
+                        target.append(
+                            `<option value="${item.id}" ${item.id == selected ? 'selected' : ''}>${item.name}</option>`
+                        );
+                    });
+                    if (callback) callback();
+                });
+            }
+
+            function loadProvinces(target, selected = null) {
+                if (cachedProvinces) {
+                    target.empty().append('<option value="" disabled>Pilih Provinsi</option>');
+                    cachedProvinces.forEach(item => {
+                        target.append(`<option value="${item.id}">${item.name}</option>`);
+                    });
+
+                    // Set selected setelah dropdown diisi
+                    if (selected) {
+                        target.val(selected).trigger('change');
+                    }
+                } else {
+                    $.get(`${apiBaseUrl}/provinces.json`, function(data) {
+                        cachedProvinces = data;
+                        loadProvinces(target, selected); // Load ulang dengan selected
+                    });
+                }
+            }
+
+
+            loadProvinces($('.select-province'));
+
+            $(document).on('change', '.select-province', function() {
+                let provinceId = $(this).val();
+                let citySelect = $('.select-city');
+                citySelect.empty().append(
+                    '<option value="" disabled selected>Pilih Kabupaten/Kota</option>');
+                $('.select-subdistrict, .select-village').empty().append(
+                    '<option value="">Pilih Kabupaten/Kota</option>');
+                if (provinceId) loadDropdown(`${apiBaseUrl}/regencies/${provinceId}.json`, citySelect);
+            });
+
+            $(document).on('change', '.select-city', function() {
+                let cityId = $(this).val();
+                let subdistrictSelect = $('.select-subdistrict');
+                subdistrictSelect.empty().append(
+                    '<option value="" disabled selected>Pilih Kecamatan</option>');
+                $('.select-village').empty().append('<option value="">Pilih Kecamatan</option>');
+                if (cityId) loadDropdown(`${apiBaseUrl}/districts/${cityId}.json`, subdistrictSelect);
+            });
+
+            $(document).on('change', '.select-subdistrict', function() {
+                let subdistrictId = $(this).val();
+                let villageSelect = $('.select-village');
+                villageSelect.empty().append(
+                    '<option value="" disabled selected>Pilih Kelurahan/Desa</option>');
+                if (subdistrictId) loadDropdown(`${apiBaseUrl}/villages/${subdistrictId}.json`,
+                    villageSelect);
+            });
+
+            $('#modalAddParticipant').on('show.bs.modal', function() {
+                $('.select-province, .select-city, .select-subdistrict, .select-village').empty().append(
+                    '<option value="">Pilih</option>');
+                loadProvinces($('.select-province'));
+            });
+
+            $(document).on('click', '[data-bs-target^="#modalUpdateParticipant-"]', function() {
+                let targetModal = $($(this).data('bs-target'));
+                let selectedProvince = targetModal.find('.select-province').data('selected');
+                let selectedCity = targetModal.find('.select-city').data('selected');
+                let selectedSubdistrict = targetModal.find('.select-subdistrict').data('selected');
+                let selectedVillage = targetModal.find('.select-village').data('selected');
+
+                loadProvinces(targetModal.find('.select-province'), selectedProvince);
+                if (selectedProvince) {
+                    loadDropdown(`${apiBaseUrl}/regencies/${selectedProvince}.json`, targetModal.find(
+                        '.select-city'), selectedCity, function() {
+                        if (selectedCity) {
+                            loadDropdown(`${apiBaseUrl}/districts/${selectedCity}.json`, targetModal
+                                .find('.select-subdistrict'), selectedSubdistrict,
+                                function() {
+                                    if (selectedSubdistrict) {
+                                        loadDropdown(
+                                            `${apiBaseUrl}/villages/${selectedSubdistrict}.json`,
+                                            targetModal.find('.select-village'),
+                                            selectedVillage);
+                                    }
+                                });
+                        }
+                    });
                 }
             });
         });
