@@ -36,6 +36,12 @@ use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 
 class EventController extends Controller
 {
+    public function listEventPage()
+    {
+
+        $organizers = Organizer::with('user')->get()->groupBy('organizer_type');
+        return view('dashboardPage.events.listEvent', compact('organizers'));
+    }
     public function eventPage($shorten_name)
     {
         if (Auth::user()->roles()->where('name', 'Organizer')->exists()) {
@@ -45,6 +51,85 @@ class EventController extends Controller
         }
         return view('dashboardPage.events.index', compact('shorten_name'));
     }
+
+    // Super Admin
+    public function getDataListEvent(Request $request)
+    {
+
+        $events = Event::with('organizers')->where('organizer_id', $request->organizer_id)->get();
+
+        return DataTables::of($events)
+            ->addIndexColumn()
+            ->editColumn('status', function ($event) {
+
+                $badgeClass = '';
+                $textButton = '';
+                if ($event->status === 'planned') {
+                    $textButton = 'Direncanakan';
+                    $badgeClass = 'bg-primary-600';
+                } elseif ($event->status === 'published') {
+                    $textButton = 'Terpublikasi';
+                    $badgeClass = 'bg-success-600';
+                } elseif ($event->status === 'blocked') {
+                    $textButton = 'Terblokir';
+                    $badgeClass = 'bg-danger-600';
+                } elseif ($event->status === 'completed') {
+                    $textButton = 'Selesai';
+                    $badgeClass = 'bg-dark';
+                }
+                return '<span class="badge text-sm ' . $badgeClass . ' px-20 py-9 radius-4 text-white">' . $textButton . '</span>';
+            })
+            ->addColumn('action', function ($event) {
+
+                $html = '<div class="d-flex gap-8">';
+
+                if ($event->status === 'blocked') {
+                    $html .= '
+                        <form action="' . route('block.event', ['type' => 'unblock_event', 'id' => $event->id]) . '" method="POST" class="block-form" data-table="listEventTable">
+                            <input type="hidden" name="_method" value="PUT">
+                            <input type="hidden" name="_token" value="' . csrf_token() . '">
+                            <button type="button" class="block-btn w-40-px h-40-px bg-warning-focus text-warning-main rounded-circle d-inline-flex align-items-center justify-content-center" title="Unblock" data-action="unblock_event">
+                                <iconify-icon icon="gg:unblock" width="25"></iconify-icon>
+                            </button>
+                        </form>';
+                } elseif ($event->status === 'published') {
+                    // Tombol Block
+                    $html .= '
+                        <form action="' . route('block.event', ['type' => 'block_event', 'id' => $event->id]) . '" method="POST" class="block-form" data-table="listEventTable">
+                            <input type="hidden" name="_method" value="PUT">
+                            <input type="hidden" name="_token" value="' . csrf_token() . '">
+                            <button type="button" class="block-btn w-40-px h-40-px bg-danger-focus text-danger-main rounded-circle d-inline-flex align-items-center justify-content-center" title="Block" data-action="block_event">
+                                <iconify-icon icon="ic:sharp-block" width="20"></iconify-icon>
+                            </button>
+                        </form>';
+                }
+
+                $html .= '</div>';
+                return $html;
+            })
+            ->rawColumns(['status', 'action'])
+            ->make(true);
+    }
+    public function blockEvent($type, $id)
+    {
+        try {
+            // Ambil data event yang ingin dihapus
+            $event = Event::findOrFail($id);
+            // Hapus event
+            $event->update(['status' => $type == 'block_event' ? 'blocked' : 'published']);
+            return response()->json([
+                'status' => 'success',
+                'message' => $type == 'block_event' ? 'Blokir event berhasil!' :  'Membuka blokir event berhasil!',
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $type == 'block_event' ? 'Terjadi kesalahan saat memblokir event.' : 'Terjadi kesalahan saat membuka blokir event.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    // Organizer
     public function getDataEvents($shorten_name)
     {
 
@@ -116,70 +201,7 @@ class EventController extends Controller
             ->rawColumns(['event_date_location', 'quota', 'action'])
             ->make(true);
     }
-    public function getDataParticipants($id)
-    {
-        $participants = EventParticipant::with('user', 'event.steps', 'transaction')
-            ->where('event_id', $id)
-            ->get();
-        return DataTables::of($participants)
-            ->addIndexColumn()
-            ->editColumn('category_user', function ($participant) {
-                $user = $participant->user;
-                if ($user->category_user == 'Internal Kampus') {
-                    $categoryUser = 'Mahasiswa J' . $user->jurusan->kode_jurusan;
-                } else {
-                    $categoryUser = 'Eksternal Kampus';
-                }
-                return $categoryUser;
-            })
-            ->editColumn('status', function ($participant) {
-                $badgeClass = '';
-                $statusText = '';
-                $reasonRejected = null;
 
-                switch ($participant->status) {
-                    case 'pending_approval':
-                        $badgeClass = 'bg-warning-600';
-                        $statusText = 'Perlu Diverifikasi';
-                        break;
-                    case 'registered':
-                        $badgeClass = 'bg-primary-600';
-                        $statusText = 'Terdaftar';
-                        break;
-                    case 'attended':
-                        $badgeClass = 'bg-success-600';
-                        $statusText = 'Hadir';
-                        break;
-                    case 'rejected':
-                        $badgeClass = 'bg-danger-600';
-                        $statusText = 'Ditolak';
-                        $reasonRejected = $participant->reason;
-                        break;
-                }
-
-                $html = '<span class="badge ' . $badgeClass . '">' . $statusText . '</span>';
-
-                if ($reasonRejected) {
-                    $html .= '<p class="mt-2 text-danger small">' . e($reasonRejected) . '</p>';
-                }
-
-                return $html;
-            })
-            ->addColumn('action', function ($participant) {
-                $confirmModal = view('dashboardPage.events.modal.confirmRegistration', compact('participant'))->render();
-                if ($participant->status === 'pending_approval') {
-
-                    return '
-                    <a class="w-40-px h-40-px cursor-pointer bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center"
-                    data-bs-toggle="modal" data-bs-target="#modalConfirmRegistration-' . $participant->id . '">
-                    <iconify-icon icon="ph:check-fat-fill" class="text-xl"></iconify-icon>
-                    </a>
-                    ' . $confirmModal;
-                }
-            })
-            ->rawColumns(['category_user', 'status', 'action'])
-            ->make(true);
-    }
 
 
     public function addEventPage()
@@ -413,6 +435,7 @@ class EventController extends Controller
                     'event_leader' => $request->event_leader,
                     'is_free' => $request->is_free,
                     'is_publish' => $request->is_publish,
+                    'status' => $request->is_publish ? 'published' : 'planned',
                     'benefit' => $request->benefit,
                     'contact_person' => $request->contact_person,
                     'registration_date_start' => $request->date_registration_start,
@@ -553,6 +576,12 @@ class EventController extends Controller
 
                     // **Cek apakah ada booking yang bentrok dengan waktu yang dipilih**
                     $conflict = AssetBooking::where('asset_id', $location_id)
+                        ->where(function ($query) {
+                            $query->where('status', 'NOT LIKE', 'submission%')
+                                ->where('status', '!=', 'rejected_booking')
+                                ->where('status', '!=', 'rejected')
+                                ->where('status', '!=', 'cancelled');
+                        })
                         ->where(function ($query) use ($usageDateStart, $usageDateEnd) {
                             $query->where(function ($q) use ($usageDateStart, $usageDateEnd) {
                                 $q->where('usage_date_start', '<', $usageDateEnd)
@@ -636,6 +665,12 @@ class EventController extends Controller
                             }
                             // **Cek apakah ada booking yang bentrok dengan waktu yang dipilih**
                             $conflict = AssetBooking::where('asset_id', $request->loan_assets[$index])
+                                ->where(function ($query) {
+                                    $query->where('status', 'NOT LIKE', 'submission%')
+                                        ->where('status', '!=', 'rejected_booking')
+                                        ->where('status', '!=', 'rejected')
+                                        ->where('status', '!=', 'cancelled');
+                                })
                                 ->where(function ($query) use ($usageDateLoanStart, $usageDateLoanEnd) {
                                     $query->where(function ($q) use ($usageDateLoanStart, $usageDateLoanEnd) {
                                         $q->where('usage_date_start', '<', $usageDateLoanEnd)
@@ -964,6 +999,7 @@ class EventController extends Controller
                     'event_leader' => $request->event_leader,
                     'is_free' => $request->is_free,
                     'is_publish' => $request->is_publish,
+                    'status' => $request->is_publish ? 'published' : 'planned',
                     'benefit' => $request->benefit,
                     'contact_person' => $request->contact_person,
                     'registration_date_start' => $request->date_registration_start,
@@ -1324,228 +1360,4 @@ class EventController extends Controller
     }
 
     public function destroyEvent($id) {}
-
-    public function registerEvent(Request $request, $id)
-    {
-        if (!Auth::check()) {
-            notyf()->ripple(true)->error('Anda harus login terlebih dahulu.');
-            return redirect()->back();
-        }
-        if (!Auth::user()->hasRole('Participant')) {
-            notyf()->ripple(true)->error('Anda harus login sebagai Participant.');
-            return redirect()->back();
-        }
-
-
-        $event = Event::findOrFail($id);
-        $user = Auth::user();
-
-        // Cek apakah user sudah pernah mendaftar
-        $alreadyRegistered = EventParticipant::where('event_id', $event->id)
-            ->where('user_id', $user->id)
-            ->exists();
-
-        if ($alreadyRegistered) {
-            notyf()->ripple(true)->warning('Anda sudah terdaftar di event ini');
-            return redirect()->back();
-        }
-        $yearNow = Carbon::now()->year;
-        DB::beginTransaction();
-        try {
-            $status = $event->is_free ? 'registered' : 'pending_approval';
-            $event->remaining_quota += 1;
-            $event->save();
-
-
-
-            // Simpan ke tabel participant
-            $participant = EventParticipant::create([
-                'event_id' => $event->id,
-                'user_id' => $user->id,
-                'ticket_code' => '',
-                'status' => $status,
-            ]);
-
-
-            $clean_event_id = str_replace('-', '', $event->id);
-            $clean_participant_id = str_replace('-', '', $participant->id);
-            $uuid_event = substr($clean_event_id, (strlen($clean_event_id) - 8) / 2, 8);
-            $uuid_participant = substr($clean_participant_id, (strlen($clean_participant_id) - 8) / 2, 8);
-            $kode_ticket = strtoupper("{$uuid_event}{$uuid_participant}");
-
-            $participant->ticket_code = $kode_ticket;
-            $participant->save();
-
-            // Jika event berbayar, buat transaksi dan simpan bukti
-            if (!$event->is_free) {
-                $request->validate([
-                    'proof_of_payment' => 'required|file|mimes:jpg,jpeg,png',
-                ]);
-
-
-                $part_event_name = implode(' ', array_slice(explode(' ', $event->title), 0, 3));
-                $organizerName = $event->organizers->shorten_name;
-                $file = $request->file('proof_of_payment');
-                $extension = $file->getClientOriginalExtension();
-
-
-                // Buat nama file
-                $fileName =  $user->name . '.' . $extension;
-                $path = $file->storeAs(
-                    'Event/' . $organizerName . '/' . $yearNow . '/' . $part_event_name . '/' .  'Bukti Pembayaran',
-                    $fileName,
-                    'public'
-                );
-                EventTransaction::create([
-                    'event_participant_id' => $participant->id,
-                    'total_amount' => $request->price,
-                    'status' => 'pending',
-                    'proof_of_payment' => $path,
-                    'payment_date' => Carbon::now()
-                ]);
-            }
-            DB::commit();
-
-            notyf()->ripple(true)->success('Berhasil mendaftar event!');
-            return redirect()->back();
-        } catch (\Exception $e) {
-            DB::rollback();
-
-            notyf()->ripple(true)->error('Terjadi kesalahan saat mendaftar event. ' . $e);
-            return redirect()->back();
-        }
-    }
-    public function repeatRegisterEvent(Request $request, $id)
-    {
-        if (!Auth::check()) {
-            notyf()->ripple(true)->error('Anda harus login terlebih dahulu.');
-            return redirect()->back();
-        }
-
-        if (!Auth::user()->hasRole('Participant')) {
-            notyf()->ripple(true)->error('Anda harus login sebagai Participant.');
-            return redirect()->back();
-        }
-
-        $event = Event::findOrFail($id);
-        $user = Auth::user();
-        $yearNow = Carbon::now()->year;
-
-        // Cek apakah user sudah pernah mendaftar
-        $participant = EventParticipant::where('event_id', $event->id)
-            ->where('user_id', $user->id)
-            ->first();
-
-        // Jika sudah pernah mendaftar dan statusnya rejected, izinkan upload ulang bukti
-        if ($participant && $participant->status === 'rejected') {
-            $request->validate([
-                'proof_of_payment' => 'required|file|mimes:jpg,jpeg,png',
-            ]);
-
-            DB::beginTransaction();
-            try {
-                if (Storage::disk('public')->exists($participant->transaction->first()->proof_of_payment)) {
-                    Storage::disk('public')->delete($participant->transaction->first()->proof_of_payment);
-                }
-
-                $part_event_name = implode(' ', array_slice(explode(' ', $event->title), 0, 3));
-                $organizerName = $event->organizers->shorten_name;
-                $file = $request->file('proof_of_payment');
-                $extension = $file->getClientOriginalExtension();
-
-                $fileName = $user->name . '.' . $extension;
-                $path = $file->storeAs(
-                    'Event/' . $organizerName . '/' . $yearNow . '/' . $part_event_name . '/Bukti Pembayaran',
-                    $fileName,
-                    'public'
-                );
-
-                // Update status peserta jadi pending_approval kembali
-                $participant->update([
-                    'status' => 'pending_approval',
-                    'reason' => null
-                ]);
-
-                // Update atau buat transaksi baru
-                $participant->transaction()->update(
-                    [
-                        'proof_of_payment' => $path,
-                        'payment_date' => Carbon::now(),
-                    ]
-                );
-
-                DB::commit();
-                notyf()->ripple(true)->success('Bukti pembayaran berhasil diperbarui!');
-                return redirect()->back();
-            } catch (\Exception $e) {
-                DB::rollback();
-                notyf()->ripple(true)->error('Terjadi kesalahan saat memperbarui bukti pembayaran.');
-                return redirect()->back();
-            }
-        }
-    }
-    public function confirmRegistration(Request $request, $id)
-    {
-        // Validasi input berdasarkan status
-        $rules = ['statusRegistration' => 'required'];
-        $messages = ['statusRegistration.required' => 'Tindakan Konfirmasi wajib diisi.'];
-
-        if ($request->statusRegistration === 'rejected') {
-            $rules['reason'] = 'required';
-            $messages['reason.required'] = 'Alasan Penolakan wajib diisi.';
-        }
-
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validasi gagal',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-        DB::beginTransaction();
-        try {
-            // Temukan peserta
-            $eventParticipant = EventParticipant::findOrFail($id);
-
-            // Update status berdasarkan input
-            if ($request->statusRegistration === 'approved') {
-                $eventParticipant->status = 'registered';
-            } elseif ($request->statusRegistration === 'rejected') {
-                $eventParticipant->status = 'rejected';
-                $eventParticipant->reason = $request->reason;
-            }
-
-            $eventParticipant->save();
-            DB::commit();
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Konfirmasi Pendaftaran berhasil!.'
-            ], 201);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan saat konfirmasi pendaftaran.',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function eTicket($id)
-    {
-        $participant = EventParticipant::with('user', 'event.steps', 'transaction')->findOrFail($id);
-
-        $renderer = new ImageRenderer(
-            new RendererStyle(400),
-            new SvgImageBackEnd() // Gunakan SvgImageBackEnd yang tidak memerlukan Imagick
-        );
-
-        $writer = new Writer($renderer);
-        $qrCode = base64_encode($writer->writeString($participant->ticket_code));
-        $pdf = Pdf::loadView('components.e-ticket', compact('participant', 'qrCode'));
-
-        return $pdf->stream("E-ticket {$participant->event->title}.pdf");
-    }
 }
