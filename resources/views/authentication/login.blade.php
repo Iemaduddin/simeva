@@ -86,7 +86,8 @@
                                 Password?</a>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-info text-sm btn-sm px-12 py-16 w-100 radius-12 mt-32">
+                    <button type="submit"
+                        class="btn btn-primary text-sm btn-sm px-12 py-16 w-100 radius-12 mt-32 submit-btn">
                         Sign In</button>
 
                     <div class="mt-32 text-center text-sm">
