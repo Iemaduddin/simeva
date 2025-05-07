@@ -556,7 +556,7 @@
                                         <span class="text-neutral-500 text-line-4">{{ $asset->description }}</span>
                                         <h5 class="mt-12">Fasilitas</h5>
                                         @php
-                                            $facilityList = explode(',', $asset->facility);
+                                            $facilityList = explode('|', $asset->facility);
                                         @endphp
                                         @foreach ($facilityList as $asset_facility)
                                             <div class="flex-align gap-8">
@@ -570,10 +570,13 @@
                                                 class="badge {{ $asset->status === 'OPEN' ? 'badge-success' : 'badge-danger' }}rounded-10 px-10 py-10 bg-success text-white text-sm fw-bold ">
                                                 {{ $asset->status }}
                                             </span>
-                                            <div class="row">
-                                                <div class="col-12 fw-bold">Tersedia:</div>
-                                                <div class="col-12">{{ $asset->available_at }}</div>
-                                            </div>
+                                            @if ($asset->available_at)
+                                                <div class="row">
+                                                    <div class="col-12 fw-bold">Tersedia:</div>
+                                                    <div class="col-12">
+                                                        {{ implode(', ', explode('|', $asset->available_at)) }}</div>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                     <div

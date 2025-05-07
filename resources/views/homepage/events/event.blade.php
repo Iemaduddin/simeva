@@ -271,10 +271,11 @@
 
 
                             <span id="showing-text" class="text-neutral-500">
-                                Showing {{ $events->firstItem() }} to {{ $events->lastItem() }} of {{ $events->total() }}
-                                entries
+                                Menampilkan {{ $events->firstItem() }} hingga {{ $events->lastItem() }} dari
+                                {{ $events->total() }}
+                                event
                                 @if ($events->total() > $events->count())
-                                    (filtered from {{ $events->total() }} total entries)
+                                    (Difilter dari {{ $events->total() }} total event)
                                 @endif
                             </span>
 
@@ -329,9 +330,9 @@
 
                         // Update informasi jumlah data
                         let showingText =
-                            `Showing ${response.from} to ${response.to} of ${response.filtered ? response.filtered : response.total} entries`;
+                            `Menampilkan ${response.from} hingga ${response.to} dari ${response.filtered ? response.filtered : response.total} event`;
                         if (response.filtered && response.filtered !== response.total) {
-                            showingText += ` (filtered from ${response.total} total entries)`;
+                            showingText += ` (Difilter dari ${response.total} total event)`;
                         }
                         $('#showing-text').text(showingText);
                     },
