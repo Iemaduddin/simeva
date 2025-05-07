@@ -3,7 +3,7 @@
 <input type="hidden" id="status" value="{{ $assetDetails->status }}">
 @if (auth()->check())
     @if (auth()->user()->hasRole(['Super Admin', 'Tenant']))
-        <div id="event-modal" class="modal fade" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+        <div id="event-modal-daily" class="modal fade" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
             <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content p-10">
                     <div class="modal-header">
@@ -164,7 +164,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         // Data hari tersedia dari backend (ubah ke format array JavaScript)
-        const availableDays = @json(explode(',', $assetDetails->available_at));
+        const availableDays = @json(explode('|', $assetDetails->available_at));
 
         // Konversi nama hari ke indeks (0 = Minggu, 1 = Senin, ..., 6 = Sabtu)
         const dayMapping = {
@@ -184,7 +184,7 @@
             mode: "range",
             // dateFormat: "d F Y", // Format tanggal dalam bahasa Indonesia
             minDate: "today", // Tidak bisa memilih sebelum hari ini
-            locale: "id", // Menggunakan bahasa Indonesia
+            // locale: "id", // Menggunakan bahasa Indonesia
             disable: [
                 function(date) {
                     return !enabledDays.includes(date.getDay()); // Hanya izinkan hari tertentu
@@ -202,7 +202,7 @@
             noCalendar: true,
             dateFormat: "H:i",
             time_24hr: true,
-            locale: "id"
+            // locale: "id"
         });
 
         flatpickr("#end_time", {
@@ -210,7 +210,7 @@
             noCalendar: true,
             dateFormat: "H:i",
             time_24hr: true,
-            locale: "id"
+            // locale: "id"
         });
     });
 </script>
@@ -245,7 +245,7 @@
             },
             viewDisplay: function(view) {
                 let availableDays = $("#available_days").length ? $("#available_days").val()
-                    .split(", ").map(x => x.trim()) : [];
+                    .split("|").map(x => x.trim()) : [];
 
                 let today = new Date();
                 today.setHours(0, 0, 0, 0); // Hilangkan jam untuk perbandingan hanya pada tanggal
@@ -260,7 +260,7 @@
                         // **Disable tanggal jika lebih kecil dari hari ini atau tidak tersedia dalam availableDays**
                         if (currentDate < today || !availableDays.includes(dayName)) {
                             $(this).css({
-                                "background-color": "#dcdcdc", // Warna abu-abu
+                                "background-color": "#F5F5F5", // Warna abu-abu
                                 "pointer-events": "none", // Nonaktifkan klik
                                 "opacity": "0.5" // Buat lebih transparan
                             });
@@ -343,6 +343,7 @@
             },
 
             dayClick: function(date, allDay, jsEvent, view) {
+                // const booking_type = "{{ $assetDetails->booking_type ?? '' }}";
                 if (!isUserLoggedIn) {
                     $("#event-beforeLogin-modal").modal("show");
                     return;
@@ -352,10 +353,11 @@
                     // Pastikan user sudah login sebelum mengambil nilai dari #available_days
                     let availableDays = $("#available_days").length ? $("#available_days").val()
                         .split(
-                            ", ").map(x => x.trim()) : [];
+                            "|").map(x => x.trim()) : [];
 
                     if (availableDays.length === 0) {
-                        $("#event-modal").modal("show");
+                        $("#event-modal-daily").modal("show");
+                        $("#event-modal-annual").modal("show");
                         return;
                     }
 
@@ -371,8 +373,8 @@
                         return;
                     }
 
+                    $("#event-modal-daily").modal("show");
 
-                    $("#event-modal").modal("show");
 
                     let year = clickedDate.getFullYear();
                     let month = (clickedDate.getMonth() + 1).toString().padStart(2, '0');
@@ -380,7 +382,9 @@
 
                     let formattedSelectedDate = `${year}-${month}-${day}`;
 
-                    let prevDate = new Date(date);
+                    // Ini buat tanggal sebelumnya, kalau kamu masih butuh
+                    let prevDate = new Date(
+                        clickedDate); // harusnya pakai clickedDate, bukan 'date'
                     prevDate.setDate(prevDate.getDate() - 1);
 
                     let prevYear = prevDate.getFullYear();
@@ -389,14 +393,10 @@
 
                     let formattedPrevDate = `${prevYear}-${prevMonth}-${prevDay}`;
 
-                    let formattedDisplayDate = clickedDate.toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
-                    });
-                    // Set value tetap 'YYYY-MM-DD' dan tampilan berubah
-                    $("#usage_date").val(formattedSelectedDate); // Simpan format YYYY-MM-DD
-                    $("#usage_date_display").val(formattedDisplayDate);
+                    // Set hidden dan tampilan (tidak pakai format apa-apa)
+                    $("#usage_date").val(formattedSelectedDate); // Hidden: tetap 'YYYY-MM-DD'
+                    $("#usage_date_display").val(formattedSelectedDate); // Display: sama, langsung
+
                 } else {
                     $('#status-closed-modal').modal('show');
                 }

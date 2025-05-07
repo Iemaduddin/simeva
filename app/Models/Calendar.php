@@ -7,28 +7,26 @@ use Illuminate\Database\Eloquent\Model;
 class Calendar extends Model
 {
     protected $fillable = [
-        'type',
         'event_id',
-        'asset_booking_id',
+        'organizer_id',
+        'title',
+        'start_date',
+        'end_date',
         'is_public',
         'all_day',
-        'background_color',
-        'text_color'
     ];
 
     protected $casts = [
         'is_public' => 'boolean',
         'all_day' => 'boolean',
-        'type' => 'string'
     ];
 
     public function event()
     {
         return $this->belongsTo(Event::class);
     }
-
-    public function asset_booking()
+    public function organizer()
     {
-        return $this->belongsTo(AssetBooking::class);
+        return $this->belongsTo(Organizer::class, 'organizer_id');
     }
 }

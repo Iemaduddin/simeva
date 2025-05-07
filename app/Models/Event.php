@@ -83,6 +83,10 @@ class Event extends Model
     {
         return $this->belongsTo(Organizer::class, 'organizer_id');
     }
+    public function calendars()
+    {
+        return $this->belongsTo(Calendar::class, 'event_id');
+    }
     public function documents()
     {
         return $this->hasMany(AssetBookingDocument::class, 'event_id');

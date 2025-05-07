@@ -13,18 +13,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('calendars', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(Str::uuid());
-            $table->enum('type', ['event', 'asset']);
+            $table->bigIncrements('id');
             $table->uuid('event_id')->nullable();
-            $table->uuid('asset_booking_id')->nullable();
-            $table->boolean('is_public')->default(true);
+            $table->uuid('organizer_id')->nullable();
+            $table->string('title')->nullable();
+            $table->dateTime('start_date')->nullable();
+            $table->dateTime('end_date')->nullable();
+            $table->boolean('is_public')->default(false);
             $table->boolean('all_day')->default(false);
-            $table->string('background_color', 7);
-            $table->string('text_color', 7);
             $table->timestamps();
 
             $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
-            $table->foreign('asset_booking_id')->references('id')->on('asset_bookings')->onDelete('cascade');
+            $table->foreign('organizer_id')->references('id')->on('organizers')->onDelete('cascade');
         });
     }
 
