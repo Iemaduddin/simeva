@@ -48,72 +48,70 @@
         <div class="row gy-4 my-24">
             <div class="col-xxl-2">
                 <div class="card h-100 p-0">
-                    <div class="card h-100 p-0">
-                        <div class="card-body p-24">
-                            <h5>Filter</h5>
-                            <div class="d-flex flex-column gap-16">
-                                <div class="flex-between gap-16">
-                                    <div class="form-check common-check mb-0">
-                                        <input class="form-check-input category-filter" type="checkbox" name="category[]"
-                                            value="All" id="category-all" checked>
-                                        <label class="form-check-label fw-bold text-dark flex-grow-1"
-                                            for="category-all">All</label>
-                                    </div>
-                                </div>
-                                <div class="flex-between gap-16">
-                                    <div class="form-check common-check mb-0">
-                                        <input class="form-check-input category-filter" type="checkbox" name="category[]"
-                                            value="Seminar" id="category-seminar" checked>
-                                        <label class="form-check-label fw-bold text-danger-700 flex-grow-1"
-                                            for="category-seminar">Seminar</label>
-                                    </div>
-                                </div>
-                                <div class="flex-between gap-16">
-                                    <div class="form-check common-check mb-0">
-                                        <input class="form-check-input category-filter" type="checkbox" name="category[]"
-                                            value="Kuliah Tamu" id="category-kuliah-tamu" checked>
-                                        <label class="form-check-label fw-bold text-success-700 flex-grow-1"
-                                            for="category-kuliah-tamu">Kuliah Tamu</label>
-                                    </div>
-                                </div>
-                                <div class="flex-between gap-16">
-                                    <div class="form-check common-check mb-0">
-                                        <input class="form-check-input category-filter" type="checkbox" name="category[]"
-                                            value="Pelatihan" id="category-pelatihan" checked>
-                                        <label class="form-check-label fw-bold text-primary-700 flex-grow-1"
-                                            for="category-pelatihan">Pelatihan</label>
-                                    </div>
-                                </div>
-                                <div class="flex-between gap-16">
-                                    <div class="form-check common-check mb-0">
-                                        <input class="form-check-input category-filter" type="checkbox" name="category[]"
-                                            value="Workshop" id="category-workshop" checked>
-                                        <label class="form-check-label fw-bold text-info-700 flex-grow-1"
-                                            for="category-workshop">Workshop</label>
-                                    </div>
-                                </div>
-                                <div class="flex-between gap-16">
-                                    <div class="form-check common-check mb-0">
-                                        <input class="form-check-input category-filter" type="checkbox" name="category[]"
-                                            value="Kompetisi" id="category-kompetisi" checked>
-                                        <label class="form-check-label fw-bold text-warning-700 flex-grow-1"
-                                            for="category-kompetisi">Kompetisi</label>
-                                    </div>
-                                </div>
-                                <div class="flex-between gap-16">
-                                    <div class="form-check common-check mb-0">
-                                        <input class="form-check-input category-filter" type="checkbox" name="category[]"
-                                            value="Lainnya" id="category-lainnya" checked>
-                                        <label class="form-check-label fw-bold text-purple-700 flex-grow-1"
-                                            for="category-lainnya">Lainnya</label>
-                                    </div>
+                    <div class="card-body p-24">
+                        <h5>Filter</h5>
+                        <div class="d-flex flex-column gap-16">
+                            <div class="flex-between gap-16">
+                                <div class="form-check common-check mb-0">
+                                    <input class="form-check-input category-filter" type="checkbox" name="category[]"
+                                        value="All" id="category-all" checked>
+                                    <label class="form-check-label fw-bold text-dark flex-grow-1"
+                                        for="category-all">All</label>
                                 </div>
                             </div>
-
+                            <div class="flex-between gap-16">
+                                <div class="form-check common-check mb-0">
+                                    <input class="form-check-input category-filter" type="checkbox" name="category[]"
+                                        value="Seminar" id="category-seminar" checked>
+                                    <label class="form-check-label fw-bold text-danger-700 flex-grow-1"
+                                        for="category-seminar">Seminar</label>
+                                </div>
+                            </div>
+                            <div class="flex-between gap-16">
+                                <div class="form-check common-check mb-0">
+                                    <input class="form-check-input category-filter" type="checkbox" name="category[]"
+                                        value="Kuliah Tamu" id="category-kuliah-tamu" checked>
+                                    <label class="form-check-label fw-bold text-success-700 flex-grow-1"
+                                        for="category-kuliah-tamu">Kuliah Tamu</label>
+                                </div>
+                            </div>
+                            <div class="flex-between gap-16">
+                                <div class="form-check common-check mb-0">
+                                    <input class="form-check-input category-filter" type="checkbox" name="category[]"
+                                        value="Pelatihan" id="category-pelatihan" checked>
+                                    <label class="form-check-label fw-bold text-primary-700 flex-grow-1"
+                                        for="category-pelatihan">Pelatihan</label>
+                                </div>
+                            </div>
+                            <div class="flex-between gap-16">
+                                <div class="form-check common-check mb-0">
+                                    <input class="form-check-input category-filter" type="checkbox" name="category[]"
+                                        value="Workshop" id="category-workshop" checked>
+                                    <label class="form-check-label fw-bold text-info-700 flex-grow-1"
+                                        for="category-workshop">Workshop</label>
+                                </div>
+                            </div>
+                            <div class="flex-between gap-16">
+                                <div class="form-check common-check mb-0">
+                                    <input class="form-check-input category-filter" type="checkbox" name="category[]"
+                                        value="Kompetisi" id="category-kompetisi" checked>
+                                    <label class="form-check-label fw-bold text-warning-700 flex-grow-1"
+                                        for="category-kompetisi">Kompetisi</label>
+                                </div>
+                            </div>
+                            <div class="flex-between gap-16">
+                                <div class="form-check common-check mb-0">
+                                    <input class="form-check-input category-filter" type="checkbox" name="category[]"
+                                        value="Lainnya" id="category-lainnya" checked>
+                                    <label class="form-check-label fw-bold text-purple-700 flex-grow-1"
+                                        for="category-lainnya">Lainnya</label>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
+                    </div>
                 </div>
+
             </div>
             <div class="col-xxl-10 col-lg-8">
                 <div class="card h-100 p-0">

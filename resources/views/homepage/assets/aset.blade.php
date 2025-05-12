@@ -1,5 +1,8 @@
 @extends('layout.landingPageLayout')
+@section('css')
+    <link rel="stylesheet" href="{{ asset('assets/css/lib/event-calendar.min.css') }}">
 
+@endsection
 @section('title', 'Aset BMN')
 @section('content')
     <!-- ========================= Banner Section Start =============================== -->
@@ -66,10 +69,50 @@
     </section>
     <!-- ========================= Banner SEction End =============================== -->
     <section class="course-list-view py-50">
+        <div class="text-2xl fw-semibold text-main-600 d-flex gap-8 mb-16 justify-content-center aos-init aos-animate my-54"
+            data-aos="fade-down">
+            <span><i class="ph-bold ph-building-office"></i></span>
+            <span>Jadwal Penggunaan Gedung Fasilitas Umum</span>
+        </div>
+        <div class="container card h-100 p-24 my-50 wow bounceIn">
+            <div class="row gy-4">
+                <div class="col-xl-12">
+
+                    <div id="timeline-usage-asset"></div>
+                    <div class="row my-24 mx-16 d-flex justify-content-around">
+                        <div class="col-xl-12">
+                            <h6>Status Peminjaman:</h6>
+                        </div>
+
+                        @php
+                            $statuses = [
+                                ['color' => 'bg-color-blue', 'text' => 'Sudah Dipesan (Booked)'],
+                                ['color' => 'bg-color-yellow', 'text' => 'Proses Pengajuan (Submission)'],
+                                ['color' => 'bg-color-light-green', 'text' => 'Disetujui (Approved)'],
+                            ];
+                        @endphp
+
+                        @foreach ($statuses as $status)
+                            <div class="col-xl-4 d-flex align-items-center gap-8">
+                                <div class="w-16 h-16 border border-2 border-white {{ $status['color'] }} rounded-circle">
+                                </div>
+                                <p class="m-0 fw-bold">{{ $status['text'] }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="container">
-            <div class="row">
+            <div class="text-2xl fw-semibold text-main-600 d-flex gap-8 mb-16 justify-content-center aos-init aos-animate"
+                data-aos="fade-down">
+                <span><i class="ph-bold ph-list-dashes"></i></span>
+                <span>Daftar Aset</span>
+            </div>
+            <div class="row mt-72">
                 <div class="col-lg-4">
-                    <div class="sidebar rounded-12 bg-main-25 p-32 border border-neutral-30">
+                    <div class="sidebar rounded-12 bg-main-25 p-32 border border-neutral-30 wow bounceInLeft">
                         <form id="asset-filter-form">
                             <div class="flex-between mb-24">
                                 <h4 class="mb-0">Filter</h4>
@@ -112,16 +155,17 @@
                             <div class="d-flex flex-column gap-16">
                                 <div class="flex-between gap-16">
                                     <div class="form-check common-check mb-0">
-                                        <input class="form-check-input" type="checkbox" name="booking_type[]" value="all"
-                                            id="all-booking-type" checked>
-                                        <label class="form-check-label fw-normal flex-grow-1" for="all-costs">Semua</label>
+                                        <input class="form-check-input" type="checkbox" name="booking_type[]"
+                                            value="all" id="all-booking-type" checked>
+                                        <label class="form-check-label fw-normal flex-grow-1"
+                                            for="all-costs">Semua</label>
                                     </div>
                                     <span class="text-neutral-500">{{ $allAssets->count() }}</span>
                                 </div>
                                 <div class="flex-between gap-16">
                                     <div class="form-check common-check mb-0">
-                                        <input class="form-check-input" type="checkbox" name="booking_type[]" value="daily"
-                                            id="daily" checked>
+                                        <input class="form-check-input" type="checkbox" name="booking_type[]"
+                                            value="daily" id="daily" checked>
                                         <label class="form-check-label fw-normal flex-grow-1"
                                             for="daily">Harian</label>
                                     </div>
@@ -149,7 +193,7 @@
                     </div>
                 </div>
                 <div class="col-lg-8 ps-40">
-                    <div class="course-list-wrapper">
+                    <div class="course-list-wrapper wow bounceInRight">
                         <div class="flex-between gap-16 flex-wrap mb-40">
                             <span id="showing-text" class="text-neutral-500">
                                 Menampilkan {{ $assets->firstItem() }} hingga {{ $assets->lastItem() }} dari
@@ -170,8 +214,37 @@
             </div>
         </div>
     </section>
+
+    <!-- Modal Detail Timeline Asset Booking -->
+    <div class="modal fade" id="detailTimelineUsageAsset" tabindex="-1" aria-labelledby="detailTimelineUsageAsset"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog modal-dialog-centered">
+            <div class="modal-content radius-16 bg-base">
+                <div class="modal-header py-16 px-24 border border-top-0 border-start-0 border-end-0">
+                    <h1 class="modal-title fs-5" id="detailTimelineUsageAsset">Rincian Data Booking Aset</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-24">
+                    <div class="mb-12">
+                        <span class="text-secondary-light txt-sm fw-medium">Nama Event:</span>
+                        <h6 class="text-primary-light fw-semibold text-md mb-0 mt-4 detail-event-title"></h6>
+                    </div>
+                    <div class="mb-12">
+                        <span class="text-secondary-light txt-sm fw-medium">Tanggal Pelaksanaan:</span>
+                        <h6 class="text-primary-light fw-semibold text-md mb-0 mt-4 detail-event-date"></h6>
+                    </div>
+                    <div class="mb-12">
+                        <span class="text-secondary-light txt-sm fw-medium">Dibooking oleh:</span>
+                        <h6 class="text-primary-light fw-semibold text-md mb-0 mt-4 detail-usage-user-booking"></h6>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @push('script')
+    @include('components.timeline-usage-asset')
     <script>
         $(function() {
             // Tangani klik checkbox "Semua Kategori"

@@ -11484,9 +11484,9 @@ body::after {
 /* === calendar css start === */
 /* Full Calendar Customize Css Start */
 .fc-border-separate tr.fc-last th {
-    background: var(--neutral-50);
+    background: #f5f6fa !important;
     padding: 12px;
-    color: var(--text-primary-light);
+    color: #111827;
 }
 
 .fc-border-separate tr.fc-last th a {
@@ -11542,7 +11542,7 @@ body::after {
 }
 
 .fc-border-separate tr.fc-last th {
-    border-color: var(--neutral-200) !important;
+    border-color: #ebecef !important;
 }
 
 table.fc-header,
@@ -11609,7 +11609,7 @@ td.fc-header-center {
 }
 
 .fc-widget-content {
-    border-color: var(--border-color) !important;
+    border-color: #d1d5db80 !important;
 }
 
 .fc-last td {

@@ -288,6 +288,7 @@ class HomeController extends Controller
 
         return response()->json($bookings);
     }
+
     // public function getAnnualAssetBooking($assetId)
     // {
     //     $assetBookings = AssetBooking::where('asset_id', $assetId)
@@ -340,6 +341,65 @@ class HomeController extends Controller
     //         'data' => $data
     //     ]);
     // }
+
+
+    public function getTimelineUsageAsset()
+    {
+
+        $assetBookings = AssetBooking::with(['asset', 'event'])
+            ->whereHas('asset', function ($q) {
+                $q->where('facility_scope', 'umum');
+            })
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    $q->whereNotNull('event_id')
+                        ->whereIn('status', ['booked', 'approved']);
+                })->orWhere(function ($q) {
+                    $q->whereNull('event_id')
+                        ->whereNotIn('status', ['rejected_booking', 'rejected', 'cancelled']);
+                });
+            })
+            ->get();
+
+        $resources = [];
+        $events = [];
+
+        $resourceIds = [];
+
+        foreach ($assetBookings as $booking) {
+            // Tambahkan resource hanya jika belum ada
+            if (!in_array($booking->asset_id, $resourceIds)) {
+                $resources[] = [
+                    'id' => $booking->asset_id,
+                    'title' => $booking->asset->name,
+                    'extendedProps' => [
+                        'detailAsset' =>  route('asset-bmn.getData', $booking->asset->id)
+                    ]
+                ];
+                $resourceIds[] = $booking->asset_id;
+            }
+
+            // Tambahkan event
+            $events[] = [
+                'resourceId' => $booking->asset_id,
+                'title' => $booking->event_id !== null ? $booking->event->title : $booking->usage_event_name,
+                'start' => Carbon::parse($booking->usage_date_start)->toDateTimeString(),
+                'end' => Carbon::parse($booking->usage_date_end)->toDateTimeString(),
+                'backgroundColor' => str_contains($booking->status, 'submission')
+                    ? '#ffab00'
+                    : ($booking->status === 'booked' ? '#0066ff' : '#22c55e'),
+                'extendedProps' => [
+                    'userBooking' => $booking->user_id !== null ? $booking->user->name : $booking->external_user,
+                    'detailAsset' =>  route('asset-bmn.getData', $booking->asset->id)
+                ]
+            ];
+        }
+
+        return response()->json([
+            'resources' => $resources,
+            'events' => $events,
+        ]);
+    }
     public function calender()
     {
         return view('homepage.calender');
