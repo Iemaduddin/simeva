@@ -280,14 +280,28 @@
         </div>
         <div class="col-xxl-12">
             <div class="card h-100 p-24">
-                <div class="card-header text-center">
+                <div class="card-header d-flex justify-content-between align-items-center gap-8 mb-24">
                     <h6>Jadwal Penggunaan Aset</h6>
+                    <div class="d-flex justify-content-start align-items-center gap-8">
+                        <span class="text-neutral-500 flex-shrink-0">Filter Kategori Aset :</span>
+                        <select id="facility-filter" class="form-select form-select-sm w-auto"
+                            data-target="#timeline-usage-asset"
+                            data-fetch-url="{{ route('asset-booking.getTimelineUsageAsset') }}">
+                            <option value="umum">Fasilitas Umum</option>
+                            <optgroup label="Fasilitas Jurusan">
+                                @foreach ($jurusanModel as $jurusan)
+                                    <option value="jurusan_{{ $jurusan->id }}">{{ $jurusan->nama }}</option>
+                                @endforeach
+                            </optgroup>
+                        </select>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row gy-4">
                         <div class="col-xl-12">
-
-                            <div id="timeline-usage-asset"></div>
+                            <div id="timeline-usage-asset" data-default-scope="{{ $defaultScope ?? 'umum' }}"
+                                data-fetch-url="{{ route('asset-booking.getTimelineUsageAsset') }}">
+                            </div>
                             <div class="row my-24 mx-16 d-flex justify-content-around">
                                 <div class="col-xl-12">
                                     <p class="text-lg fw-bold">Status Peminjaman:</p>
@@ -314,7 +328,33 @@
             </div>
         </div>
     </div>
+    <!-- Modal Detail Timeline Asset Booking -->
+    <div class="modal fade" id="detailTimelineUsageAsset" tabindex="-1" aria-labelledby="detailTimelineUsageAsset"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog modal-dialog-centered">
+            <div class="modal-content radius-16 bg-base">
+                <div class="modal-header py-16 px-24 border border-top-0 border-start-0 border-end-0">
+                    <h1 class="modal-title fs-5" id="detailTimelineUsageAsset">Rincian Data Booking Aset</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-24">
+                    <div class="mb-12">
+                        <span class="text-secondary-light txt-sm fw-medium">Nama Event:</span>
+                        <h6 class="text-primary-light fw-semibold text-md mb-0 mt-4 detail-event-title"></h6>
+                    </div>
+                    <div class="mb-12">
+                        <span class="text-secondary-light txt-sm fw-medium">Tanggal Pelaksanaan:</span>
+                        <h6 class="text-primary-light fw-semibold text-md mb-0 mt-4 detail-event-date"></h6>
+                    </div>
+                    <div class="mb-12">
+                        <span class="text-secondary-light txt-sm fw-medium">Dibooking oleh:</span>
+                        <h6 class="text-primary-light fw-semibold text-md mb-0 mt-4 detail-usage-user-booking"></h6>
+                    </div>
 
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @push('script')
     {{-- Filter event by year --}}
