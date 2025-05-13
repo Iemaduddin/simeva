@@ -2,14 +2,30 @@
 <script src="{{ asset('assets/js/moment-with-locales.js') }}"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        moment.locale('id')
+    let timelineCalendar = null;
+
+    function loadTimelineUsage(targetSelector, scope) {
+        const container = document.querySelector(targetSelector);
+        const fetchUrl = container.dataset.fetchUrl;
+        if (!fetchUrl) return;
 
         $.ajax({
-            url: "{{ route('asset-booking.getTimelineUsageAsset') }}",
+            url: fetchUrl,
             method: 'GET',
+            data: {
+                scope
+            },
             success: function(response) {
-                let ec = EventCalendar.create(document.getElementById('timeline-usage-asset'), {
+                // Hapus isi container
+                container.innerHTML = '';
+
+                // Destroy instance lama (kalau ada)
+                if (timelineCalendar && typeof timelineCalendar.destroy === 'function') {
+                    timelineCalendar.destroy();
+                    timelineCalendar = null;
+                }
+                // Buat instance kalender baru
+                timelineCalendar = EventCalendar.create(container, {
                     view: 'resourceTimelineMonth',
                     locale: 'id',
                     headerToolbar: {
@@ -29,8 +45,8 @@
                         minute: '2-digit',
                         hour12: false
                     },
-                    resources: response.resources,
-                    events: response.events,
+                    resources: response.resources || [],
+                    events: response.events || [],
                     resourceLabelDidMount: function(info) {
                         // Ubah cursor menjadi pointer
                         info.el.style.cursor = 'pointer';
@@ -54,7 +70,8 @@
                         const event = info.event;
 
                         // Tambahkan pengecekan null/undefined untuk menghindari error
-                        const userBooking = event.extendedProps && event.extendedProps
+                        const userBooking = event.extendedProps && event
+                            .extendedProps
                             .userBooking ? event.extendedProps.userBooking : '-';
                         $('#detailTimelineUsageAsset')
                             .find('.detail-event-title').text(event.title)
@@ -91,6 +108,29 @@
                 console.error('Gagal memuat data kalender:', xhr);
             }
         });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        moment.locale('id');
+        const selectFilter = document.querySelector('#facility-filter');
+        const timelineContainer = document.querySelector('#timeline-usage-asset');
+
+        if (!timelineContainer) return;
+
+        const targetSelector = `#${timelineContainer.id}`;
+        const fetchScope = () => {
+            return selectFilter ? selectFilter.value : timelineContainer.dataset.defaultScope;
+        };
+
+        // Event listener (jika ada filter)
+        if (selectFilter) {
+            selectFilter.addEventListener('change', function() {
+                loadTimelineUsage(targetSelector, this.value);
+            });
+        }
+
+        // First load
+        loadTimelineUsage(targetSelector, fetchScope());
     });
 
     function formatDateRange(start, end) {
