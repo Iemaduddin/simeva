@@ -52,13 +52,13 @@ class DashboardSuperAdminController extends Controller
 
         // Kode Jurusan
         $jurusans = Jurusan::pluck('kode_jurusan');
-
+        $jurusanModel = Jurusan::all();
         $organizers = Organizer::with('user')->get()->groupBy('organizer_type');
 
 
         return view(
             'dashboardPage.dashboard.super-admin',
-            compact('totalUser', 'newUsers', 'onGoingEvents', 'assetBookings', 'jurusans', 'organizers')
+            compact('totalUser', 'newUsers', 'onGoingEvents', 'assetBookings', 'jurusans', 'jurusanModel', 'organizers')
         );
     }
 
@@ -121,7 +121,7 @@ class DashboardSuperAdminController extends Controller
         ')
             ->first();
         return response()->json([
-            'labels' => ['Booking Disetujui', 'Pengajuan', 'Disetujui', 'Ditolak', 'Dibatalkan'],
+            'labels' => ['Booking Disetujui', 'Perlu Dikonfirmasi', 'Disetujui', 'Ditolak', 'Dibatalkan'],
             'colors' => ['#487fff', '#ff9f29', '#16a34a', '#dc2626', '#000000'],
             'statusTotal' => [
                 $statusCounts->booked_count ?? 0,

@@ -164,8 +164,10 @@ class HomeController extends Controller
     }
     public function detail_organizer($id)
     {
+        $yearNow = Carbon::now()->year;
         $organizer = Organizer::findOrFail($id);
-        $events = Event::where('organizer_id', $id)->where('status', 'published')->get();
+        $events = Event::where('organizer_id', $id)->where('status', 'published')
+            ->whereYear('created_at', $yearNow)->get();
         return view('homepage.detail_organizer', compact('organizer', 'events'));
     }
 
@@ -343,56 +345,61 @@ class HomeController extends Controller
     // }
 
 
-    public function getTimelineUsageAsset()
+    public function getTimelineUsageAsset(Request $request)
     {
+        $scope = $request->input('scope');
 
-        $assetBookings = AssetBooking::with(['asset', 'event'])
-            ->whereHas('asset', function ($q) {
+        // Ambil semua asset berdasarkan scope
+        $assets = Asset::query()
+            ->when($scope === 'umum', function ($q) {
                 $q->where('facility_scope', 'umum');
             })
-            ->where(function ($query) {
-                $query->where(function ($q) {
-                    $q->whereNotNull('event_id')
-                        ->whereIn('status', ['booked', 'approved']);
-                })->orWhere(function ($q) {
-                    $q->whereNull('event_id')
-                        ->whereNotIn('status', ['rejected_booking', 'rejected', 'cancelled']);
-                });
+            ->when(Str::startsWith($scope, 'jurusan_'), function ($q) use ($scope) {
+                $jurusanId = Str::after($scope, 'jurusan_');
+                $q->where('facility_scope', 'jurusan')->where('jurusan_id', $jurusanId);
             })
+            ->with(['bookings' => function ($q) {
+                $q->where(function ($query) {
+                    $query->where(function ($q) {
+                        $q->whereNotNull('event_id')
+                            ->whereIn('status', ['booked', 'approved']);
+                    })->orWhere(function ($q) {
+                        $q->whereNull('event_id')
+                            ->whereNotIn('status', ['rejected_booking', 'rejected', 'cancelled']);
+                    });
+                })->with('event', 'user');
+            }])
             ->get();
 
         $resources = [];
         $events = [];
 
-        $resourceIds = [];
-
-        foreach ($assetBookings as $booking) {
-            // Tambahkan resource hanya jika belum ada
-            if (!in_array($booking->asset_id, $resourceIds)) {
-                $resources[] = [
-                    'id' => $booking->asset_id,
-                    'title' => $booking->asset->name,
-                    'extendedProps' => [
-                        'detailAsset' =>  route('asset-bmn.getData', $booking->asset->id)
-                    ]
-                ];
-                $resourceIds[] = $booking->asset_id;
-            }
-
-            // Tambahkan event
-            $events[] = [
-                'resourceId' => $booking->asset_id,
-                'title' => $booking->event_id !== null ? $booking->event->title : $booking->usage_event_name,
-                'start' => Carbon::parse($booking->usage_date_start)->toDateTimeString(),
-                'end' => Carbon::parse($booking->usage_date_end)->toDateTimeString(),
-                'backgroundColor' => str_contains($booking->status, 'submission')
-                    ? '#ffab00'
-                    : ($booking->status === 'booked' ? '#0066ff' : '#22c55e'),
+        foreach ($assets as $asset) {
+            // Tambahkan semua resource, meskipun tidak ada booking
+            $resources[] = [
+                'id' => $asset->id,
+                'title' => $asset->name,
                 'extendedProps' => [
-                    'userBooking' => $booking->user_id !== null ? $booking->user->name : $booking->external_user,
-                    'detailAsset' =>  route('asset-bmn.getData', $booking->asset->id)
+                    'detailAsset' => route('asset-bmn.getData', $asset->id)
                 ]
             ];
+
+            // Tambahkan events hanya kalau ada booking
+            foreach ($asset->bookings as $booking) {
+                $events[] = [
+                    'resourceId' => $asset->id,
+                    'title' => $booking->event_id !== null ? $booking->event->title : $booking->usage_event_name,
+                    'start' => Carbon::parse($booking->usage_date_start)->toDateTimeString(),
+                    'end' => Carbon::parse($booking->usage_date_end)->toDateTimeString(),
+                    'backgroundColor' => str_contains($booking->status, 'submission')
+                        ? '#ffab00'
+                        : ($booking->status === 'booked' ? '#0066ff' : '#22c55e'),
+                    'extendedProps' => [
+                        'userBooking' => $booking->user_id !== null ? $booking->user->name : $booking->external_user,
+                        'detailAsset' => route('asset-bmn.getData', $asset->id)
+                    ]
+                ];
+            }
         }
 
         return response()->json([
@@ -400,6 +407,7 @@ class HomeController extends Controller
             'events' => $events,
         ]);
     }
+
     public function calender()
     {
         return view('homepage.calender');

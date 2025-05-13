@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\Asset;
 use App\Models\Event;
+use App\Models\Jurusan;
+use App\Models\Organizer;
 use App\Models\AssetBooking;
 use Illuminate\Http\Request;
 use App\Models\EventParticipant;
@@ -42,9 +44,11 @@ class DashboardOrganizerController extends Controller
             ->where('usage_date_start', '>=', $sevenDaysFromNow)
             ->get();
 
+        $jurusanModel = Jurusan::all();
+
         return view(
             'dashboardPage.dashboard.organizer',
-            compact('newParticipants', 'upcomingEvents', 'assetBookings')
+            compact('newParticipants', 'upcomingEvents', 'assetBookings', 'jurusanModel')
         );
     }
 
@@ -73,7 +77,7 @@ class DashboardOrganizerController extends Controller
     {
         $year = $request->input('year');
 
-        $organizerId = Auth::user()->organizer->id;
+        $organizerId = Organizer::where('shorten_name', $shorten_name)->value('id');
 
         $events = Event::withMax('steps', 'event_date') // ambil langkah terakhir (max event_date)
             ->whereHas('steps', function ($query) use ($year) {

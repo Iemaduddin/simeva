@@ -72,13 +72,32 @@
         <div class="text-2xl fw-semibold text-main-600 d-flex gap-8 mb-16 justify-content-center aos-init aos-animate my-54"
             data-aos="fade-down">
             <span><i class="ph-bold ph-building-office"></i></span>
-            <span>Jadwal Penggunaan Gedung Fasilitas Umum</span>
+            <span>Jadwal Penggunaan Aset</span>
         </div>
         <div class="container card h-100 p-24 my-50 wow bounceIn">
             <div class="row gy-4">
                 <div class="col-xl-12">
+                    <div class="flex-between gap-16 flex-wrap px-20">
 
-                    <div id="timeline-usage-asset"></div>
+                        <div class="flex-align gap-8">
+                            <span class="text-neutral-500 flex-shrink-0">Filter Kategori Aset :</span>
+                            <select id="facility-filter" class="form-select" data-target="#timeline-usage-asset"
+                                data-fetch-url="{{ route('asset-booking.getTimelineUsageAsset') }}">
+                                <option value="umum">Fasilitas Umum</option>
+                                <optgroup label="Fasilitas Jurusan">
+                                    @foreach ($jurusans as $jurusan)
+                                        <option value="jurusan_{{ $jurusan->id }}">{{ $jurusan->nama }}</option>
+                                    @endforeach
+                                </optgroup>
+                            </select>
+
+                        </div>
+                    </div>
+                    <hr>
+                    <div id="timeline-usage-asset" data-default-scope="{{ $defaultScope ?? 'umum' }}"
+                        data-fetch-url="{{ route('asset-booking.getTimelineUsageAsset') }}">
+                    </div>
+
                     <div class="row my-24 mx-16 d-flex justify-content-around">
                         <div class="col-xl-12">
                             <h6>Status Peminjaman:</h6>
