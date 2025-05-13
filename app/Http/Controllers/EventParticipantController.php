@@ -23,6 +23,130 @@ use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 
 class EventParticipantController extends Controller
 {
+    public function indexParticipant()
+    {
+        return view('dashboardPage.users.event-participant');
+    }
+    public function getDataParticipantsForAdmin()
+    {
+        $participants = EventParticipant::with('user', 'event.steps', 'transaction', 'event.organizers')
+            ->get();
+
+        return DataTables::of($participants)
+            ->addIndexColumn()
+            ->editColumn('user.name', function ($participant) {
+                return '<div class="' . ($participant->user->is_blocked ? 'bg-danger-400' : '') . '">' . $participant->user->name . '</div>';
+            })
+            ->editColumn('category_user', function ($participant) {
+                $user = $participant->user;
+                if ($user->category_user == 'Internal Kampus') {
+                    $categoryUser = 'Mahasiswa J' . $user->jurusan->kode_jurusan;
+                } else {
+                    $categoryUser = 'Eksternal Kampus';
+                }
+                return $categoryUser;
+            })
+            ->editColumn('status', function ($participant) {
+                $badgeClass = '';
+                $statusText = '';
+                $reasonRejected = null;
+
+                switch ($participant->status) {
+                    case 'pending_approval':
+                        $badgeClass = 'bg-warning-600';
+                        $statusText = 'Perlu Diverifikasi';
+                        break;
+                    case 'registered':
+                        $badgeClass = 'bg-primary-600';
+                        $statusText = 'Terdaftar';
+                        break;
+                    case 'attended':
+                        $badgeClass = 'bg-success-600';
+                        $statusText = 'Hadir';
+                        break;
+                    case 'rejected':
+                        $badgeClass = 'bg-danger-600';
+                        $statusText = 'Ditolak';
+                        $reasonRejected = $participant->reason;
+                        break;
+                }
+
+                $html = '<span class="badge ' . $badgeClass . '">' . $statusText . '</span>';
+
+                if ($reasonRejected) {
+                    $html .= '<p class="mt-2 text-danger small">' . e($reasonRejected) . '</p>';
+                }
+
+                return $html;
+            })
+            ->addColumn('action', function ($participant) {
+                $event_id = $participant->event->id;
+                $event = Event::findOrFail($event_id);
+
+                $confirmModal = view('dashboardPage.events.modal.confirmRegistration', compact('participant', 'event_id'))->render();
+                $updateModal = view('dashboardPage.events.participants.update-participant', compact('participant', 'event', 'event_id'))->render();
+
+                $html = '<div class="d-flex gap-8">';
+                if ($participant->status === 'pending_approval') {
+                    $html .= '
+                    <a class="w-40-px h-40-px cursor-pointer bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center"
+                    data-bs-toggle="modal" data-bs-target="#modalConfirmRegistration-' . $participant->id . '">
+                    <iconify-icon icon="ph:check-fat-fill" class="text-xl"></iconify-icon>
+                    </a>';
+
+                    $html .= $confirmModal;
+                }
+                if ($participant->status === 'registered') {
+                    $html .= '
+                    <a href="' . route('e-ticket.event', ['participant' => $participant->id]) . '" class="w-40-px h-40-px cursor-pointer bg-info-focus text-info-main rounded-circle d-inline-flex align-items-center justify-content-center"
+                    target="_blank">
+                        <iconify-icon icon="iconamoon:ticket-light" class="text-xl"></iconify-icon>
+                    </a>';
+                }
+
+
+                $html .= '
+                <button class="w-40-px h-40-px bg-hover-success-200 bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center"
+                    data-bs-toggle="modal" data-bs-target="#modalUpdateParticipant-' . $participant->user->id . '">
+                    <iconify-icon icon="lucide:edit" width="20"></iconify-icon>
+                </button>';
+                $html .= $updateModal;
+                // Tombol Unblock
+                if ($participant->user->is_blocked) {
+                    $html .= '
+                        <form action="' . route('block.eventParticipant', ['type' => 'unblock', 'id' => $participant->user->id]) . '" method="POST" class="block-form" data-table="eventParticipantTable">
+                            <input type="hidden" name="_method" value="PUT">
+                            <input type="hidden" name="_token" value="' . csrf_token() . '">
+                            <button type="button" class="block-btn w-40-px h-40-px bg-warning-focus text-warning-main rounded-circle d-inline-flex align-items-center justify-content-center" title="Unblock" data-action="unblock">
+                                <iconify-icon icon="gg:unblock" width="25"></iconify-icon>
+                            </button>
+                        </form>';
+                } else {
+                    // Tombol Block
+                    $html .= '
+                        <form action="' . route('block.eventParticipant', ['type' => 'block', 'id' => $participant->user->id]) . '" method="POST" class="block-form" data-table="eventParticipantTable">
+                            <input type="hidden" name="_method" value="PUT">
+                            <input type="hidden" name="_token" value="' . csrf_token() . '">
+                            <button type="button" class="block-btn w-40-px h-40-px bg-danger-focus text-danger-main rounded-circle d-inline-flex align-items-center justify-content-center" title="Block" data-action="block">
+                                <iconify-icon icon="ic:sharp-block" width="20"></iconify-icon>
+                            </button>
+                        </form>';
+                }
+                // Tombol Delete
+                // $html .= '
+                //    <form action="' . route('destroy.eventParticipant', ['id' => $participant->user->id]) . '" method="POST" class="delete-form" data-table="eventParticipantTable">
+                //        <input type="hidden" name="_method" value="DELETE">
+                //        <input type="hidden" name="_token" value="' . csrf_token() . '">
+                //        <button type="button" class="delete-btn w-40-px h-40-px bg-danger-focus text-danger-main rounded-circle d-inline-flex align-items-center justify-content-center" title="Hapus">
+                //            <iconify-icon icon="mingcute:delete-2-line" width="20"></iconify-icon>
+                //        </button>
+                //    </form>';
+                $html .= '</div>';
+                return $html;
+            })
+            ->rawColumns(['user.name', 'category_user', 'status', 'action'])
+            ->make(true);
+    }
     public function getDataParticipants($id)
     {
         $participants = EventParticipant::with('user', 'event.steps', 'transaction')
@@ -128,6 +252,15 @@ class EventParticipantController extends Controller
                             </button>
                         </form>';
                 }
+                // Tombol Delete
+                // $html .= '
+                //   <form action="' . route('destroy.eventParticipant', ['id' => $participant->user->id]) . '" method="POST" class="delete-form" data-table="eventParticipantTable">
+                //       <input type="hidden" name="_method" value="DELETE">
+                //       <input type="hidden" name="_token" value="' . csrf_token() . '">
+                //       <button type="button" class="delete-btn w-40-px h-40-px bg-danger-focus text-danger-main rounded-circle d-inline-flex align-items-center justify-content-center" title="Hapus">
+                //           <iconify-icon icon="mingcute:delete-2-line" width="20"></iconify-icon>
+                //       </button>
+                //   </form>';
                 $html .= '</div>';
                 return $html;
             })
@@ -371,25 +504,40 @@ class EventParticipantController extends Controller
         }
     }
 
-    public function destroyEventParticipant($id)
-    {
-        try {
-            // Ambil data user yang ingin dihapus
-            $user = User::findOrFail($id);
-            // Hapus user
-            $user->delete();
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Hapus data user berhasil!',
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan saat menghapus user.',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+    // public function destroyEventParticipant($id)
+    // {
+    //     DB::beginTransaction();
+    //     try {
+    //         // Ambil data participant yang ingin dihapus
+    //         $eventParticipant = EventParticipant::where('user_id', $id)->first();
+
+    //         $event = Event::findOrFail($eventParticipant->event_id);
+
+    //         $event->remaining_quota -= 1;
+    //         $event->save();
+
+    //         $eventParticipant->delete();
+
+    //         // Ambil data user yang ingin dihapus
+    //         $user = User::findOrFail($id);
+    //         // Hapus user
+    //         $user->delete();
+
+
+    //         DB::commit();
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'Hapus data user berhasil!',
+    //         ], 201);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Terjadi kesalahan saat menghapus user.',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
     public function blockEventParticipant($type, $id)
     {
         try {
