@@ -1,2 +1,6 @@
 *
 !.gitignore
+!wilayah/
+!wilayah/**
+!Foto Profil/
+!Foto Profil/**

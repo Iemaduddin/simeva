@@ -4,6 +4,12 @@
 /public/hot
 /public/storage
 /storage/*.key
+!/storage/app/public/
+/storage/app/public/*
+!/storage/app/public/wilayah/
+/storage/app/public/wilayah/**
+!/storage/app/public/Foto Profil/
+/storage/app/public/Foto Profil/**
 /vendor
 .env
 .env.backup
