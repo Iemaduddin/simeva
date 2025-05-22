@@ -179,20 +179,20 @@
 
 <body>
     <div class="fluid-container card">
-        <div class="card-header">
-            @php
-                $bannerPath = public_path('storage/' . $participant->event->banner_path);
-                $bannerHeight = count($participant->event->steps) == 1 ? '300px' : '250px';
-            @endphp
+        @php
+            $bannerUrl = asset('storage/' . $participant->event->banner_path);
+            $bannerPath = public_path('storage/' . $participant->event->banner_path);
+            $bannerHeight = count($participant->event->steps) == 1 ? '300px' : '250px';
 
-            @if (file_exists($bannerPath))
-                <img class="cover-img" src="{{ $bannerPath }}" alt="Event Header"
-                    style="width: 100%; height: {{ $bannerHeight }};">
-            @else
-                <p>Banner tidak ditemukan.</p>
-            @endif
+        @endphp
 
-        </div>
+        @if (file_exists($bannerPath))
+            <img class="cover-img" src="{{ $bannerUrl }}" alt="Event Header"
+                style="width: 100%; height: {{ $bannerHeight }};">
+        @else
+            <p>Banner tidak ditemukan.</p>
+        @endif
+
 
         <div class="card-body">
             <center>
@@ -351,7 +351,8 @@
                     </td>
                     <td style="width:30%">
                         <center>
-                            <img src="data:image/png;base64,{{ $qrCode }}" width="200px">
+                            <img src="data:image/svg+xml;base64,{{ $qrCode }}" alt="QR Code" width="200">
+
                             <span class="fw-bold">Scan for attendance</span>
                         </center>
                     </td>
@@ -359,6 +360,9 @@
             </table>
         </div>
     </div>
+    <script>
+        window.print();
+    </script>
 </body>
 
 </html>
