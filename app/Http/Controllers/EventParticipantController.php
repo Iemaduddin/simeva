@@ -14,8 +14,10 @@ use App\Models\EventTransaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
 use BaconQrCode\Renderer\ImageRenderer;
 use Illuminate\Support\Facades\Storage;
+use App\Exports\EventParticipantsExport;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
@@ -313,7 +315,6 @@ class EventParticipantController extends Controller
                 'message' => 'Mohon maaf, kuota sudah penuh.'
             ], 422);
         }
-
         DB::beginTransaction();
         try {
             $newUser = User::create([
@@ -606,7 +607,7 @@ class EventParticipantController extends Controller
             $participant = EventParticipant::create([
                 'event_id' => $event->id,
                 'user_id' => $user->id,
-                'ticket_code' => '',
+                'ticket_code' => $user->id,
                 'status' => $status,
             ]);
 
@@ -814,8 +815,12 @@ class EventParticipantController extends Controller
 
         $writer = new Writer($renderer);
         $qrCode = base64_encode($writer->writeString($participant->ticket_code));
-        $pdf = Pdf::loadView('components.e-ticket', compact('participant', 'qrCode'));
+        return view('components.e-ticket', compact('participant', 'qrCode'));
+    }
 
-        return $pdf->stream("E-ticket {$participant->event->title}.pdf");
+    public function exportExcel($eventId)
+    {
+        $eventName = Event::findOrFail($eventId)->value('title');
+        return Excel::download(new EventParticipantsExport($eventId), 'Daftar Peserta ' . '-' . $eventName . '.xlsx');
     }
 }

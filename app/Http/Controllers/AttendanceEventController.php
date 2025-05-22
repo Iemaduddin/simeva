@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\Event;
 use App\Models\TeamMember;
 use Illuminate\Http\Request;
 use App\Models\EventAttendance;
 use App\Models\EventParticipant;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
+use App\Exports\EventAttendanceParticipantsExport;
 
 class AttendanceEventController extends Controller
 {
@@ -295,5 +298,12 @@ class AttendanceEventController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function exportExcel($eventId, $category)
+    {
+        $eventName = Event::findOrFail($eventId)->value('title');
+        $categoryPresensi = $category == 'member' ? 'Panitia' : 'Peserta';
+        return Excel::download(new EventAttendanceParticipantsExport($eventId, $category), 'Rekapan Presensi ' . $categoryPresensi . '-' . $eventName . '.xlsx');
     }
 }

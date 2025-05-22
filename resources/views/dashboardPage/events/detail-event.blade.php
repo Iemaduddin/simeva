@@ -57,8 +57,8 @@
                 <div class="col-lg-8">
                     <div class="card p-0 radius-12 overflow-hidden">
                         <div class="card-body p-0">
-                            <img src="{{ asset('storage/' . $event->banner_path) }}" alt=""
-                                class="w-100 h-100 object-fit-cover">
+                            <img src="{{ $event->banner_path ? asset('storage/' . $event->banner_path) : asset('assets/images/banner.png') }}"
+                                alt="Banner Event" class="w-100 h-100 object-fit-cover">
                             <div class="p-32">
                                 <h3 class="mb-16"> {{ $event->title }} </h3>
                                 <p class="text-neutral-500 mb-16">{{ $event->description }}</p>
@@ -108,6 +108,47 @@
                                         @endif
                                     @endforeach
                                 @endif
+                                @php
+                                    $sponsors = json_decode($event->sponsored_by, true);
+                                    $mediaPartners = json_decode($event->media_partner, true);
+
+                                    $contactPersonsRaw = $event->contact_person ?? '';
+                                    $contactPersons = array_filter(explode('|', $contactPersonsRaw), function ($cp) {
+                                        return trim($cp) !== '';
+                                    });
+                                @endphp
+                                @if (count($contactPersons) > 0)
+                                    <span class="d-block border-bottom border-main-100 my-32"></span>
+                                    <h6 class="mb-16">Contact Person</h6>
+                                    <ul class="list-dotted d-flex flex-column gap-15">
+                                        @foreach ($contactPersons as $cp)
+                                            <li>{{ trim($cp) }}</li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                                @if ((is_array($sponsors) && count($sponsors)) || (is_array($mediaPartners) && count($mediaPartners)))
+                                    <span class="d-block border-bottom border-main-100 my-32"></span>
+                                    <div class="row">
+                                        @if (is_array($sponsors) && count($sponsors))
+                                            <div class="col-xxl-6">
+                                                <h6 class="mb-16">Sponsored By</h6>
+                                                @foreach ($sponsors as $sponsor)
+                                                    <img src="{{ asset('storage/' . $sponsor) }}" alt="sponsor event"
+                                                        width="80px">
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                        @if (is_array($mediaPartners) && count($mediaPartners))
+                                            <div class="col-xxl-6">
+                                                <h6 class="mb-16">Media Partner</h6>
+                                                @foreach ($mediaPartners as $media)
+                                                    <img src="{{ asset('storage/' . $media) }}" alt="media partner event"
+                                                        width="80px">
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -120,7 +161,7 @@
                         <div class="card">
                             <div class="border border-neutral-30 rounded-12 bg-main-25 p-24 bg-main-25">
                                 <div class="d-flex justify-content-center mb-20">
-                                    <img src="{{ asset($event->organizers->logo) }}" class="rounded-circle"
+                                    <img src="{{ asset('storage/' . $event->organizers->logo) }}" class="rounded-circle"
                                         alt="logo_organizers" style="width: 200px;height:200px">
                                 </div>
                                 <div class="border-bottom border-neutral-40 pb-20 mb-20 flex-between flex-wrap">
@@ -297,9 +338,9 @@
                                                             $event_location =
                                                                 'Offline: ' .
                                                                 $assetName .
-                                                                ($isValidBooking
-                                                                    ? ' ' . ($jurusan ?? '')
-                                                                    : ' (Belum Disetujui)') .
+                                                                ' ' .
+                                                                ($jurusan ?? '') .
+                                                                ' (Belum Disetujui)' .
                                                                 '<br>Online: ' .
                                                                 $location_decode[0]['location_online'];
                                                         }
@@ -319,11 +360,11 @@
                                                     <p class="text-neutral-600 mb-2">
                                                         <strong>{{ \Carbon\Carbon::parse($stepEvent->event_date)->isoFormat('dddd, D MMMM Y') }}</strong>
                                                     </p>
-                                                    <p class="text-neutral-700">{{ $event_location }}</p>
+                                                    <p class="text-neutral-700">{!! $event_location !!}</p>
                                                 </div>
                                             @else
                                                 <div class="ms-40 mb-10">
-                                                    <p class="text-neutral-700">{{ $event_location }}</p>
+                                                    <p class="text-neutral-700">{!! $event_location !!}</p>
                                                 </div>
                                             @endif
                                         @endforeach
@@ -397,9 +438,26 @@
                                     return $booking->asset && $booking->asset->facility_scope === 'jurusan';
                                 });
 
+                                $organizer = \App\Models\Organizer::findOrFail(Auth::user()->organizer->id);
+                                $leaders = \App\Models\TeamMember::where('organizer_id', $organizer->id)
+                                    ->where('is_leader', true)
+                                    ->get();
                             @endphp
-
                             <div class="d-flex gap-3">
+                                <button data-bs-toggle="modal" data-bs-target="#modalLoanForm" data-asset-jurusan="true"
+                                    class='btn btn-sm btn-info cursor-pointer'>Download Surat Peminjaman</button>
+                                @include('dashboardPage.assets.asset-booking-event.modal.download-loan-form')
+                                @php
+                                    $suratDispo = \App\Models\AssetBookingDocument::where('event_id', $event->id)
+                                        ->where('document_type', 'Surat Disposisi')
+                                        ->first();
+                                @endphp
+                                @if ($suratDispo)
+                                    <a href="{{ asset('storage/' . $suratDispo->document_path) }}?v={{ $suratDispo->updated_at->timestamp }}"
+                                        class="btn btn-dark text-sm btn-sm" target="_blank" rel="noopener noreferrer">
+                                        Download Surat Disposisi
+                                    </a>
+                                @endif
                                 @if ($isJurusanBooked)
                                     <button
                                         class="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2 open-upload-modal"
@@ -462,12 +520,20 @@
                     <div class="card basic-data-table">
                         <div class="card-header d-flex justify-content-between">
                             <h5 class="card-title mb-0 align-content-center">Daftar Peserta</h5>
-                            <button
-                                class="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2"
-                                data-bs-toggle="modal" data-bs-target="#modalAddParticipant">
-                                <iconify-icon icon="ic:baseline-plus" class="icon text-xl line-height-1"></iconify-icon>
-                                Tambah Peserta
-                            </button>
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('participants.export-excel', ['eventId' => $event->id]) }}"
+                                    class="btn btn-info-900 btn-sm px-4 py-2 rounded-2 d-flex align-items-center px-12 py-12 radius-8 gap-2">
+                                    <iconify-icon icon="typcn:export-outline" class="text-xl"></iconify-icon>
+                                    Export Peserta
+                                </a>
+                                <button
+                                    class="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2"
+                                    data-bs-toggle="modal" data-bs-target="#modalAddParticipant">
+                                    <iconify-icon icon="ic:baseline-plus"
+                                        class="icon text-xl line-height-1"></iconify-icon>
+                                    Tambah Peserta
+                                </button>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -552,7 +618,8 @@
                             <div class="tab-content" id="pills-tabContent-six">
                                 <div class="tab-pane fade show active" id="pills-header-participant" role="tabpanel"
                                     aria-labelledby="pills-header-participant-tab" tabindex="0">
-                                    <div class="d-flex flex-wrap align-items-center justify-content-start my-3 gap-3">
+
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between my-3 gap-3">
                                         <div class="d-flex flex-wrap align-items-center gap-3">
                                             <select class="form-select form-select-sm w-auto" id="event_step_id_select">
                                                 @foreach ($event->steps as $step)
@@ -577,20 +644,25 @@
                                                         {{ $dateTimeEvent }}</option>
                                                 @endforeach
                                             </select>
-                                        </div>
-
-                                        <div class="d-flex flex-wrap align-items-center gap-3">
                                             <select class="form-select form-select-sm w-auto" id="attendance_type">
                                                 <option value="arrival">Presensi Datang</option>
                                                 <option value="departure">Presensi Pulang</option>
                                             </select>
+                                            <div class="">
+
+                                                <input type="text" id="ticket_code_input"
+                                                    class="form-control form-control-sm"
+                                                    placeholder="Masukkan kode tiket atau scan barcode" autofocus>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-end">
+                                            <a href="{{ route('attendance.export-excel', ['eventId' => $event->id, 'category' => 'participant']) }}"
+                                                class="btn btn-info-900 btn-sm px-4 py-2 rounded-2 d-flex align-items-center px-12 py-12 radius-8 gap-2">
+                                                <iconify-icon icon="typcn:export-outline" class="text-xl"></iconify-icon>
+                                                Export Presensi
+                                            </a>
                                         </div>
 
-                                        <div class="d-flex flex-wrap align-items-center gap-3">
-                                            <input type="text" id="ticket_code_input"
-                                                class="form-control form-control-sm"
-                                                placeholder="Masukkan kode tiket atau scan barcode" autofocus>
-                                        </div>
                                     </div>
                                     <div class="table-responsive">
                                         <table id="eventParticipantAttendance"
@@ -653,6 +725,11 @@
                                                 data-bs-target="#confirmAttendanceModal" data-type="checkout">
                                                 Presensi Pulang (Semua)
                                             </button>
+                                            <a href="{{ route('attendance.export-excel', ['eventId' => $event->id, 'category' => 'member']) }}"
+                                                class="btn btn-info-900 rounded-2 d-flex align-items-center radius-8 gap-2">
+                                                <iconify-icon icon="typcn:export-outline" class="text-xl"></iconify-icon>
+                                                Export Presensi
+                                            </a>
                                         </div>
                                         <div class="modal fade" id="confirmAttendanceModal" tabindex="-1"
                                             aria-hidden="true">
@@ -870,19 +947,21 @@
         });
     </script>
     <script>
-        // ================== Password Show Hide Js Start ==========
-        $(document).on("click", ".toggle-password", function() {
-            const inputId = $(this).data("toggle"); // tanpa #
-            const input = $("#" + inputId);
+        $(document).ready(function() {
+            // ================== Password Show Hide Js Start ==========
+            $(document).on("click", ".toggle-password", function() {
+                const inputId = $(this).data("toggle"); // tanpa #
+                const input = $("#" + inputId);
 
-            // Toggle type input
-            if (input.attr("type") === "password") {
-                input.attr("type", "text");
-                $(this).removeClass("ri-eye-line").addClass("ri-eye-off-line");
-            } else {
-                input.attr("type", "password");
-                $(this).removeClass("ri-eye-off-line").addClass("ri-eye-line");
-            }
+                // Toggle type input
+                if (input.attr("type") === "password") {
+                    input.attr("type", "text");
+                    $(this).removeClass("ri-eye-line").addClass("ri-eye-off-line");
+                } else {
+                    input.attr("type", "password");
+                    $(this).removeClass("ri-eye-off-line").addClass("ri-eye-line");
+                }
+            });
         });
         // ========================= Password Show Hide Js End ===========================
     </script>

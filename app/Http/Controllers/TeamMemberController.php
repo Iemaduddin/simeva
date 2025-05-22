@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use App\Models\Event;
+use App\Models\Prodi;
 use App\Models\Organizer;
 use App\Models\TeamMember;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 
@@ -21,20 +22,41 @@ class TeamMemberController extends Controller
                 return abort(403, 'Unauthorized');
             }
         }
-        return view('dashboardPage.team-members.index', compact('shorten_name'));
+        $organizer = Auth::user()->organizer;
+
+        if ($organizer->organizer_type == 'HMJ') {
+            $prodis = Prodi::where('jurusan_id', $organizer->user->jurusan->id)->get();
+        } else {
+            $prodis = Prodi::all();
+        }
+
+        return view('dashboardPage.team-members.index', compact('shorten_name', 'prodis'));
     }
     public function getDataTeamMembers($shorten_name)
     {
 
         $organizer_id = Organizer::where('shorten_name', $shorten_name)->pluck('id')->first();
-        $team_members = TeamMember::where('organizer_id', $organizer_id)->get();
+        $team_members = TeamMember::with('prodi')->where('organizer_id', $organizer_id)->get();
         $tableId = $shorten_name . '-TeamMembersTable';
+        $organizer = Auth::user()->organizer;
 
+        if ($organizer->organizer_type == 'HMJ') {
+            $prodis = Prodi::where('jurusan_id', $organizer->user->jurusan->id)->get();
+        } else {
+            $prodis = Prodi::all();
+        }
 
         return DataTables::of($team_members)
             ->addIndexColumn()
-            ->addColumn('action', function ($team_member) use ($tableId) {
-                $updateModal = view('dashboardPage.team-members.modal.update-team', compact('team_member', 'tableId'))->render();
+            ->editColumn('position', function ($team_member) {
+                if ($team_member->is_leader) {
+                    return $team_member->position . ' <br> <strong>(Pemimpin Organisasi)</strong>';
+                } else {
+                    return $team_member->position;
+                }
+            })
+            ->addColumn('action', function ($team_member) use ($tableId, $prodis) {
+                $updateModal = view('dashboardPage.team-members.modal.update-team', compact('team_member', 'tableId', 'prodis'))->render();
                 return '<div class="d-flex gap-8">
                 <a class="w-40-px h-40-px cursor-pointer bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center"
                     data-bs-toggle="modal" data-bs-target="#modalUpdateTeamMember-' . $team_member->id . '">
@@ -52,7 +74,7 @@ class TeamMemberController extends Controller
                 </form>
                 </div>';
             })
-            ->rawColumns(['action'])
+            ->rawColumns(['position', 'action'])
             ->make(true);
     }
 
@@ -60,11 +82,15 @@ class TeamMemberController extends Controller
     public function addTeamMember(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'nim' => 'required',
             'name' => 'required',
+            'prodi' => 'required',
             'level' => 'required|in:SC,OC',
             'position' => 'required',
         ], [
+            'nim.required' => 'NIM harus diisi.',
             'name.required' => 'Nama harus diisi.',
+            'prodi.required' => 'Prodi harus diisi.',
             'level.required' => 'Tingkatan Tim harus diisi.',
             'level.in' => 'Tingkatan Tim harus SC atau OC.',
             'position.required' => 'Posisi harus diisi.',
@@ -81,10 +107,13 @@ class TeamMemberController extends Controller
 
         try {
             TeamMember::create([
+                'nim' => $request->nim,
                 'name' => $request->name,
+                'prodi_id' => $request->prodi,
                 'level' => $request->level,
                 'position' => $request->position,
                 'organizer_id' => $organizer_id,
+                'is_leader' => $request->is_leader ? true : false,
             ]);
 
             return response()->json([
@@ -102,10 +131,13 @@ class TeamMemberController extends Controller
     public function updateTeamMember(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
+            'nim' => 'required',
             'name' => 'required',
+            'prodi' => 'required',
             'level' => 'required|in:SC,OC',
             'position' => 'required',
         ], [
+            'nim.required' => 'NIM harus diisi.',
             'name.required' => 'Nama harus diisi.',
             'level.required' => 'Tingkatan Tim harus diisi.',
             'level.in' => 'Tingkatan Tim harus SC atau OC.',
@@ -123,9 +155,12 @@ class TeamMemberController extends Controller
 
         try {
             $team_member->update([
+                'nim' => $request->nim,
                 'name' => $request->name,
+                'prodi_id' => $request->prodi,
                 'level' => $request->level,
                 'position' => $request->position,
+                'is_leader' => $request->is_leader ? true : false,
             ]);
 
             return response()->json([

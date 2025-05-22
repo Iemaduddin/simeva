@@ -25,9 +25,11 @@ class TeamMemberSeeder extends Seeder
                 for ($i = 0; $i < 5; $i++) {
                     TeamMember::create([
                         'organizer_id' => $organizer->id,
-                        'name' => $faker->name, // Generate a random name
+                        'nim' => rand(100000, 999999),
+                        'name' => $faker->name,
                         'level' => $faker->randomElement(['SC', 'OC']), // Randomly select between 'SC' and 'OC'
-                        'position' => $faker->jobTitle, // Generate a random job title
+                        'position' => $faker->jobTitle,
+                        'is_leader' => $i == 0 ? true : false
                     ]);
                 }
         }
