@@ -75,6 +75,7 @@
                         novalidate method="POST" data-table="{{ $shorten_name }}-EventsTable"
                         enctype="multipart/form-data">
                         @csrf
+                        @method('PUT')
                         <div class="form-wizard-header overflow-x-auto scroll-sm pb-8 mb-32">
                             <ul class="list-unstyled form-wizard-list">
                                 <li class="form-wizard-list__item active">

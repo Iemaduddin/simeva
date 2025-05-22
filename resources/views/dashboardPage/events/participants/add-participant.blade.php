@@ -96,8 +96,8 @@
                              <div class="col-md-4 mb-20">
                                  <label class="form-label fw-semibold text-primary-light text-sm mb-8">Bukti Pembayaran
                                      <span class="text-danger">*</span></label>
-                                 <input type="file" accept=".pdf,.png,.jpg,.jpeg"
-                                     class="form-control radius-8 bg-base" name="proof_of_payment" required>
+                                 <input type="file" accept=".png,.jpg,.jpeg" class="form-control radius-8 bg-base"
+                                     name="proof_of_payment" required>
                              </div>
                          @endif
                          <div class="col-md-4 mb-20">

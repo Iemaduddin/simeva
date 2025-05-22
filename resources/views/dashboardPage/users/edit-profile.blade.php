@@ -171,7 +171,7 @@
                                                 <input type="text" class="form-control radius-8"
                                                     name="link_media_social[instagram]"
                                                     placeholder="https://instagram.com/username"
-                                                    value="{{ $user->organizer->link_media_social['instagram'] }}">
+                                                    value="{{ optional($user->organizer->link_media_social)['instagram'] ?? '' }}">
                                             </div>
                                         </div>
                                         <div class="col-sm-3">
@@ -181,7 +181,7 @@
                                                 <input type="text" class="form-control radius-8"
                                                     name="link_media_social[youtube]"
                                                     placeholder="https://youtube.com/..."
-                                                    value="{{ $user->organizer->link_media_social['youtube'] }}">
+                                                    value="{{ optional($user->organizer->link_media_social)['youtube'] ?? '' }}">
                                             </div>
                                         </div>
                                         <div class="col-sm-3">
@@ -190,7 +190,7 @@
                                                     TikTok </label>
                                                 <input type="text" class="form-control radius-8"
                                                     name="link_media_social[tiktok]" placeholder="https://tiktok.com/..."
-                                                    value="{{ $user->organizer->link_media_social['tiktok'] }}">
+                                                    value="{{ optional($user->organizer->link_media_social)['tiktok'] ?? '' }}">
                                             </div>
                                         </div>
                                         <div class="col-sm-3">
@@ -199,19 +199,15 @@
                                                     X </label>
                                                 <input type="text" class="form-control radius-8"
                                                     name="link_media_social[x]" placeholder="https://x.com/..."
-                                                    value="{{ $user->organizer->link_media_social['x'] ?? '' }}">
+                                                    value="{{ optional($user->organizer->link_media_social)['x'] ?? '' }}">
                                             </div>
                                         </div>
 
                                     </div>
                                     <div class="d-flex align-items-center justify-content-end gap-3">
-                                        <button type="button"
-                                            class="border border-danger-600 bg-hover-danger-200 text-danger-600 text-md px-56 py-11 radius-8">
-                                            Cancel
-                                        </button>
                                         <button type="submit"
                                             class="btn btn-primary border border-primary-600 text-md px-56 py-12 radius-8">
-                                            Save
+                                            Simpan
                                         </button>
                                     </div>
                                 </form>

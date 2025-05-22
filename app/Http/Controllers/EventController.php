@@ -179,26 +179,54 @@ class EventController extends Controller
             ->editColumn('quota', function ($event) {
                 return $event->remaining_quota . '/' . $event->quota;
             })
-            ->addColumn('action', function ($event) use ($tableId) {
-                return '<div class="d-flex gap-8">
-                <a href="' . route('detail.event.page', ['id' => $event->id]) . '" class="w-40-px h-40-px cursor-pointer bg-warning-focus text-warning-main rounded-circle d-inline-flex align-items-center justify-content-center">
-                    <iconify-icon icon="gg:more-o"></iconify-icon>
-                </a>
-                
-                <a href="' . route('update.event.page', ['id' => $event->id]) . '" class="w-40-px h-40-px cursor-pointer bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center">
-                    <iconify-icon icon="lucide:edit"></iconify-icon>
-                </a>
-                <form action="' . route('destroy.event', ['id' => $event->id]) . '" method="POST" class="delete-form" data-table="' . $tableId . '">
-                    <input type="hidden" name="_method" value="DELETE">
-                    <input type="hidden" name="_token" value="' . csrf_token() . '">
-                    <button type="button"
-                    class="delete-btn w-40-px h-40-px bg-danger-focus text-danger-main rounded-circle d-inline-flex align-items-center justify-content-center">
-                    <iconify-icon icon="mingcute:delete-2-line"></iconify-icon>
-                </button>
-                </form>
-                </div>';
+            ->editColumn('status', function ($event) {
+
+                $badgeClass = '';
+                $textButton = '';
+                if ($event->status === 'planned') {
+                    $textButton = 'Direncanakan';
+                    $badgeClass = 'bg-primary-600';
+                } elseif ($event->status === 'published') {
+                    $textButton = 'Terpublikasi';
+                    $badgeClass = 'bg-success-600';
+                } elseif ($event->status === 'blocked') {
+                    $textButton = 'Terblokir';
+                    $badgeClass = 'bg-danger-600';
+                } elseif ($event->status === 'completed') {
+                    $textButton = 'Selesai';
+                    $badgeClass = 'bg-dark';
+                }
+                return '<span class="badge text-sm ' . $badgeClass . ' px-20 py-9 radius-4 text-white">' . $textButton . '</span>';
             })
-            ->rawColumns(['event_date_location', 'quota', 'action'])
+            ->addColumn('action', function ($event) use ($tableId) {
+                $actions = '<div class="d-flex gap-8">
+                    <a href="' . route('detail.event.page', ['id' => $event->id]) . '" class="w-40-px h-40-px cursor-pointer bg-warning-focus text-warning-main rounded-circle d-inline-flex align-items-center justify-content-center">
+                        <iconify-icon icon="gg:more-o"></iconify-icon>
+                    </a>
+            
+                    <a href="' . route('update.event.page', ['id' => $event->id]) . '" class="w-40-px h-40-px cursor-pointer bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center">
+                        <iconify-icon icon="lucide:edit"></iconify-icon>
+                    </a>';
+
+                // Hanya tampilkan tombol delete jika event punya participants
+                if (!$event->participants()->exists()) {
+                    $actions .= '
+                    <form action="' . route('destroy.event', ['id' => $event->id]) . '" method="POST" class="delete-form" data-table="' . $tableId . '">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <input type="hidden" name="_token" value="' . csrf_token() . '">
+                        <button type="button"
+                            class="delete-btn w-40-px h-40-px bg-danger-focus text-danger-main rounded-circle d-inline-flex align-items-center justify-content-center">
+                            <iconify-icon icon="mingcute:delete-2-line"></iconify-icon>
+                        </button>
+                    </form>';
+                }
+
+                $actions .= '</div>';
+
+                return $actions;
+            })
+
+            ->rawColumns(['event_date_location', 'quota', 'status', 'action'])
             ->make(true);
     }
 
@@ -211,7 +239,7 @@ class EventController extends Controller
         $buildings = Asset::with('jurusan')->where('type', 'building')->where('booking_type', 'daily')->get();
         $transportations = Asset::with('jurusan')->where('type', 'transportation')->where('booking_type', 'daily')->get();
 
-        $team_members = TeamMember::select('id', 'name')->where('organizer_id', $organizer_id)->get();
+        $team_members = TeamMember::select('id', 'name')->where('organizer_id', $organizer_id)->where('level', 'OC')->get();
         return view('dashboardPage.events.add-event', compact('buildings', 'transportations', 'team_members', 'shorten_name'));
     }
     public function updateEventPage($id)
@@ -221,7 +249,7 @@ class EventController extends Controller
         $buildings = Asset::with('jurusan')->where('type', 'building')->where('booking_type', 'daily')->get();
         $transportations = Asset::with('jurusan')->where('type', 'transportation')->where('booking_type', 'daily')->get();
 
-        $team_members = TeamMember::select('id', 'name')->where('organizer_id', $organizer_id)->get();
+        $team_members = TeamMember::select('id', 'name')->where('organizer_id', $organizer_id)->where('level', 'OC')->get();
 
         $event = Event::with(['prices', 'steps.event_speaker'])->findOrFail($id);
         $assetBookings = AssetBooking::where('event_id', $id)->get();
@@ -422,7 +450,6 @@ class EventController extends Controller
                 $filePaths['media_partner'] = $mediaPartnerPaths;
             }
 
-
             $event = Event::create(
                 [
                     'organizer_id' => Auth::user()->organizer->id,
@@ -442,10 +469,12 @@ class EventController extends Controller
                     'registration_date_end' => $request->date_registration_end,
                     'pamphlet_path' => $filePaths['pamphlet_path'] ?? null,
                     'banner_path' => $filePaths['banner_path'] ?? null,
-                    'sponsored_by' => json_encode($filePaths['sponsored_by'] ?? []),
-                    'media_partner' => json_encode($filePaths['media_partner'] ?? []),
+                    'sponsored_by' => $filePaths['sponsored_by'] ?? null,
+                    'media_partner' => $filePaths['media_partner'] ?? null,
                 ]
             );
+
+
             if ($request->has('prices') && is_array($request->prices)) {
                 // Filter untuk memeriksa agar isi konten tidak bernilai null
 
@@ -773,6 +802,7 @@ class EventController extends Controller
             return redirect()->back();
         } catch (\Exception $e) {
             DB::rollBack();
+
             notyf()->ripple(true)->error('Terjadi kesalahan saat menambahkan event.');
             return redirect()->back();
         }
@@ -800,7 +830,7 @@ class EventController extends Controller
             'event_time_starts' => 'required|array',
             'event_time_ends' => 'required|array',
             'execution_systems' => 'required|array',
-            'locations' => 'required|array',
+            'locations' => 'required_if:execution_systems,offline|array',
             'event_date_speakers' => 'array',
             'speaker_name' => 'required|array',
             'role' => 'required|array',
@@ -840,7 +870,7 @@ class EventController extends Controller
             // 'event_time_ends.array' => 'Waktu selesai acara harus berupa array.',
             'execution_systems.required' => 'Sistem pelaksanaan wajib diisi.',
             // 'execution_systems.array' => 'Sistem pelaksanaan harus berupa array.',
-            'locations.required' => 'Lokasi acara wajib diisi.',
+            'locations.required_if' => 'Lokasi acara wajib diisi.',
             // 'locations.array' => 'Lokasi acara harus berupa array.',
 
             // 'event_date_speakers.required' => 'Tanggal sesi pembicara wajib diisi.',
@@ -1006,8 +1036,8 @@ class EventController extends Controller
                     'registration_date_end' => $request->date_registration_end,
                     'pamphlet_path' => $filePaths['pamphlet_path'] ?? $event->pamphlet_path,
                     'banner_path' => $filePaths['banner_path'] ?? $event->banner_path,
-                    'sponsored_by' => json_encode($filePaths['sponsored_by'] ?? $event->sponsored_by),
-                    'media_partner' => json_encode($filePaths['media_partner'] ?? $event->media_partner),
+                    'sponsored_by' => $filePaths['sponsored_by'] ?? $event->sponsored_by,
+                    'media_partner' => $filePaths['media_partner'] ?? $event->media_partner,
                 ]
             );
             if ($request->has('prices') && is_array($request->prices)) {
@@ -1359,5 +1389,23 @@ class EventController extends Controller
         }
     }
 
-    public function destroyEvent($id) {}
+    public function destroyEvent($id)
+    {
+        try {
+            // Ambil data user dan hapus user
+            $event = Event::findOrFail($id);
+            $event->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Event berhasil dihapus!',
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan saat menghapus event.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

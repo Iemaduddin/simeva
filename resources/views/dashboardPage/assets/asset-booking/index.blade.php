@@ -22,12 +22,12 @@
         <div class="card-body px-24">
             @php
                 $statusBooking = [
-                    'all' => ['label' => 'Data Booking Aset Keseluruhan', 'color' => 'primary-900'],
+                    // 'all' => ['label' => 'Data Booking Aset Keseluruhan', 'color' => 'primary-900'],
                     'submission_booking' => ['label' => 'Konfirmasi Booking', 'color' => 'warning-600'],
                     'submission_payment' => ['label' => 'Konfirmasi Pembayaran', 'color' => 'success-600'],
                     'waiting_payment' => ['label' => 'Menunggu Pembayaran', 'color' => 'info-600'],
                     'approved' => ['label' => 'Disetujui', 'color' => 'success-600'],
-                    'done' => ['label' => 'Selesai', 'color' => 'primary-600'],
+                    // 'done' => ['label' => 'Selesai', 'color' => 'primary-600'],
                     'rejected' => ['label' => 'Ditolak', 'color' => 'danger-600'],
                     'cancelled' => ['label' => 'Dibatalkan', 'color' => 'dark'],
                 ];
@@ -92,6 +92,139 @@
 @endsection
 @push('script')
     <script src="{{ asset('assets/libs/flatpickr.js/flatpickr.js') }}"></script>
+
+    <script>
+        // Gunakan delegation
+        let selectedCategory = null;
+
+        $(document).on('change', '#assetSelect', function() {
+            const assetId = $(this).val();
+            const $categorySelect = $('#categorySelect');
+            const $priceTypeSelect = $('#priceTypeSelect');
+            $('#priceDisplay').val('');
+
+            $categorySelect.html('<option value="">-- Memuat Kategori --</option>');
+
+            if (assetId) {
+                $.ajax({
+                    url: `{{ route('getDataAssetCategory', ':id') }}`.replace(':id', assetId),
+                    type: 'GET',
+                    success: function(data) {
+                        $categorySelect.empty().append(
+                            '<option value="">-- Pilih Kategori --</option>');
+                        $.each(data, function(key, category) {
+                            $categorySelect.append(`<option value="${category.id}" 
+                        data-price='${JSON.stringify(category)}'>${category.category_name}</option>`);
+                        });
+                    },
+                    error: function() {
+                        $categorySelect.html('<option value="">Gagal memuat kategori</option>');
+                    }
+                });
+            }
+        });
+
+        $(document).on('change', '#categorySelect', function() {
+            const selectedOption = $(this).find('option:selected');
+            selectedCategory = selectedOption.data('price');
+            $('#priceDisplay').val('');
+        });
+
+        $(document).on('change', '#priceTypeSelect', function() {
+            if (!selectedCategory) {
+                $('#priceDisplay').val('');
+                $('#priceValue').val('');
+                return;
+            }
+
+            const type = $(this).val();
+            const basePrice = parseFloat(selectedCategory.external_price);
+            let finalPrice = 0;
+
+            if (type === 'external') {
+                finalPrice = basePrice;
+            } else if (type === 'internal') {
+                finalPrice = basePrice * (selectedCategory.internal_price_percentage / 100);
+            } else if (type === 'social') {
+                finalPrice = basePrice * (selectedCategory.social_price_percentage / 100);
+            }
+
+            // Tampilkan ke user (dengan format rupiah)
+            $('#priceDisplay').val('Rp ' + finalPrice.toLocaleString('id-ID', {
+                minimumFractionDigits: 2
+            }));
+
+            // Simpan ke hidden input untuk backend (format angka murni)
+            $('#priceValue').val(finalPrice.toFixed(2));
+        });
+    </script>
+    <script>
+        function toggleBookingDateTime(status) {
+            const wrapper = $('.booking-date-time-wrapper');
+            const fields = wrapper.find('input');
+            const paymentTypeSelect = $('select[name="payment_type"]');
+            const dpOption = paymentTypeSelect.find('option[value="dp"]');
+            const lunasOption = paymentTypeSelect.find('option[value="lunas"]');
+
+            const proofInput = $('#proof_of_payment');
+            const proofLabel = $('#proof_label');
+
+            if (status === 'booked') {
+                wrapper.hide();
+                fields.prop('readonly', false);
+                fields.prop('disabled', true);
+                // Hapus required agar tidak error saat hidden
+                fields.removeAttr('required');
+                // Aktifkan semua opsi pembayaran & reset selection
+                paymentTypeSelect.prop('readonly', false);
+                dpOption.prop('disabled', false);
+                lunasOption.prop('disabled', true);
+                paymentTypeSelect.val('');
+
+                // Reset proof input requirement
+                proofInput.removeAttr('required');
+                proofLabel.html('Bukti Pembayaran');
+            } else if (status === 'approved_full_payment') {
+                wrapper.show();
+                // Tambahkan kembali required & readonly
+                fields.prop('readonly', true);
+                fields.prop('disabled', false);
+
+                fields.each(function() {
+                    $(this).attr('required', true);
+                    fields.removeAttr('disabled');
+
+                });
+
+                // Nonaktifkan DP dan set default ke Lunas
+                paymentTypeSelect.prop('readonly', true);
+                dpOption.prop('disabled', true);
+                lunasOption.prop('disabled', false);
+                paymentTypeSelect.val('lunas');
+
+                // Set proof required dan tampilkan bintang merah
+                proofInput.prop('required', true);
+                if (!proofLabel.html().includes('*')) {
+                    proofLabel.html('Bukti Pembayaran <span class="text-danger">*</span>');
+                }
+            }
+        }
+
+
+        $(document).ready(function() {
+            const $statusSelect = $('select[name="status"]');
+
+            // Initial load
+            toggleBookingDateTime($statusSelect.val());
+
+            // On change
+            $statusSelect.on('change', function() {
+                toggleBookingDateTime($(this).val());
+            });
+        });
+    </script>
+
+
     <script>
         $(document).ready(function() {
             const kodeJurusan = "{{ $kode_jurusan ?? '' }}"; // Jika null, dikosongkan
@@ -132,7 +265,11 @@
                             },
                             {
                                 data: 'user.name',
-                                name: 'user.name'
+                                name: 'user.name',
+                                render: function(data, type, row) {
+                                    return row.user && row.user.name ? row.user.name : (row
+                                        .external_user ?? '-');
+                                }
                             },
                             {
                                 data: 'usage_event_name',

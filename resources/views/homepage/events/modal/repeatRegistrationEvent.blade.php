@@ -22,7 +22,7 @@
                     if (!$userPrice) {
                         $userPrice = $event->prices->firstWhere('scope', 'Umum');
                     }
-                    $participant = $event->participants->first();
+                    $participant = $event->participants->firstWhere('user_id', Auth::id());
 
                 @endphp
                 @if (!$event->is_free)
@@ -45,7 +45,8 @@
                             Pembayaran</label>
                         <input type="hidden" name="price" value="{{ $userPrice->price }}" class="form-control"
                             required>
-                        <input type="file" name="proof_of_payment" class="form-control" required>
+                        <input type="file" name="proof_of_payment" class="form-control" accept=".png,.jpeg,.jpg"
+                            required>
                     </div>
                 @else
                     <div class="alert alert-success mt-3">
@@ -54,10 +55,9 @@
                 @endif
 
                 @if ($participant->status === 'rejected')
-                    <div class="alert alert-danger mt-3">
-                        <div class="alert alert-danger mt-3">
-                            Pengajuan ditolak: <strong>{{ $participant->reason }}</strong>
-                        </div>
+                    <div class="alert alert-danger mt-10">
+                        Pengajuan ditolak: <strong>{{ $participant->reason }}</strong>
+                    </div>
                 @endif
             </div>
             <div class="modal-footer">

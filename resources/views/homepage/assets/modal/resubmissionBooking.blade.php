@@ -21,10 +21,8 @@
                             </label>
                             <input type="text"
                                 class="common-input bg-main-25 rounded-pill border-transparent focus-border-main-600"
-                                id="usage_date_display" placeholder="Pilih Tanggal" readonly>
-                            <input type="hidden" id="usage_date"
                                 value="{{ \Carbon\Carbon::parse($assetBooking->usage_date_start)->format('Y-m-d') }}"
-                                name="usage_date">
+                                id="usage_date" name="usage_date" placeholder="Pilih Tanggal" readonly>
                         </div>
 
                         <div class="col-sm-4">
@@ -123,7 +121,28 @@
         </div>
     </div>
 </div>
+<script src="{{ asset('assets/libs/flatpickr.js/flatpickr.js') }}"></script>
+
 <script>
+    flatpickr("#usage_date", {
+        dateFormat: "Y-m-d",
+        minDate: "today",
+    });
+    flatpickr("#start_time", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i",
+        time_24hr: true,
+        // locale: "id"
+    });
+
+    flatpickr("#end_time", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i",
+        time_24hr: true,
+        // locale: "id"
+    });
     $(document).ready(function() {
         let assetId = $("#asset_id").val();
         let typeEvent = $("#type_event");

@@ -13,6 +13,8 @@
                     data-table="eventParticipantTable">
                     @csrf
                     <div class="row gy-4 ">
+
+                        <input type="hidden" name="event_id" value="{{ $event_id }}">
                         @php
                             $proof = $participant->transaction->proof_of_payment ?? null;
                         @endphp

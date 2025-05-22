@@ -69,11 +69,11 @@
     <div class="card basic-data-table">
         <div class="card-header d-flex justify-content-between">
             <h5 class="card-title mb-0 align-content-center">Manajemen Aset Fasilitas {{ $kode_jurusan ?? 'Umum' }}</h5>
-            <button class="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2"
-                data-bs-toggle="modal" data-bs-target="#modalAddAsset">
+            <a href="{{ route('add.assetPage', ['kode_jurusan' => $kode_jurusan]) }}"
+                class="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2">
                 <iconify-icon icon="ic:baseline-plus" class="icon text-xl line-height-1"></iconify-icon>
                 Tambah Aset Baru
-            </button>
+            </a>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -83,8 +83,9 @@
                             <th>No</th>
                             <th>Aksi</th>
                             <th>Nama</th>
-                            <th>Tipe</th>
+                            <th>Status</th>
                             <th>Tersedia</th>
+                            <th>Tipe Aset</th>
                             <th>Tipe Sewa</th>
                             <th>Fasilitas</th>
                         </tr>
@@ -95,8 +96,6 @@
     </div>
 @endsection
 @push('script')
-    @include('dashboardPage.assets.modal.add-asset')
-
     <script src="{{ URL::asset('assets/libs/choices.js/choices.js.min.js') }}"></script>
 
     <script>
@@ -130,16 +129,20 @@
                         name: 'name'
                     },
                     {
+                        data: 'status',
+                        name: 'status'
+                    },
+                    {
+                        data: 'available_at',
+                        name: 'available_at'
+                    },
+                    {
                         data: 'type',
                         name: 'type',
                         render: function(data, type, row) {
                             return row.type === 'building' ? 'Gedung' :
                                 'Kendaraan';
                         }
-                    },
-                    {
-                        data: 'available_at',
-                        name: 'available_at'
                     },
                     {
                         data: 'booking_type',
@@ -196,7 +199,6 @@
             });
         });
     </script>
-    {{-- @include('components.script-crud') --}}
 
     <script>
         // =============================== Wizard Step Js Start ================================
@@ -340,85 +342,5 @@
             showStep(currentStep);
         });
         // =============================== Wizard Step Js End ================================
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const newUploadedImgsContainer = document.querySelector(".new-uploaded-imgs-container");
-            console.log(newUploadedImgsContainer);
-            document.addEventListener("change", function(e) {
-                if (e.target.classList.contains("upload-file-input")) {
-                    const files = e.target.files;
-                    if (files.length === 0) return;
-
-                    Array.from(files).forEach(file => {
-                        if (!file.type.startsWith("image/")) {
-                            alert("Hanya file gambar yang diperbolehkan.");
-                            return;
-                        }
-
-                        const objectUrl = URL.createObjectURL(file);
-
-                        // Buat elemen wrapper untuk gambar baru
-                        const imgContainer = document.createElement("div");
-                        imgContainer.classList.add(
-                            "uploaded-asset-img", "position-relative",
-                            "h-120-px", "w-120-px",
-                            "border", "radius-8", "overflow-hidden"
-                        );
-
-                        // Buat tombol hapus gambar
-                        const removeButton = document.createElement("button");
-                        removeButton.type = "button";
-                        removeButton.classList.add(
-                            "uploaded-img__remove", "position-absolute",
-                            "top-0", "end-0", "z-1", "text-2xxl"
-                        );
-                        removeButton.innerHTML = `
-                    <iconify-icon icon='radix-icons:cross-2' class='text-xl text-danger-600'></iconify-icon>
-                `;
-
-                        // Event untuk menghapus gambar
-                        removeButton.onclick = () => {
-                            URL.revokeObjectURL(objectUrl);
-                            imgContainer.remove();
-                        };
-
-                        // Buat elemen img untuk preview gambar
-                        const imagePreview = document.createElement("img");
-                        imagePreview.classList.add("w-100", "h-100", "object-fit-cover");
-                        imagePreview.src = objectUrl;
-
-                        // Tambahkan elemen ke dalam wrapper
-                        imgContainer.appendChild(removeButton);
-                        imgContainer.appendChild(imagePreview);
-                        newUploadedImgsContainer.appendChild(imgContainer);
-                    });
-
-                    e.target.value = ""; // Reset input agar bisa pilih file yang sama lagi
-                }
-            });
-
-            // Event untuk menghapus gambar yang sudah ada (dari database)
-            document.addEventListener("click", function(e) {
-                if (e.target.closest(".uploaded-img__remove")) {
-                    const button = e.target.closest(".uploaded-img__remove");
-                    const imgContainer = button.closest(".uploaded-asset-img");
-                    const imageName = button.getAttribute("data-image");
-
-                    if (imageName) {
-                        let removedImagesInput = document.querySelector("input[name='removed_images']");
-                        if (!removedImagesInput) {
-                            removedImagesInput = document.createElement("input");
-                            removedImagesInput.type = "hidden";
-                            removedImagesInput.name = "removed_images";
-                            document.querySelector("form").appendChild(removedImagesInput);
-                        }
-                        removedImagesInput.value += `${imageName},`;
-                    }
-
-                    imgContainer.remove();
-                }
-            });
-        });
     </script>
 @endpush

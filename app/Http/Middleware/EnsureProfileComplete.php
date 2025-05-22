@@ -16,12 +16,23 @@ class EnsureProfileComplete
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check()) {
+        $roleName = Auth::user()->getRoleNames()->first();
+        if (Auth::check() && $roleName == 'Participant' || $roleName == 'Tenant') {
             $user = Auth::user();
 
             // Cek apakah ada data penting yang masih null
-            if (is_null($user->provinsi) || is_null($user->kab_kota)) {
-                return redirect()->route('profile.complete')->with('error', 'Silakan lengkapi profil Anda terlebih dahulu.');
+            if (
+                is_null($user->phone_number) ||
+                is_null($user->province) ||
+                is_null($user->city) ||
+                is_null($user->subdistrict) ||
+                is_null($user->village) ||
+                is_null($user->address)
+            ) {
+                notyf()
+                    ->dismissible(true)->ripple(true)->duration(0)
+                    ->warning('Silahkan lengkapi data profil Anda!');
+                return redirect()->route('profileUserHomepage');
             }
         }
         return $next($request);

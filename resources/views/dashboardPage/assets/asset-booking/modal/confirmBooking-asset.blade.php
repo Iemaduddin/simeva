@@ -1,34 +1,104 @@
 <div class="modal fade" id="modalConfirmAssetBooking-{{ $assetBooking->id }}" tabindex="-1"
     aria-labelledby="modalConfirmAssetBookingLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content radius-16 bg-base">
             <div class="modal-header py-16 px-24 border border-top-0 border-start-0 border-end-0">
                 <h1 class="modal-title fs-5" id="modalConfirmAssetBookingLabel">Konfirmasi Booking Aset</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-24">
-                <p>👤 <strong>Nama Aset:</strong> {{ $assetBooking->asset->name }}</p>
-                <p> <strong>Peminjam:</strong> {{ $assetBooking->user->name }}</p>
-                <p>📅 <strong>Event:</strong> {{ $assetBooking->usage_event_name }}</p>
-                <p>📌 <strong>Kategori Event:</strong> {{ $assetBooking->asset_category->category_name ?? '-' }}</p>
-                <p>📆 <strong>Waktu Pakai:</strong>
-                    {{ \Carbon\Carbon::parse($assetBooking->usage_date_start)->format('d-M-Y H.i') }}
-                    -
-                    {{ \Carbon\Carbon::parse($assetBooking->usage_date_end)->format('d-M-Y H.i') }}</p>
-                <p>🔄 <strong>Pembayaran:</strong> <span>{{ $assetBooking->payment_type }}</span></p>
-                <p>🔄 <strong>Harga Sewa:</strong> <span
-                        class="text-warning fw-bold">{{ $assetBooking->total_amount }}</span></p>
-                <p>🔄 <strong>Status:</strong> <span class="text-warning fw-bold">{{ $assetBooking->status }}</span></p>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Nama Peminjam</strong>
+                        <p class="text-muted mb-0">{{ $assetBooking->user->name ?? $assetBooking->external_user }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Email Peminjam</strong>
+                        <p class="text-muted mb-0">{{ $assetBooking->user->email ?? '-' }}</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Nama Aset</strong>
+                        <p class="text-muted mb-0">{{ $assetBooking->asset->name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Kategori Aset</strong>
+                        <p class="text-muted mb-0">{{ $assetBooking->asset_category->category_name ?? '-' }}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Tanggal Pemakaian</strong>
+                        <p class="text-muted mb-0">
+                            @if ($assetBooking->asset->booking_type === 'annual')
+                                {{ \Carbon\Carbon::parse($assetBooking->usage_date_start)->translatedFormat('d F Y') }}
+                                - {{ \Carbon\Carbon::parse($assetBooking->usage_date_end)->translatedFormat('d F Y') }}
+                            @else
+                                {{ \Carbon\Carbon::parse($assetBooking->usage_date_start)->translatedFormat('d F Y') }}
+                            @endif
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Waktu Pemakaian</strong>
+                        <p class="text-muted mb-0">
+                            @if ($assetBooking->asset->booking_type === 'annual')
+                                -
+                            @else
+                                {{ \Carbon\Carbon::parse($assetBooking->usage_date_start)->format('H:i') }} -
+                                {{ \Carbon\Carbon::parse($assetBooking->usage_date_end)->format('H:i') }}
+                            @endif
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Tipe Pembayaran</strong>
+                        <p class="text-muted mb-0">{{ ucfirst($assetBooking->payment_type) }}</p>
+                    </div>
+                    @if ($assetBooking->asset->booking_type === 'annual')
+                        <div class="col-md-6">
+                            <strong>Penggunaan</strong>
+                            <p class="text-muted mb-0">{{ $assetBooking->usage_event_name ?? '-' }}</p>
+                        </div>
+                    @else
+                        <div class="col-md-6">
+                            <strong>Jenis Acara</strong>
+                            <p class="text-muted mb-0">{{ $assetBooking->usage_event_name ?? '-' }}</p>
+                        </div>
+                    @endif
+                    <div class="col-md-6">
+                        <strong>Dibuat Pada</strong>
+                        <p class="text-muted mb-0">{{ $assetBooking->created_at->format('d F Y H:i') }}</p>
+                    </div>
+                </div>
                 @php
                     $ktp = $assetBooking->documents->where('document_type', 'Identitas Diri')->first();
                 @endphp
+
                 @if ($ktp)
                     <label for="identity_personal"><strong>Identitas Diri</strong></label><br>
-                    <img id="identity_personal"
-                        src="{{ asset('storage/' . $ktp->document_path) }}?v={{ $ktp->updated_at->timestamp }}"
-                    alt="Identity Personal Image" class="w-30" @else <p>Gambar tidak ditemukan
-                    </p>
+
+                    @php
+                        $ext = pathinfo($ktp->document_path, PATHINFO_EXTENSION);
+                    @endphp
+
+                    @if (strtolower($ext) === 'pdf')
+                        <iframe id="identity_personal"
+                            src="{{ asset('storage/' . $ktp->document_path) }}?v={{ $ktp->updated_at->timestamp }}"
+                            width="100%" height="300px" style="border:1px solid #ccc;">
+                        </iframe>
+                    @else
+                        <img id="identity_personal"
+                            src="{{ asset('storage/' . $ktp->document_path) }}?v={{ $ktp->updated_at->timestamp }}"
+                            alt="Identity Personal Image" class="w-30">
+                    @endif
+                @else
+                    <p>Dokumen tidak ditemukan</p>
                 @endif
+
                 <hr>
                 <form id="{{ $tableId }}" action="{{ route('assetBooking.confirm', $assetBooking->id) }}"
                     method="POST" data-table="{{ $tableId }}">
@@ -45,7 +115,8 @@
 
                     <!-- Input VA (Hanya tampil jika "Setujui Booking" dipilih) -->
                     <div class="row mt-3 va-details">
-                        <p class="fw-medium">Masukkan Nomor VA dan Expired VA</p>
+                        <p class="fw-medium">Masukkan Nomor VA dan Expired VA
+                            {{ $assetBooking->booking_type === 'dp' ? 'DP' : 'Pelunasan' }}</p>
                         <div class="col-md-6">
                             <label for="va_number">Nomor Virtual Account</label>
                             <input type="text" class="form-control" name="va_number" id="va_number"
@@ -64,9 +135,10 @@
                     </div>
 
                     <div class="modal-footer my-10">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#modalInvoicePreview-{{ $assetBooking->id }}">📄 Preview Invoice</button>
-                        <button type="submit" class="btn btn-success-600">✔️ Simpan</button>
+                        <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Batal
+                        </button>
+                        <button type="submit" class="btn btn-success-600">Konfirmasi</button>
                     </div>
                 </form>
 

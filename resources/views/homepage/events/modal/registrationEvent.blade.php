@@ -36,7 +36,8 @@
                             Pembayaran</label>
                         <input type="hidden" name="price" value="{{ $userPrice->price }}" class="form-control"
                             required>
-                        <input type="file" name="proof_of_payment" class="form-control" required>
+                        <input type="file" name="proof_of_payment" class="form-control" accept=".png,.jpeg,.jpg"
+                            required>
                     </div>
                 @else
                     <div class="alert alert-success mt-3">

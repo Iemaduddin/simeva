@@ -7,6 +7,8 @@ use App\Models\Asset;
 use App\Models\Event;
 use App\Models\Jurusan;
 use App\Models\Organizer;
+use App\Models\TeamMember;
+use App\Models\Stakeholder;
 use Illuminate\Support\Str;
 use App\Models\AssetBooking;
 use Illuminate\Http\Request;
@@ -71,6 +73,9 @@ class AssetBookingEventController extends Controller
             //     $query->whereIn('status', $statusCategories[$statusBooking])
             //         ->whereDate('usage_date_end', '<', now()); // Pastikan `usage_date_end` sudah lewat
             // }
+        }
+        if ($statusBooking === 'submission_booking') {
+            $query->where('event_id', '!=', null);
         }
 
         // Eksekusi query
@@ -219,7 +224,6 @@ class AssetBookingEventController extends Controller
 
                 // Ambil semua booking untuk asset_id yang termasuk dalam daftar jurusan
                 $listAssetBookings = collect();
-
                 if ($jurusan) {
                     $listAssetBookings = AssetBooking::where('event_id', $eventId)
                         ->whereIn('asset_id', $assetJurusanIds)
@@ -243,6 +247,7 @@ class AssetBookingEventController extends Controller
                 $confirmApproved = view('dashboardPage.assets.asset-booking-event.modal.confirm-approved', compact('assetBooking', 'documentPath', 'eventId', 'tableId'))->render();
                 $scriptCancelledBooking = view('dashboardPage.assets.asset-booking-event.modal.cancelledBookingAssetEvent', compact('assetBooking', 'listAssetBookings', 'eventId', 'tableId'))->render();
                 $confirmDone = view('dashboardPage.assets.asset-booking-event.modal.confirm-done', compact('assetBookingIdNoEvent', 'eventId', 'tableId'))->render();
+                $uploadSuratDisposisi = view('dashboardPage/assets.modal.uploadSuratDisposisi', compact('eventId', 'tableId'))->render();
 
                 // Tombol aksi berdasarkan status
                 $buttons = '<div class="d-flex align-items-center gap-2">';
@@ -290,7 +295,15 @@ class AssetBookingEventController extends Controller
                         $modals .= $confirmApproved;
                         break;
                     case 'approved':
-                        $buttons .= "<span class='badge bg-success'>✔ Disetujui</span>";
+                        // $buttons .= "<span class='badge bg-success'>✔ Disetujui</span>";
+                        // Tombol Batalkan (Selalu Tampil)
+                        $buttons .= "<a class='btn btn-sm btn-outline-primary cursor-pointer' 
+                                        data-bs-toggle='modal' 
+                                        data-bs-target='#modalUploadSuratDisposisi-{$eventId}'>
+                                        Upload Surat Disposisi
+                                    </a>";
+                        // Tambahkan modal ke dalam tombol aksi
+                        $buttons .= $uploadSuratDisposisi;
                         break;
                     case 'rejected':
                         $buttons .= "<span class='badge bg-danger'>❌ Ditolak</span>";
@@ -384,13 +397,13 @@ class AssetBookingEventController extends Controller
                         </a>';
                     $modals .=  $cancelledBookingModal;
                 }
-                if ($booking->status === 'approved') {
-                    $buttons .= '
-                    <a href=""
-                    class="btn btn-dark text-sm btn-sm">
-                    Download Surat Disposisi
-                </a>';
-                }
+                // if ($booking->status === 'approved') {
+                //     $buttons .= '
+                //     <a href=""
+                //     class="btn btn-dark text-sm btn-sm">
+                //     Download Surat Disposisi
+                // </a>';
+                // }
                 $buttons .= '</div>' . $modals;
 
                 return $buttons;
@@ -432,9 +445,12 @@ class AssetBookingEventController extends Controller
         // **Cek apakah ada booking yang bentrok dengan waktu yang dipilih**
         $conflict = AssetBooking::where('asset_id', $request->asset_id)
             ->where('id', '!=', $id)
-            ->where('status', '!=', 'rejected_booking')
-            ->where('status', '!=', 'rejected')
-            ->where('status', '!=', 'cancelled')
+            ->where(function ($query) {
+                $query->where('status', 'NOT LIKE', 'submission%')
+                    ->where('status', '!=', 'rejected_booking')
+                    ->where('status', '!=', 'rejected')
+                    ->where('status', '!=', 'cancelled');
+            })
             ->where(function ($query) use ($loanDateStart, $loanDateEnd) {
                 $query->where(function ($q) use ($loanDateStart, $loanDateEnd) {
                     $q->where('usage_date_start', '<', $loanDateEnd)
@@ -927,6 +943,12 @@ class AssetBookingEventController extends Controller
 
 
                 $conflict = AssetBooking::where('asset_id', $asset)
+                    ->where(function ($query) {
+                        $query->where('status', 'NOT LIKE', 'submission%')
+                            ->where('status', '!=', 'rejected_booking')
+                            ->where('status', '!=', 'rejected')
+                            ->where('status', '!=', 'cancelled');
+                    })
                     ->where(function ($query) use ($usageDateStart, $usageDateEnd) {
                         $query->where(function ($q) use ($usageDateStart, $usageDateEnd) {
                             $q->where('usage_date_start', '<', $usageDateEnd)
@@ -976,5 +998,29 @@ class AssetBookingEventController extends Controller
             notyf()->ripple(true)->error('Terjadi kesalahan saat menambahkan data booking.');
             return redirect()->back();
         }
+    }
+
+    public function getLoanForm(Request $request, $id)
+    {
+        $event = Event::findOrFail($id);
+
+        $organizer = Organizer::with('user')->where('user_id', Auth::id())->first();
+
+        $assetBookings = AssetBooking::with('asset', 'event')->where('event_id', $id)
+            ->whereHas('asset', function ($query) {
+                $query->where('type', 'building');
+            })
+            ->get();
+
+        $dpk = Stakeholder::where('position', 'DPK')->where('organizer_id', $organizer->id)
+            ->where('is_active', true)->first();
+        $presiden = Stakeholder::where('position', 'Presiden BEM')->where('is_active', true)->first();
+        $kajur = Stakeholder::where('position', 'Ketua Jurusan')->where('is_active', true)->first();
+        $wadir3 = Stakeholder::where('position', 'Wakil Direktur III')->where('is_active', true)->first();
+        $team_members = TeamMember::where('organizer_id', $organizer->id)->get();
+        $leader = TeamMember::findOrFail($request->leader);
+        $letter_number = $request->letter_number;
+        $event_leader = TeamMember::findOrFail($event->event_leader);
+        return view('dashboardPage.assets.asset-booking-event.loan-form', compact('organizer', 'assetBookings', 'dpk', 'kajur', 'presiden', 'wadir3', 'letter_number', 'event_leader', 'leader', 'team_members'));
     }
 }

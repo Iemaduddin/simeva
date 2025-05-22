@@ -19,7 +19,8 @@ class AssetBooking extends Model
         'usage_date_end',
         'loading_date_start',
         'loading_date_end',
-        'unloading_date',
+        'unloading_date_start',
+        'unloading_date_end',
         'usage_event_name',
         'payment_type',
         'booking_duration',
@@ -33,7 +34,8 @@ class AssetBooking extends Model
         'usage_date_end' => 'datetime',
         'loading_date_start' => 'datetime',
         'loading_date_end' => 'datetime',
-        'unloading_date' => 'date',
+        'unloading_date_start' => 'datetime',
+        'unloading_date_end' => 'datetime',
         'payment_type' => 'string',
         'status' => 'string'
     ];
