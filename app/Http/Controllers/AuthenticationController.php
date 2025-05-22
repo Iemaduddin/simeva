@@ -113,33 +113,38 @@ class AuthenticationController extends Controller
             // if (session()->has('url.intended')) {
             //     return redirect(session()->pull('url.intended')); // Ambil URL lalu hapus dari session
             // }
-
+            if ($user->is_blocked) {
+                Auth::logout(); // Penting!
+                return back()->withErrors([
+                    'username' => 'Akun Anda telah diblokir. Silakan hubungi Admin untuk selengkapnya!',
+                ])->withInput();
+            }
             $jurusanAdmin = Auth::user()->jurusan_id;
             $kode_jurusan = Jurusan::where('id', $jurusanAdmin)->value('kode_jurusan');
-
+            $shorten_name = Auth::user()->organizer->shorten_name ?? '-';
             if ($user->hasRole('Super Admin')) {
                 // Arahkan ke halaman dashboard untuk Super Admin
                 notyf()->ripple(true)->info('Anda berhasil login!');
-                return redirect()->route('stakeholderUsers');
+                return redirect()->route('dashboard.super-admin');
             } elseif ($user->hasRole('Participant')) {
                 // Arahkan ke halaman home untuk Participant
                 notyf()->ripple(true)->info('Anda berhasil login!');
                 return redirect()->route('home');
             } elseif ($user->hasRole('Kaur RT')) {
                 notyf()->ripple(true)->info('Anda berhasil login!');
-                return redirect()->route('assets.fasum');
+                return redirect()->route('dashboard.kaur-rt-pu');
             } elseif ($user->hasRole('UPT PU')) {
                 notyf()->ripple(true)->info('Anda berhasil login!');
-                return redirect()->route('asset.fasum.bookings');
+                return redirect()->route('dashboard.kaur-rt-pu');
             } elseif ($user->hasRole('Admin Jurusan')) {
                 notyf()->ripple(true)->info('Anda berhasil login!');
-                return redirect()->route('asset.fasjur.bookings', $kode_jurusan);
+                return redirect()->route('dashboard.admin-jurusan', $kode_jurusan);
             } elseif ($user->hasRole('Tenant')) {
                 notyf()->ripple(true)->info('Anda berhasil login!');
                 return redirect()->route('aset-bmn');
             } elseif ($user->hasRole('Organizer')) {
                 notyf()->ripple(true)->info('Anda berhasil login!');
-                return redirect()->route('data.events', $user->organizer->shorten_name);
+                return redirect()->route('dashboard.organizer', $shorten_name);
             }
 
             // Jika peran tidak cocok, arahkan ke halaman default atau berikan error
