@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('asset_bookings', function (Blueprint $table) {
             $table->uuid('id')->primary()->default(Str::uuid());
-            $table->uuid('asset_id');
+            $table->uuid('asset_id')->nullable();
             $table->uuid('user_id')->nullable();
             $table->string('external_user', 100)->nullable();
             $table->string('booking_number');
@@ -24,7 +24,8 @@ return new class extends Migration
             $table->dateTime('usage_date_end');
             $table->dateTime('loading_date_start')->nullable();
             $table->dateTime('loading_date_end')->nullable();
-            $table->dateTime('unloading_date')->nullable();
+            $table->dateTime('unloading_date_start')->nullable();
+            $table->dateTime('unloading_date_end')->nullable();
             $table->string('usage_event_name');
             $table->enum('payment_type', ['dp', 'lunas'])->nullable();
             $table->decimal('total_amount', 18, 2)->nullable();

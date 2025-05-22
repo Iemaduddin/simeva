@@ -24,4 +24,9 @@ class Jurusan extends Model
     {
         return $this->hasMany(Asset::class, 'jurusan_id');
     }
+
+    public function stakeholders()
+    {
+        return $this->hasMany(Stakeholder::class);
+    }
 }

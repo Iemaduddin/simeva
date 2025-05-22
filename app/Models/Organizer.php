@@ -39,4 +39,13 @@ class Organizer extends Model
     {
         return $this->hasMany(Event::class, 'organizer_id');
     }
+
+    public function calendars()
+    {
+        return $this->hasMany(Calendar::class, 'organizer_id');
+    }
+    public function stakeholders()
+    {
+        return $this->hasMany(Stakeholder::class);
+    }
 }

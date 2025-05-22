@@ -51,11 +51,6 @@ class Event extends Model
     ];
 
 
-    public function timelines()
-    {
-        return $this->hasMany(Timeline::class);
-    }
-
     public function steps()
     {
         return $this->hasMany(EventStep::class);
@@ -90,11 +85,6 @@ class Event extends Model
     public function documents()
     {
         return $this->hasMany(AssetBookingDocument::class, 'event_id');
-    }
-
-    public function certificates()
-    {
-        return $this->hasMany(ParticipantEventCertificate::class, 'event_id');
     }
     public function userItems()
     {

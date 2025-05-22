@@ -14,13 +14,31 @@
                      @method('PUT')
                      <div class="row">
                          <div class="col-12 mb-20">
-                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Nama Anggota<span
+                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">NIM <span
+                                     class="text-danger">*</span></label>
+                             <input type="text" name="nim" class="form-control radius-8"
+                                 placeholder="Masukkan NIM Anggota" value="{{ $team_member->nim }}" required>
+                         </div>
+                         <div class="col-12 mb-20">
+                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Nama Anggota <span
                                      class="text-danger">*</span></label>
                              <input type="text" name="name" class="form-control radius-8"
                                  placeholder="Masukkan Nama Anggota" value="{{ $team_member->name }}" required>
                          </div>
                          <div class="col-12 mb-20">
-                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Tingkatan<span
+                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Prodi <span
+                                     class="text-danger">*</span></label>
+                             <select class="form-select" name="prodi" required>
+                                 <option disabled selected>Pilih Prodi</option>
+                                 @foreach ($prodis as $prodi)
+                                     <option value="{{ $prodi->id }}"
+                                         {{ $prodi->id === $team_member->prodi_id ? 'selected' : '' }}>
+                                         {{ $prodi->nama_prodi }}</option>
+                                 @endforeach
+                             </select>
+                         </div>
+                         <div class="col-12 mb-20">
+                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Tingkatan <span
                                      class="text-danger">*</span></label>
                              <select class="form-select" name="level" required>
                                  <option disabled selected>Pilih Tingkatan</option>
@@ -31,10 +49,17 @@
                              </select>
                          </div>
                          <div class="col-12 mb-20">
-                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Jabatan<span
+                             <label class="form-label fw-semibold text-primary-light text-sm mb-8">Jabatan <span
                                      class="text-danger">*</span></label>
                              <input type="text" name="position" class="form-control radius-8"
                                  placeholder="Masukkan Jabatan" value="{{ $team_member->position }}" required>
+                         </div>
+                         <div class="col-12">
+                             <div class="form-check style-check d-flex align-items-center mb-2">
+                                 <input class="form-check-input radius-4 border border-neutral-400 me-2" id="is_leader"
+                                     type="checkbox" name="is_leader" {{ $team_member->is_leader ? 'checked' : '' }}>
+                                 <label class="form-check-label" for="is_leader">Pemimpin Organisasi</label>
+                             </div>
                          </div>
                          <div class="modal-footer d-flex align-items-end justify-content-end gap-3 mt-24">
                              <button type="reset"

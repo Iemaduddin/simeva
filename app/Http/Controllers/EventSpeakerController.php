@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\Event;
 use BaconQrCode\Writer;
+use App\Models\TeamMember;
 use App\Models\EventSpeaker;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -27,6 +28,7 @@ class EventSpeakerController extends Controller
             })
             ->get();
         $event = Event::findOrFail($id);
+
         return DataTables::of($speakers)
             ->addIndexColumn()
             ->editColumn('event', function ($speaker) {
@@ -44,18 +46,22 @@ class EventSpeakerController extends Controller
                 return $eventName . '<br>' . $dateTimeEvent;
             })
             ->addColumn('action', function ($speaker) use ($event): string {
+                $organizer = $speaker->event_step->event->organizers ?? null;
+                $leaders = TeamMember::where('organizer_id', $organizer->id)->where('is_leader', true)->get();
+
                 $updateModal = view('dashboardPage.events.speaker.update-speaker', compact('event', 'speaker'))->render();
-                $invitationSpeaker = view('dashboardPage.events.speaker.invitation-speaker', compact('speaker'))->render();
+                $invitationLetterModal = view('dashboardPage.events.speaker.download-event-speaker', compact('event', 'speaker', 'leaders'))->render();
 
                 return '<div class="d-flex gap-8">
-                <a href="' . route('invitation.speaker', ['id' => $speaker->id]) . '" class="w-40-px h-40-px cursor-pointer bg-warning-focus text-warning-main rounded-circle d-inline-flex align-items-center justify-content-center">
-                    <iconify-icon icon="mi:document-download" class="text-xl"></iconify-icon>
-                </a>
-                ' . $invitationSpeaker . '
-                <a href="' . route('update.speaker', ['id' => $speaker->id]) . '" class="w-40-px h-40-px cursor-pointer bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center"
+                <button class="w-40-px h-40-px cursor-pointer bg-warning-focus text-warning-main rounded-circle d-inline-flex align-items-center justify-content-center"
+                data-bs-toggle="modal" data-bs-target="#modalDataInvitationSpeaker-' . $speaker->id . '">
+                <iconify-icon icon="mi:document-download" class="text-xl"></iconify-icon>
+                </button>
+                ' . $invitationLetterModal . '
+                <button class="w-40-px h-40-px cursor-pointer bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center"
                 data-bs-toggle="modal" data-bs-target="#modalUpdateSpeaker-' . $speaker->id . '">
                     <iconify-icon icon="lucide:edit"></iconify-icon>
-                </a>
+                </button>
                 ' . $updateModal . '
                 <form action="' . route('destroy.speaker', ['id' => $speaker->id]) . '" method="POST" class="delete-form" data-table="eventSpeakerTable">
                     <input type="hidden" name="_method" value="DELETE">
@@ -71,20 +77,15 @@ class EventSpeakerController extends Controller
             ->make(true);
     }
 
-    public function invitationSpeaker($id)
+    public function invitationSpeaker(Request $request, $id)
     {
-        $participant = EventParticipant::with('user', 'event.steps', 'transaction')->findOrFail($id);
+        $speaker = EventSpeaker::findOrFail($id);
+        $organizer = $speaker->event_step->event->organizers ?? null;
 
-        $renderer = new ImageRenderer(
-            new RendererStyle(400),
-            new SvgImageBackEnd() // Gunakan SvgImageBackEnd yang tidak memerlukan Imagick
-        );
-
-        $writer = new Writer($renderer);
-        $qrCode = base64_encode($writer->writeString($participant->ticket_code));
-        $pdf = Pdf::loadView('components.e-ticket', compact('participant', 'qrCode'));
-
-        return $pdf->stream("E-ticket {$participant->event->title}.pdf");
+        $leader = TeamMember::findOrFail($request->leader);
+        $letter_number = $request->letter_number;
+        $event_leader = TeamMember::findOrFail($speaker->event_step->event->event_leader);
+        return view('dashboardPage.events.speaker.invitation-letter', compact('speaker', 'organizer', 'letter_number', 'leader', 'event_leader'));
     }
 
     public function addSpeaker(Request $request)
