@@ -23,6 +23,7 @@
                         <tr>
                             <th>No</th>
                             <th>Nama</th>
+                            <th>Prodi</th>
                             <th>Tingkatan</th>
                             <th>Jabatan</th>
                             <th>Aksi</th>
@@ -56,6 +57,10 @@
                     {
                         data: 'name',
                         name: 'name'
+                    },
+                    {
+                        data: 'prodi.nama_prodi',
+                        name: 'prodi.nama_prodi'
                     },
                     {
                         data: 'level',

@@ -1,6 +1,6 @@
 @extends('layout.landingPageLayout')
 
-@section('title', 'Booking Aset')
+@section('title', 'Kegiatanku')
 @section('content')
     <!-- ==================== Breadcrumb Start Here ==================== -->
     <section class="breadcrumb py-120 bg-main-25 position-relative z-1 overflow-hidden mb-0">
@@ -19,7 +19,7 @@
             <div class="row justify-content-center">
                 <div class="col-lg-8">
                     <div class="breadcrumb__wrapper">
-                        <h1 class="breadcrumb__title display-4 fw-semibold text-center"> Daftar Event</h1>
+                        <h1 class="breadcrumb__title display-4 fw-semibold text-center"> Kegiatanku</h1>
                         <ul class="breadcrumb__list d-flex align-items-center justify-content-center gap-4">
                             <li class="breadcrumb__item">
                                 <a href="{{ route('home') }}"
@@ -30,7 +30,7 @@
                                 <i class="text-neutral-500 d-flex ph-bold ph-caret-right"></i>
                             </li>
                             <li class="breadcrumb__item">
-                                <span class="text-main-two-600">Daftar Event </span>
+                                <span class="text-main-two-600">Kegiatanku </span>
                             </li>
                         </ul>
                     </div>
@@ -157,7 +157,7 @@
                                             @php
                                                 $event = $itemEvent->event;
                                             @endphp
-                                            @if ($itemEvent->status === 'pending_approval')
+                                            @if ($itemEvent->status === 'pending_approval' || $itemEvent->status === 'rejected')
                                                 <a class='btn btn-sm btn-outline-warning cursor-pointer'
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#modalRegisterEvent{{ $event->id }}"><i

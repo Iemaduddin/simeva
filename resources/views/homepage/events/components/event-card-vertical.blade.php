@@ -171,8 +171,8 @@
                     <div class="row align-items-center">
                         <div class="col-8  d-flex align-items-center">
                             <span class="text-neutral-700 text-2xl d-flex">
-                                <img src="{{ asset($event->organizers->logo) }}" alt="Logo Organizers"
-                                    class="w-40 h-40 object-fit-cover">
+                                <img src="{{ $event->organizers->logo ? asset('storage/' . $event->organizers->logo) : asset('assets/images/banner.png') }}"
+                                    alt="Logo Organizers" class="w-32 h-32 object-fit-cover rounded-circle">
                             </span>
                             <p class="text-neutral-700 text-md fw-medium text-line-1 ms-2">
                                 {{ $event->organizers->shorten_name }}

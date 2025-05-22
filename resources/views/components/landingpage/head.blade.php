@@ -32,6 +32,9 @@
 <link rel="stylesheet" href="{{ asset('assets/css/main.css') }}">
 <!-- Notify-->
 <link rel="stylesheet" href="{{ asset('assets/css/notyf.min.css') }}">
+
+@yield('css')
+
 <style>
     /* Menghilangkan panah pada input number */
     input[type=number] {

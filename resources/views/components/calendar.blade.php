@@ -71,9 +71,9 @@
                                 <div class="col-sm-4">
                                     <label for="file_personal_identity"
                                         class="text-neutral-700 text-lg fw-medium mb-24">Scan
-                                        KTP
+                                        KTP (.pdf)
                                         <span class="text-danger-600">*</span> </label>
-                                    <input type="file" accept=".pdf, .jpg, .jpeg, .png" name="file_personal_identity"
+                                    <input type="file" accept=".pdf" name="file_personal_identity"
                                         class="form-control border-transparent focus-border-main-600"
                                         id="file_personal_identity" required>
                                 </div>

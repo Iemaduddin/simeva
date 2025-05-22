@@ -18,7 +18,8 @@
         <div class="dashboard-main-body">
 
             <!-- ..::  breadcrumb  start ::.. -->
-            <x-breadcrumb title="{{ $title ?? '' }}" subTitle="{{ $subTitle ?? '' }}" />
+            <x-breadcrumb title="{{ $title ?? '' }}" subTitle="{{ $subTitle ?? '' }}"
+                subSubTitle="{{ $subSubTitle ?? '' }}" />
 
             <!-- ..::  header area end ::.. -->
 
@@ -36,7 +37,9 @@
         @isset($script)
             {!! $script !!}
         @endisset
+
     </x-script>
+
 
     <!-- ..::  scripts  end ::.. -->
 

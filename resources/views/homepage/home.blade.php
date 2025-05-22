@@ -58,38 +58,6 @@
                             class="banner-thumb__img rounded-12 wow bounceIn" data-wow-duration="3s" data-wow-delay=".5s"
                             data-tilt data-tilt-max="12" data-tilt-speed="500" data-tilt-perspective="5000"
                             data-tilt-full-page-listening data-tilt-scale="1.02">
-
-                        <img src="{{ asset('assets/images/shapes/curve-arrow.png') }}" alt=""
-                            class="curve-arrow position-absolute">
-
-                        <div class="banner-box one px-24 py-12 rounded-12 bg-white fw-medium box-shadow-lg d-inline-block"
-                            data-aos="fade-down">
-                            <span class="text-main-600">36k+</span> Enrolled Students
-                            <div class="enrolled-students mt-12">
-                                <img src="{{ asset('assets/images/thumbs/enroll-student-img1.png') }}" alt=""
-                                    class="w-48 h-48 rounded-circle object-fit-cover transition-2">
-                                <img src="{{ asset('assets/images/thumbs/enroll-student-img2.png') }}" alt=""
-                                    class="w-48 h-48 rounded-circle object-fit-cover transition-2">
-                                <img src="{{ asset('assets/images/thumbs/enroll-student-img3.png') }}" alt=""
-                                    class="w-48 h-48 rounded-circle object-fit-cover transition-2">
-                                <img src="{{ asset('assets/images/thumbs/enroll-student-img4.png') }}" alt=""
-                                    class="w-48 h-48 rounded-circle object-fit-cover transition-2">
-                                <img src="{{ asset('assets/images/thumbs/enroll-student-img5.png') }}" alt=""
-                                    class="w-48 h-48 rounded-circle object-fit-cover transition-2">
-                                <img src="{{ asset('assets/images/thumbs/enroll-student-img6.png') }}" alt=""
-                                    class="w-48 h-48 rounded-circle object-fit-cover transition-2">
-                            </div>
-                        </div>
-                        <div class="banner-box two px-24 py-12 rounded-12 bg-white fw-medium box-shadow-lg flex-align d-inline-flex gap-16"
-                            data-aos="fade-up">
-                            <span
-                                class="banner-box__icon flex-shrink-0 w-48 h-48 bg-purple-400 text-white text-2xl flex-center rounded-circle"><i
-                                    class="ph ph-watch"></i></span>
-                            <div>
-                                <h6 class="mb-4">20% OFF</h6>
-                                <span class="">For All Courses</span>
-                            </div>
-                        </div>
                         <div class="banner-box three px-24 py-12 rounded-12 bg-white fw-medium box-shadow-lg flex-align d-inline-flex gap-16"
                             data-aos="fade-left">
                             <span
@@ -115,10 +83,13 @@
                 <h5 class="mb-40 text-center text-neutral-500">Penyelenggara Event di Politeknik Negeri Malang</h5>
                 <div class="container">
                     <div class="brand-slider">
-                        @foreach ($logo_organizers as $logo)
-                            <div class="brand-slider__item px-24">
-                                <img src="{{ asset($logo) }}" alt="">
-                            </div>
+                        @foreach ($logo_organizers as $shorten_name => $logo)
+                            @if ($logo)
+                                <div class="brand-slider__item px-24">
+                                    <img src="{{ asset('storage/' . $logo) }}" alt="LOGO ORGANIZER"
+                                        title="{{ $shorten_name }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                </div>
+                            @endif
                         @endforeach
                     </div>
                 </div>
@@ -382,8 +353,9 @@
                                                 <div class="row align-items-center">
                                                     <div class="col-8  d-flex align-items-center">
                                                         <span class="text-neutral-700 text-2xl d-flex">
-                                                            <img src="{{ asset($event->organizers->logo) }}"
-                                                                alt="Logo Organizers" class="w-40 h-40 object-fit-cover">
+                                                            <img src="{{ $event->organizers->logo ? asset('storage/' . $event->organizers->logo) : asset('assets/images/banner.png') }}"
+                                                                alt="Logo Organizers"
+                                                                class="w-32 h-32 object-fit-cover rounded-circle">
                                                         </span>
                                                         <p class="text-neutral-700 text-md fw-medium text-line-1 ms-2">
                                                             {{ $event->organizers->shorten_name }}
@@ -527,7 +499,8 @@
                             data-is-public="{{ $asset->facility_scope === 'umum' ? 'true' : 'false' }}">
                             <div class="asset-item bg-white rounded-16 p-12 h-100 box-shadow-md">
                                 <div class="asset-item__thumb rounded-12 overflow-hidden position-relative">
-                                    <a href="{{ route('asset-bmn.getData', $asset->id) }}" class="w-100 h-100">
+                                    <a href="{{ route('asset-bmn.getData', $asset->id) }}" class="w-100"
+                                        style="height: 300px">
                                         @php
                                             $asset_images = json_decode($asset->asset_images, true);
                                         @endphp
@@ -606,6 +579,11 @@
     <script>
         let isUserLoggedIn = @json(Auth::check());
         let userCategory = @json(Auth::check() ? Auth::user()->category_user : 'public');
+
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
     </script>
 
     <script>

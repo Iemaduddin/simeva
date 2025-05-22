@@ -1,6 +1,6 @@
 @extends('layout.landingPageLayout')
 
-@section('title', 'Profil')
+@section('title', 'Profile')
 @section('content')
     <!-- ==================== Breadcrumb Start Here ==================== -->
     <section class="breadcrumb py-120 bg-main-25 position-relative z-1 overflow-hidden mb-0">
@@ -212,7 +212,7 @@
             }
 
 
-            loadProvinces($('.select-province'));
+            // loadProvinces($('.select-province'));
 
             $(document).on('change', '.select-province', function() {
                 let provinceId = $(this).val();
@@ -357,16 +357,18 @@
                                         // You might need to reload village options here
                                     }
 
-                                    // If there's a profile picture preview, update it
-                                    if (user.profile_picture_url) {
-                                        const profilePicture = document.querySelector(
-                                            '.profile-picture'
-                                        ); // Add this class to your profile picture element
-                                        if (profilePicture) {
-                                            profilePicture.src = user.profile_picture_url;
-                                        }
+                                }
+                                // If there's a profile picture preview, update it
+                                if (data.profile_picture) {
+                                    const profilePicture = document.querySelector('.profile-picture');
+                                    if (profilePicture) {
+                                        // Tambahkan timestamp untuk mencegah cache browser
+                                        const imageUrl =
+                                            `/storage/${data.profile_picture}?t=${new Date().getTime()}`;
+                                        profilePicture.src = imageUrl;
                                     }
                                 }
+
 
                                 // Clear password field
                                 const passwordInput = updateProfileForm.querySelector('#password');

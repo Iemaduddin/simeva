@@ -101,6 +101,7 @@
             let stakeholderTable = $('#jurusanTable').DataTable({
                 processing: true,
                 serverSide: true,
+                scrollX: true,
                 ajax: {
                     url: "{{ route('jurusan.getData') }}",
                     type: 'GET',

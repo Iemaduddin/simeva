@@ -116,7 +116,8 @@
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $user->name }}</td>
-                                        <td>{{ $user->roles->value('name') }}</td>
+
+                                        <td>{{ $user->getRoleNames()->first() }}</td>
                                         <td>
                                             {{ \Carbon\Carbon::parse($user->created_at)->isoFormat('dddd, D MMMM Y [pukul] HH:mm') }}
                                             <br>

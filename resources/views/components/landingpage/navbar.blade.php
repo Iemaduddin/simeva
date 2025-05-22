@@ -27,22 +27,22 @@
 
             <ul class="nav-menu flex-align nav-menu--mobile">
 
-                <li class="nav-menu__item {{ Route::currentRouteName() === 'home' ? 'activePage' : '' }}">
+                <li class="nav-menu__item {{ request()->is('/') ? 'activePage' : '' }}">
                     <a href="{{ route('home') }}" class="nav-menu__link">Beranda</a>
                 </li>
-                <li class="nav-menu__item {{ Route::currentRouteName() === 'event' ? 'activePage' : '' }}">
+                <li class="nav-menu__item {{ request()->is('*event*') ? 'activePage' : '' }}">
                     <a href="{{ route('event') }}" class="nav-menu__link">Event</a>
                 </li>
-                <li class="nav-menu__item {{ Route::currentRouteName() === 'organizer' ? 'activePage' : '' }}">
+                <li class="nav-menu__item {{ request()->is('*organizer*') ? 'activePage' : '' }}">
                     <a href="{{ route('organizer') }}" class="nav-menu__link">Penyelenggara</a>
                 </li>
-                <li class="nav-menu__item {{ Route::currentRouteName() === 'calender' ? 'activePage' : '' }}">
+                <li class="nav-menu__item {{ request()->is('calendar') ? 'activePage' : '' }}">
                     <a href="{{ route('calender') }}" class="nav-menu__link">Kalender</a>
                 </li>
-                <li class="nav-menu__item {{ Route::currentRouteName() === 'aset-bmn' ? 'activePage' : '' }}">
+                <li class="nav-menu__item {{ request()->is('*aset-bmn*') ? 'activePage' : '' }}">
                     <a href="{{ route('aset-bmn') }}" class="nav-menu__link">Aset BMN</a>
                 </li>
-                <li class="nav-menu__item {{ Route::currentRouteName() === 'tutorial' ? 'activePage' : '' }}">
+                <li class="nav-menu__item {{ request()->is('tutorial') ? 'activePage' : '' }}">
                     <a href="{{ route('tutorial') }}" class="nav-menu__link">Panduan</a>
                 </li>
                 @auth
@@ -176,23 +176,22 @@
                     <div class="header-menu d-lg-block d-none">
 
                         <ul class="nav-menu flex-align ">
-                            <li class="nav-menu__item {{ Route::currentRouteName() === 'home' ? 'activePage' : '' }}">
+                            <li class="nav-menu__item {{ request()->is('/') ? 'activePage' : '' }}">
                                 <a href="{{ route('home') }}" class="nav-menu__link">Beranda</a>
                             </li>
-                            <li class="nav-menu__item {{ Route::currentRouteName() === 'event' ? 'activePage' : '' }}">
+                            <li class="nav-menu__item {{ request()->is('*event*') ? 'activePage' : '' }}">
                                 <a href="{{ route('event') }}" class="nav-menu__link">Event</a>
                             </li>
-                            <li
-                                class="nav-menu__item {{ Route::currentRouteName() === 'organizer' || Route::currentRouteName() === 'detail_organizer' ? 'activePage' : '' }}">
+                            <li class="nav-menu__item {{ request()->is('*organizer*') ? 'activePage' : '' }}">
                                 <a href="{{ route('organizer') }}" class="nav-menu__link">Penyelenggara</a>
                             </li>
-                            <li class="nav-menu__item {{ Route::currentRouteName() === 'calender' ? 'activePage' : '' }}">
+                            <li class="nav-menu__item {{ request()->is('calendar') ? 'activePage' : '' }}">
                                 <a href="{{ route('calender') }}" class="nav-menu__link">Kalender</a>
                             </li>
-                            <li class="nav-menu__item {{ Route::currentRouteName() === 'aset-bmn' ? 'activePage' : '' }}">
+                            <li class="nav-menu__item {{ request()->is('*aset-bmn*') ? 'activePage' : '' }}">
                                 <a href="{{ route('aset-bmn') }}" class="nav-menu__link">Aset BMN</a>
                             </li>
-                            <li class="nav-menu__item {{ Route::currentRouteName() === 'tutorial' ? 'activePage' : '' }}">
+                            <li class="nav-menu__item {{ request()->is('tutorial') ? 'activePage' : '' }}">
                                 <a href="{{ route('tutorial') }}" class="nav-menu__link">Panduan</a>
                             </li>
                         </ul>
@@ -308,22 +307,20 @@
                                     $imageProfile = '';
                                     if (Auth::user()->hasRole('Organizer')) {
                                         $logoPath = Auth::user()->organizer->logo;
-                                        if ($logoPath && \Illuminate\Support\Facades\Storage::exists($logoPath)) {
-                                            $imageProfile = asset('storage/' . $logoPath);
-                                        } elseif ($logoPath) {
-                                            $imageProfile = asset($logoPath);
-                                        } else {
-                                            $imageProfile = asset('assets/images/user.png');
-                                        }
+                                        $imageProfile = $logoPath
+                                            ? asset('storage/' . $logoPath)
+                                            : asset('assets/images/user.png');
                                     } else {
                                         $profilPath = Auth::user()->profile_picture;
-                                        $imageProfile = $profilPath ? asset('storage/' . $profilPath) : '';
+                                        $imageProfile = $profilPath
+                                            ? asset('storage/' . $profilPath)
+                                            : asset('assets/images/user.png');
                                     }
                                 @endphp
                                 @if ($imageProfile !== '')
                                     <div style="width: 30px; height: 30px;">
                                         <img id="profilePicture" src="{{ $imageProfile }}" alt="Profile Picture"
-                                            class="rounded-circle object-fit-cover w-100 h-100">
+                                            class="profile-picture rounded-circle object-fit-cover w-100 h-100">
                                     </div>
                                 @else
                                     <i class="ph ph-user-circle"></i>
@@ -342,11 +339,39 @@
                                 aria-labelledby="userDropdown">
                                 <div class="card border border-gray-100 rounded-12 box-shadow-custom">
                                     <div class="card-body p-16">
-                                        @hasanyrole(['Super Admin', 'UPT PU', 'Kaur RT', 'Admin Jurusan', 'Organizer'])
-                                            <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
-                                                    href="{{ route('stakeholderUsers') }}"><i class="ph ph-user"></i>
-                                                    Dashboard</a></li>
-                                        @endhasanyrole
+                                        @php
+                                            $shorten_name = Auth::user()->organizer->shorten_name ?? '-';
+                                            $kode_jurusan_user = Auth::user()->jurusan->kode_jurusan ?? '-';
+                                            $menuItems = [
+                                                [
+                                                    'role' => 'Super Admin',
+                                                    'route' => route('dashboard.super-admin'),
+                                                ],
+                                                [
+                                                    'role' => 'Organizer',
+                                                    'route' => route('dashboard.organizer', $shorten_name),
+                                                ],
+                                                [
+                                                    'role' => 'Admin Jurusan',
+                                                    'route' => route('dashboard.admin-jurusan', $kode_jurusan_user),
+                                                ],
+                                                [
+                                                    'role' => 'Kaur RT',
+                                                    'route' => route('dashboard.kaur-rt-pu'),
+                                                ],
+                                                [
+                                                    'role' => 'UPT PU',
+                                                    'route' => route('dashboard.kaur-rt-pu'),
+                                                ],
+                                            ];
+                                        @endphp
+                                        @foreach ($menuItems as $item)
+                                            @hasrole($item['role'])
+                                                <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
+                                                        href="{{ $item['route'] }}"><i class="ph ph-user"></i>
+                                                        Dashboard</a></li>
+                                            @endhasrole
+                                        @endforeach
                                         @hasanyrole(['Participant', 'Tenant'])
                                             <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
                                                     href="{{ route('profileUserHomepage') }}"><i class="ph ph-user"></i>

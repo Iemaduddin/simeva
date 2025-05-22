@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Event;
 use App\Models\Organizer;
@@ -9,6 +10,7 @@ use App\Models\AssetBooking;
 use Illuminate\Http\Request;
 use App\Models\EventParticipant;
 use Illuminate\Support\Facades\DB;
+use App\Models\AssetBookingDocument;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -292,7 +294,7 @@ class ProfileController extends Controller
         }
 
         // Ambil data berdasarkan status dalam kategori
-        $query = AssetBooking::with('asset')
+        $query = AssetBooking::with('asset')->where('user_id', $id)
             ->whereIn('status', $statusCategories[$status_booking])->get();
 
         return DataTables::of($query)
@@ -309,7 +311,7 @@ class ProfileController extends Controller
                         <h6 class="text-md mb-12">' . optional($assetBooking->asset)->name . '</h6>
                         <div class="d-flex align-items-center gap-16">
                             <div class="d-flex align-items-center gap-4">
-                                <span class="text-xs text-neutral-500">Event:</span>
+                                <span class="text-xs text-neutral-500">' . (($assetBooking->asset->booking_type ?? null) === 'daily' ? 'Event: ' : 'Penggunaan: ') . '</span>
                                 <span class="p-5 border border-neutral-40 bg-white rounded-4 text-sm text-neutral-500">
                                     ' . $assetBooking->usage_event_name . '
                                 </span>
@@ -319,12 +321,18 @@ class ProfileController extends Controller
                 </div>';
             })
             ->addColumn('waktu_pemakaian', function ($assetBooking) {
-                return \Carbon\Carbon::parse($assetBooking->usage_date_start)->format('d-M-Y H.i') . ' -<br>' .
-                    \Carbon\Carbon::parse($assetBooking->usage_date_end)->format('d-M-Y H.i');
+                if ($assetBooking->asset->booking_type === 'daily') {
+                    return Carbon::parse($assetBooking->usage_date_start)->format('d M Y H.i') . ' -<br>' .
+                        Carbon::parse($assetBooking->usage_date_end)->format('d M Y H.i');
+                } else {
+                    return Carbon::parse($assetBooking->usage_date_start)->format('d M Y') . ' - ' .
+                        Carbon::parse($assetBooking->usage_date_end)->format('d M Y');
+                }
             })
             ->addColumn('aksi', function ($assetBooking) use ($status_booking) {
                 $buttons = '<div class="d-flex gap-8">';
                 $scriptCancelledBooking = view('homepage.assets.modal.cancelled-booking', compact('assetBooking', 'status_booking'))->render();
+                $detailBooking = view('homepage.assets.modal.detailsAssetBooking', compact('assetBooking', 'status_booking'))->render();
 
                 if ($assetBooking->status !== 'cancelled') {
                     // Tombol Batalkan (Selalu Tampil)
@@ -336,20 +344,31 @@ class ProfileController extends Controller
                     // Tambahkan modal ke dalam tombol aksi
                     $buttons .= $scriptCancelledBooking;
                 }
-                $buttons .= "<a class='btn btn-sm btn-outline-warning cursor-pointer' data-bs-toggle='modal' data-bs-target='#modalResubmissionAssetBooking-{$assetBooking->id}-{$status_booking}'>Rincian</a>";
-
+                $buttons .= "<a class='btn btn-sm btn-outline-warning cursor-pointer' data-bs-toggle='modal' data-bs-target='#modalDetailAssetBooking-{$assetBooking->id}'>Rincian</a>";
+                $buttons .= $detailBooking;
                 // Render modal konfirmasi booking dan pembayaran
                 $resubmissionBookingModal = view('homepage.assets.modal.resubmissionBooking', compact('assetBooking', 'status_booking'))->render();
+                $resubmissionBookinAnnualgModal = view('homepage.assets.modal.resubmissionBookingAnnual', compact('assetBooking', 'status_booking'))->render();
                 $payAndCompleteFileModal = view('homepage.assets.modal.payAndCompleteFile', compact('assetBooking', 'status_booking'))->render();
                 $payInFullModal = view('homepage.assets.modal.payInFull', compact('assetBooking', 'status_booking'))->render();
 
+                $suratDispo = AssetBookingDocument::where('booking_id', $assetBooking->id)
+                    ->where('document_type', 'Surat Disposisi')
+                    ->first();
                 // Tombol aksi berdasarkan status
                 $modals = '';
                 switch ($assetBooking->status) {
                     case 'rejected_booking':
-                        $buttons .= "<a class='btn btn-sm btn-outline-main' data-bs-toggle='modal' data-bs-target='#modalResubmissionAssetBooking-{$assetBooking->id}-{$status_booking}'>🔄 Ajukan Ulang Booking</a>";
-                        $modals .= $resubmissionBookingModal;
-                        break;
+                        if ($assetBooking->asset->booking_type === 'daily') {
+
+                            $buttons .= "<a class='btn btn-sm btn-outline-main' data-bs-toggle='modal' data-bs-target='#modalResubmissionAssetBooking-{$assetBooking->id}-{$status_booking}'>🔄 Ajukan Ulang Booking</a>";
+                            $modals .= $resubmissionBookingModal;
+                            break;
+                        } else {
+                            $buttons .= "<a class='btn btn-sm btn-outline-main' data-bs-toggle='modal' data-bs-target='#modalResubmissionAssetBookingAnnual-{$assetBooking->id}-{$status_booking}'>🔄 Ajukan Ulang Booking</a>";
+                            $modals .= $resubmissionBookinAnnualgModal;
+                            break;
+                        }
                     case 'booked':
                         $buttons .= "<a class='btn btn-sm btn-outline-main' data-bs-toggle='modal' data-bs-target='#modalpayAndCompleteFile-{$assetBooking->id}-{$status_booking}'>Bayar " . ($assetBooking->payment_type === 'dp' ? 'DP' : '') . " dan Lengkapi Berkas</a>";
                         $modals .= $payAndCompleteFileModal;
@@ -367,7 +386,12 @@ class ProfileController extends Controller
                         $modals .= $payInFullModal;
                         break;
                     case 'approved_full_payment':
-                        $buttons .= "<a class='btn btn-sm btn-outline-main' data-bs-toggle='modal' data-bs-target='#modalConfirmAssetBooking-{$assetBooking->id}-{$status_booking}'>⬇️ Surat Disposisi</a>";
+                        if ($suratDispo) {
+                            $pdfUrl = asset('storage/' . $suratDispo->document_path) . '?v=' . $suratDispo->updated_at->timestamp;
+                            $buttons .= '<a href="' . $pdfUrl . '" class="btn btn-sm btn-outline-primary text-sm" target="_blank" rel="noopener noreferrer">⬇️ Surat Disposisi</a>';
+                        } else {
+                            $buttons .= "<span class='badge bg-secondary'>Surat Disposisi <br> sedang Diproses</span>";
+                        }
                         $modals .= '';
                         break;
                 }

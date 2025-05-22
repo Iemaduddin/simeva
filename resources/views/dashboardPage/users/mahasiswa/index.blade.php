@@ -132,7 +132,18 @@
                             },
                             {
                                 data: 'tanggal_lahir',
-                                name: 'tanggal_lahir'
+                                name: 'tanggal_lahir',
+                                render: function(data, type, row) {
+                                    if (!data) return '-';
+
+                                    const tanggal = new Date(data);
+                                    const options = {
+                                        day: '2-digit',
+                                        month: 'long',
+                                        year: 'numeric'
+                                    };
+                                    return tanggal.toLocaleDateString('id-ID', options);
+                                }
                             },
                             {
                                 data: 'jenis_kelamin',

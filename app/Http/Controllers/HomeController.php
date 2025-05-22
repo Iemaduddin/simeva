@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use App\Models\AssetBooking;
 use Illuminate\Http\Request;
 use App\Models\AssetCategory;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class HomeController extends Controller
@@ -44,7 +45,20 @@ class HomeController extends Controller
         $eventsByCategory = [];
 
         foreach ($categories as $category) {
-            $query = Event::where('status', 'published')->latest();
+            $today = Carbon::today();
+            $latestEventDates = DB::table('event_steps')
+                ->select('event_id', DB::raw('MAX(event_date) as latest_date'))
+                ->groupBy('event_id');
+
+            $query = Event::latest()
+                ->with(['organizers.user.jurusan'])
+                ->where('status', 'published')
+                ->joinSub($latestEventDates, 'latest_steps', function ($join) {
+                    $join->on('events.id', '=', 'latest_steps.event_id');
+                })
+                ->whereDate('latest_steps.latest_date', '>=', $today)
+                ->select('events.*');
+
             $key = Str::slug($category, '_');
             if ($category !== 'all') {
                 $query->where('event_category', $category);
@@ -54,7 +68,7 @@ class HomeController extends Controller
         }
 
         $jurusans  = Jurusan::all();
-        $logo_organizers = Organizer::pluck('logo');
+        $logo_organizers = Organizer::with('user')->get()->pluck('logo', 'user.name');
         return view('homepage.home', compact('eventsByCategory', 'assets', 'jurusans', 'logo_organizers'));
     }
 
@@ -123,8 +137,20 @@ class HomeController extends Controller
         }
 
 
+        $today = Carbon::today();
+        $latestEventDates = DB::table('event_steps')
+            ->select('event_id', DB::raw('MAX(event_date) as latest_date'))
+            ->groupBy('event_id');
 
-        $events = $query->latest()->with(['organizers.user.jurusan'])->paginate(5);
+        $events = $query->latest()
+            ->with(['organizers.user.jurusan'])
+            ->where('status', 'published')
+            ->joinSub($latestEventDates, 'latest_steps', function ($join) {
+                $join->on('events.id', '=', 'latest_steps.event_id');
+            })
+            ->whereDate('latest_steps.latest_date', '>=', $today)
+            ->select('events.*') // untuk menghindari ambiguitas saat paginate
+            ->paginate(5);
 
         $from = ($events->currentPage() - 1) * $events->perPage() + 1;
         $to = $from + $events->count() - 1;  // Menggunakan count() dari paginator untuk menghitung jumlah di halaman ini
@@ -152,8 +178,19 @@ class HomeController extends Controller
         $event = Event::with(['prices', 'participants', 'steps.event_speaker'])->findOrFail($id);
         $categoryEvent = Event::where('id', $id)->value('event_category');
 
+        $today = Carbon::today();
+        $latestEventDates = DB::table('event_steps')
+            ->select('event_id', DB::raw('MAX(event_date) as latest_date'))
+            ->groupBy('event_id');
 
-        $simillarEvents = Event::where('event_category', $categoryEvent)->where('id', '!=', $id)->where('status', 'published')->get();
+        $query = Event::where('event_category', $categoryEvent)->where('id', '!=', $id)->where('status', 'published');
+        $simillarEvents = $query->latest()
+            ->with(['organizers.user.jurusan'])
+            ->joinSub($latestEventDates, 'latest_steps', function ($join) {
+                $join->on('events.id', '=', 'latest_steps.event_id');
+            })
+            ->whereDate('latest_steps.latest_date', '>=', $today)
+            ->select('events.*')->get();
         return view('homepage.events.detail_event', compact('event', 'simillarEvents'));
     }
     public function organizer()
@@ -166,8 +203,20 @@ class HomeController extends Controller
     {
         $yearNow = Carbon::now()->year;
         $organizer = Organizer::findOrFail($id);
-        $events = Event::where('organizer_id', $id)->where('status', 'published')
-            ->whereYear('created_at', $yearNow)->get();
+        $today = Carbon::today();
+        $latestEventDates = DB::table('event_steps')
+            ->select('event_id', DB::raw('MAX(event_date) as latest_date'))
+            ->groupBy('event_id');
+
+        $query = Event::where('organizer_id', $id)->where('id', '!=', $id)->where('status', 'published')->whereYear('created_at', $yearNow);
+        $events = $query->latest()
+            ->with(['organizers.user.jurusan'])
+            ->joinSub($latestEventDates, 'latest_steps', function ($join) {
+                $join->on('events.id', '=', 'latest_steps.event_id');
+            })
+            ->whereDate('latest_steps.latest_date', '>=', $today)
+            ->select('events.*')->get();
+
         return view('homepage.detail_organizer', compact('organizer', 'events'));
     }
 
@@ -222,9 +271,10 @@ class HomeController extends Controller
             ]);
         }
 
+        $countAsset = Asset::count();
+        $totalAsset = $countAsset > 20 ? '20+' : $countAsset;
 
-
-        return view('homepage.assets.aset', compact('assets', 'allAssets', 'jurusans', 'from', 'to', 'total', 'filtered'));
+        return view('homepage.assets.aset', compact('assets', 'allAssets', 'jurusans', 'from', 'to', 'total', 'filtered', 'totalAsset'));
     }
     public function getDataAssetBmn($id)
     {
@@ -264,9 +314,9 @@ class HomeController extends Controller
                     str_contains($booking->status, 'approved') => 'success',  // success
                     default => '#6c757d'                                      // secondary
                 };
-                $userIcon = $booking->user->category_user === 'Internal Kampus' ?
-                    'ph-student' :
-                    'ph-user-sound';
+                $userIcon = $booking->user_id
+                    ? ($booking->user->category_user === 'Internal Kampus' ? 'ph-student' : 'ph-user-sound')
+                    : 'ph-user-sound';
                 return [
                     'id' => $booking->id,
                     'title' => $booking->usage_event_name,
@@ -282,8 +332,16 @@ class HomeController extends Controller
                         Carbon::parse($booking->loading_date_end)->format('H:i')
                         : '-',
                     'status' => $booking->status,
-                    'user' => $booking->user->category_user === 'Internal Kampus' ? $booking->user->organizer->shorten_name . ' (Internal Kampus)' :  $booking->user->name . ' (Eksternal Kampus)',
-                    'userCategory' => $booking->user->category_user,
+                    'user' => $booking->user_id
+                        ? ($booking->user->category_user === 'Internal Kampus'
+                            ? $booking->user->organizer->shorten_name . ' (Internal Kampus)'
+                            : $booking->user->name . ' (Eksternal Kampus)')
+                        : $booking->external_user . ' (Eksternal Kampus)',
+
+                    'userCategory' => $booking->user_id
+                        ? $booking->user->category_user
+                        : 'Eksternal Kampus',
+
                 ];
             });
 

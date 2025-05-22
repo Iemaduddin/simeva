@@ -146,13 +146,47 @@
                                     @endif
                                 @endforeach
                             @endif
-                            {{-- <span class="d-block borderottom border-main-100 my-32"></span>
-                            <h5 class="mb-16">Lokasi Event</h5>
-                            <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d527.5579684472881!2d112.61664396543006!3d-7.946824388343488!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7882742cd7191f%3A0x56a5edb7ccb2769b!2sGraha%20Polinema!5e0!3m2!1sen!2sid!4v1737298921865!5m2!1sen!2sid"
-                                width="800" height="350" style="border:0;" allowfullscreen="" loading="lazy"
-                                referrerpolicy="no-referrer-when-downgrade"></iframe>
-                            <p class="mt-10 text-center text-neutral-700">Graha Politeknik Negeri Malang</p> --}}
+                            @php
+                                $sponsors = json_decode($event->sponsored_by) ?? '';
+                                $mediaPartners = json_decode($event->media_partner) ?? '';
+
+                                $contactPersonsRaw = $event->contact_person ?? '';
+                                $contactPersons = array_filter(explode('|', $contactPersonsRaw), function ($cp) {
+                                    return trim($cp) !== '';
+                                });
+                            @endphp
+                            @if (count($contactPersons) > 0)
+                                <span class="d-block border-bottom border-main-100 my-32"></span>
+                                <h6 class="mb-16">Contact Person</h6>
+                                <ul class="list-dotted d-flex flex-column gap-15">
+                                    @foreach ($contactPersons as $cp)
+                                        <li>{{ trim($cp) }}</li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                            @if ($sponsors || $mediaPartners)
+                                <span class="d-block border-bottom border-main-100 my-32"></span>
+                                <div class="row">
+                                    @if ($sponsors)
+                                        <div class="col-xxl-6">
+                                            <h6 class="mb-16">Sponsored By</h6>
+                                            @foreach ($sponsors as $sponsor)
+                                                <img src="{{ asset('storage/' . $sponsor) }}" alt="sponsor event"
+                                                    width="80px">
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    @if ($mediaPartners)
+                                        <div class="col-xxl-6">
+                                            <h6 class="mb-16">Media Partner</h6>
+                                            @foreach ($mediaPartners as $media)
+                                                <img src="{{ asset('storage/' . $media) }}" alt="media partner event"
+                                                    width="80px">
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </div>
                     <!-- Details Content End -->
@@ -162,7 +196,7 @@
                     <div class="course-details__sidebar border border-neutral-30 rounded-12 bg-white p-8">
                         <div class="border border-neutral-30 rounded-12 bg-main-25 p-24 bg-main-25">
                             <div class="d-flex justify-content-center mb-20">
-                                <img src="{{ asset($event->organizers->logo) }}" class="rounded-circle"
+                                <img src="{{ asset('storage/' . $event->organizers->logo) }}" class="rounded-circle"
                                     alt="logo_organizers" style="width: 200px;height:200px">
                             </div>
                             <div class="border-bottom border-neutral-40 pb-20 mb-20 flex-between flex-wrap">
@@ -402,70 +436,89 @@
                                 @endauth
 
                             </div>
-                            @auth
-                                @if (Auth::user()->hasRole('Participant'))
-                                    @if (!$event->participants->contains('user_id', Auth::id()))
-                                        <center>
-                                            <button type="button" class="btn btn-main rounded-pill flex-align gap-8"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#modalRegisterEvent{{ $event->id }}">
-                                                Daftar Sekarang
-                                                <i class="ph-bold ph-arrow-up-right d-flex text-lg"></i>
-                                            </button>
-                                        </center>
-                                    @elseif (
-                                        $event->participants->contains('user_id', Auth::id()) &&
-                                            optional($event->participants->firstWhere('user_id', Auth::id()))->status == 'pending_approval')
-                                        <center>
-                                            <div class="alert alert-warning mt-3">
-                                                <strong>Anda sudah mendaftar di event ini. Silahkan menunggu verifikasi dari
-                                                    penyelenggara.</strong>
-                                            </div>
-                                        </center>
+                            @if ($event->registration_date_end < \Carbon\Carbon::now())
+                                <center>
+                                    <div class="alert alert-danger mt-3">
+                                        <strong>Pendaftaran Telah Ditutup.</strong>
+                                    </div>
+                                </center>
+                            @else
+                                @auth
+                                    @if (Auth::user()->hasRole('Participant'))
+                                        @if (!$event->participants->contains('user_id', Auth::id()))
+                                            <center>
+                                                <button type="button" class="btn btn-main rounded-pill flex-align gap-8"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modalRegisterEvent{{ $event->id }}">
+                                                    Daftar Sekarang
+                                                    <i class="ph-bold ph-arrow-up-right d-flex text-lg"></i>
+                                                </button>
+                                            </center>
+                                        @elseif (
+                                            $event->participants->contains('user_id', Auth::id()) &&
+                                                optional($event->participants->firstWhere('user_id', Auth::id()))->status == 'pending_approval')
+                                            <center>
+                                                <div class="alert alert-warning mt-3">
+                                                    <strong>Anda sudah mendaftar di event ini. Silahkan menunggu verifikasi dari
+                                                        penyelenggara.</strong>
+                                                </div>
+                                            </center>
+                                        @else
+                                            @if (
+                                                $event->participants->contains('user_id', Auth::id()) &&
+                                                    optional($event->participants->firstWhere('user_id', Auth::id()))->status == 'rejected')
+                                                <center>
+                                                    <div class="alert alert-warning mt-3">
+                                                        <strong>Pendaftaran Anda ditolak. Silahkan ulangi
+                                                            pendaftarannya.</strong>
+                                                    </div>
+                                                </center>
+                                            @else
+                                                <center>
+                                                    <div class="alert alert-success mt-3">
+                                                        <strong>Anda sudah terdaftar di event ini.</strong>
+                                                    </div>
+                                                </center>
+                                            @endif
+                                        @endif
+                                        @include('homepage.events.modal.registrationEvent')
                                     @else
                                         <center>
-                                            <div class="alert alert-success mt-3">
-                                                <strong>Anda sudah terdaftar di event ini.</strong>
+                                            <div class="alert alert-danger mt-3">
+                                                <strong>Anda tidak memiliki akses untuk mendaftar event.</strong>
                                             </div>
                                         </center>
                                     @endif
-                                    @include('homepage.events.modal.registrationEvent')
                                 @else
                                     <center>
-                                        <div class="alert alert-danger mt-3">
-                                            <strong>Anda tidak memiliki akses untuk mendaftar event.</strong>
-                                        </div>
+                                        <button type="button" class="btn btn-main rounded-pill flex-align gap-8"
+                                            data-aos="fade-right" data-bs-toggle="modal"
+                                            data-bs-target="#loginRegisterModal">
+                                            Daftar Sekarang
+                                            <i class="ph-bold ph-arrow-up-right d-flex text-lg"></i>
+                                        </button>
                                     </center>
-                                @endif
-                            @else
-                                <center>
-                                    <button type="button" class="btn btn-main rounded-pill flex-align gap-8"
-                                        data-aos="fade-right" data-bs-toggle="modal" data-bs-target="#loginRegisterModal">
-                                        Daftar Sekarang
-                                        <i class="ph-bold ph-arrow-up-right d-flex text-lg"></i>
-                                    </button>
-                                </center>
-                                <!-- Modal -->
-                                <div class="modal fade" id="loginRegisterModal" tabindex="-1"
-                                    aria-labelledby="loginRegisterModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header border-0">
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body text-center my-20">
-                                                <h5 class="my-25">Harap Register/Login sebagai Participant terlebih dahulu
-                                                </h5>
-                                                <a href="{{ route('showLoginPage') }}"
-                                                    class="btn btn-primary rounded-pill">Login</a>
+                                    <!-- Modal -->
+                                    <div class="modal fade" id="loginRegisterModal" tabindex="-1"
+                                        aria-labelledby="loginRegisterModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header border-0">
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-center my-20">
+                                                    <h5 class="my-25">Harap Register/Login sebagai Participant terlebih dahulu
+                                                    </h5>
+                                                    <a href="{{ route('showLoginPage') }}"
+                                                        class="btn btn-primary rounded-pill">Login</a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                            @endauth
-
+                                @endauth
+                            @endif
                         </div>
                     </div>
                 </div>

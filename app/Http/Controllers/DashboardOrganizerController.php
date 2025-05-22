@@ -11,6 +11,7 @@ use App\Models\AssetBooking;
 use Illuminate\Http\Request;
 use App\Models\EventParticipant;
 use Illuminate\Support\Facades\Auth;
+use App\Models\EventStep;
 
 class DashboardOrganizerController extends Controller
 {
@@ -56,10 +57,14 @@ class DashboardOrganizerController extends Controller
     {
         try {
 
-            $total = Event::whereHas('organizers', function ($query) use ($shorten_name) {
-                $query->where('shorten_name', $shorten_name);
-            })
-                ->count();
+            $total = EventStep::whereYear('event_date', $year)
+                ->whereHas('event', function ($query) use ($shorten_name) {
+                    $query->whereHas('organizers', function ($q) use ($shorten_name) {
+                        $q->where('shorten_name', $shorten_name);
+                    });
+                })
+                ->distinct('event_id')
+                ->count('event_id');
 
             return response()->json([
                 'total' => $total,

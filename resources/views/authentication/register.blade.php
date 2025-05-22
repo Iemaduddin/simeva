@@ -10,9 +10,17 @@
         <div class="auth-right py-32 px-24 d-flex flex-column justify-content-center">
             <div class="max-w-464-px mx-auto w-100">
                 <div>
-                    <a href="{{ route('home') }}" class="mb-40 max-w-290-px">
-                        <img src="{{ asset('assets/images/logo.png') }}" alt="">
-                    </a>
+                    <!-- Logo Start -->
+                    <div class="logo d-flex ">
+                        <!-- Logo Section -->
+                        <a href="{{ route('home') }}" class="link me-12">
+                            <img src="{{ asset('assets/images/logo_polinema.png') }}" alt="Logo Polinema"
+                                style="width: 4em;">
+                        </a>
+                        <!-- Title Section -->
+                        <h2 class="text-main-600 m-0 fst-italic fw-bold"><i>SIMEVA</i></h2>
+                    </div>
+                    <!-- Logo End  -->
                     <h4 class="mb-12">Sign Up to your Account</h4>
                     <p class="mb-32 text-secondary-light text-lg">Welcome back! please enter your detail</p>
                 </div>
@@ -80,7 +88,7 @@
                             characters</span>
                     </div>
 
-                    <button type="submit" class="btn btn-info text-sm btn-sm px-12 py-16 w-100 radius-12 ">
+                    <button type="submit" class="btn btn-primary text-sm btn-sm px-12 py-16 w-100 radius-12 ">
                         Sign Up</button>
 
                     <div class="mt-32 text-center text-sm">

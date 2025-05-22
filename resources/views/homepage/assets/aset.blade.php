@@ -51,7 +51,8 @@
                                     <span
                                         class="shadow-main-two flex-center bg-main-two-600 rounded-circle position-absolute inset-block-start-0 inset-inline-start-0 mt-40 ms--40 animation-upDown"
                                         style="width: 150px; height: 150px;">
-                                        <h3 class="text-white text-center pt-20 wow bounceInLeft">20+<br> Aset</h3>
+                                        <h3 class="text-white text-center pt-20 wow bounceInLeft">{{ $totalAsset }}<br>
+                                            Aset</h3>
                                     </span>
                                 </div>
                             </div>

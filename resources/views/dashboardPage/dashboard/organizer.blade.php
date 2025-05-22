@@ -124,7 +124,7 @@
                                 @forelse ($assetBookings as $booking)
                                     <tr>
                                         <td>{{ $booking->asset->name }}</td>
-                                        <td>{{ $booking->event->title }}</td>
+                                        <td>{{ $booking->event->title ?? $booking->usage_event_name }}</td>
                                         @php
                                             switch ($booking->status) {
                                                 case 'submission_booking':

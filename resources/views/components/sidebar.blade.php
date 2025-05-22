@@ -11,12 +11,45 @@
     </div>
     <div class="sidebar-menu-area">
         <ul class="sidebar-menu" id="sidebar-menu">
-            <li>
-                <a href="/">
-                    <iconify-icon icon="solar:home-smile-angle-outline" class="menu-icon"></iconify-icon>
-                    <span>Dashboard</span>
-                </a>
-            </li>
+            @php
+                $shorten_name = Auth::user()->organizer->shorten_name ?? '-';
+                $kode_jurusan_user = Auth::user()->jurusan->kode_jurusan ?? '-';
+
+                $menuItems = [
+                    [
+                        'role' => 'Super Admin',
+                        'route' => route('dashboard.super-admin'),
+                    ],
+                    [
+                        'role' => 'Organizer',
+                        'route' => route('dashboard.organizer', $shorten_name),
+                    ],
+                    [
+                        'role' => 'Admin Jurusan',
+                        'route' => route('dashboard.admin-jurusan', $kode_jurusan_user),
+                    ],
+                ];
+            @endphp
+
+            @foreach ($menuItems as $item)
+                @hasrole($item['role'])
+                    <li>
+                        <a href="{{ $item['route'] }}">
+                            <iconify-icon icon="solar:home-smile-angle-outline" class="menu-icon"></iconify-icon>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                @endhasrole
+            @endforeach
+
+            @hasanyrole(['Kaur RT', 'UPT PU'])
+                <li>
+                    <a href="{{ route('dashboard.kaur-rt-pu') }}">
+                        <iconify-icon icon="solar:home-smile-angle-outline" class="menu-icon"></iconify-icon>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+            @endhasanyrole
             @hasanyrole(['Super Admin', 'Organizer'])
                 <li>
                     <a href="{{ route('calendarEvent') }}">
@@ -50,6 +83,11 @@
                             <a href="{{ route('tenantUsers') }}"><i
                                     class="ri-circle-fill circle-icon text-info-main w-auto"></i>
                                 Tenant</a>
+                        </li>
+                        <li>
+                            <a href="{{ route('events.indexParticipant') }}"><i
+                                    class="ri-circle-fill circle-icon text-lilac-main w-auto"></i>
+                                Event Participant</a>
                         </li>
                     </ul>
                 </li>
@@ -181,7 +219,7 @@
             @endhasrole
             @hasrole('Kaur RT')
                 <li>
-                    <a href="{{ route('assets.fasum') }}">
+                    <a href="{{ route('assets.fasum') }}" class="{{ request()->is('*assets*') ? 'active-page' : '' }}">
                         <iconify-icon icon="bi:building-gear" class="menu-icon"></iconify-icon>
                         <span>Data Asset Fasum</span>
                     </a>
@@ -195,9 +233,6 @@
                 </li>
             @endhasrole
             @hasrole('Admin Jurusan')
-                @php
-                    $kode_jurusan_user = Auth::user()->jurusan->kode_jurusan;
-                @endphp
                 <li>
                     <a href="{{ route('assets.fasjur', $kode_jurusan_user) }}"><iconify-icon icon="bi:building-gear"
                             class="menu-icon"></iconify-icon>
@@ -214,9 +249,6 @@
                 </li>
             @endhasrole
             @hasrole('Organizer')
-                @php
-                    $shorten_name = Auth::user()->organizer->shorten_name;
-                @endphp
                 @if (Auth::user()->organizer->organizer_type !== 'Kampus' && Auth::user()->organizer->organizer_type !== 'Jurusan')
                     <li>
                         <a href="{{ route('data.team-members', $shorten_name) }}"><iconify-icon
@@ -227,8 +259,9 @@
                     </li>
                 @endif
                 <li>
-                    <a href="{{ route('data.events', $shorten_name) }}"><iconify-icon icon="ic:baseline-event-note"
-                            class="menu-icon"></iconify-icon>
+                    <a href="{{ route('data.events', $shorten_name) }}"
+                        class="{{ request()->is('*events*') ? 'active-page' : '' }}"><iconify-icon
+                            icon="ic:baseline-event-note" class="menu-icon"></iconify-icon>
                         <span> Kelola Event </span>
 
                     </a>

@@ -113,101 +113,6 @@
                                             <th class="text-neutral-500 fw-semibold px-24 py-20 border-0">Aksi</th>
                                         </tr>
                                     </thead>
-                                    {{-- <tbody>
-                                        @foreach ($groupedBookings[$category_status] as $assetBooking)
-                                            <tr>
-                                                <td
-                                                    class="border-bottom border-dashed border-neutral-40 text-neutral-500 bg-transparent px-24 py-20">
-                                                    <div class="d-flex align-items-center gap-24">
-                                                        <div
-                                                            class="w-60 h-60 border border-neutral-40 rounded-8 d-flex justify-content-center align-items-center bg-white">
-                                                            @php
-                                                                $asset_images = json_decode(
-                                                                    $assetBooking->asset->asset_images,
-                                                                    true,
-                                                                );
-                                                            @endphp
-                                                            <img src="{{ isset($asset_images[0]) ? asset('storage/' . $asset_images[0]) : '' }}"
-                                                                alt="">
-                                                        </div>
-                                                        <div>
-                                                            <h6 class="text-md mb-12">
-                                                                {{ optional($assetBooking->asset)->name }}</h6>
-                                                            <div class="d-flex align-items-center gap-16">
-                                                                <div class="d-flex align-items-center gap-4">
-                                                                    <span class="text-xs text-neutral-500">Event:</span>
-                                                                    <span
-                                                                        class="p-5 border border-neutral-40 bg-white rounded-4 text-sm text-neutral-500">
-                                                                        {{ $assetBooking->usage_event_name }}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td
-                                                    class="border-bottom border-dashed border-neutral-40 text-neutral-500 bg-transparent px-24 py-20">
-                                                    {{ \Carbon\Carbon::parse($assetBooking->usage_date_start)->format('d-M-Y H.i') }}
-                                                    - <br>
-                                                    {{ \Carbon\Carbon::parse($assetBooking->usage_date_end)->format('d-M-Y H.i') }}
-                                                </td>
-                                                <td
-                                                    class="border-bottom border-dashed border-neutral-40 text-neutral-500 bg-transparent px-24 py-20">
-                                                    <div class="d-flex gap-8">
-                                                        <a class='btn btn-sm btn-outline-danger cursor-pointer d-inline-flex align-items-center justify-content-center'
-                                                            data-bs-toggle='modal'
-                                                            data-bs-target="#modalSubmissionAssetBooking-{{ $assetBooking->id }}-{{ $category_status }}">
-                                                            RIncian
-                                                        </a>
-                                                        @if ($assetBooking->status === 'rejected_booking')
-                                                            <a class='btn btn-sm btn-outline-main cursor-pointer d-inline-flex align-items-center justify-content-center'
-                                                                data-bs-toggle='modal'
-                                                                data-bs-target="#modalSubmissionAssetBooking-{{ $assetBooking->id }}-{{ $category_status }}">
-                                                                🔄 Ajukan Ulang Booking
-                                                            </a>
-                                                            @include('dashboardPage.assets.asset-booking.modal.resubmissionBooking')
-                                                        @elseif ($assetBooking->status === 'booked')
-                                                            <a class="btn btn-sm btn-outline-main cursor-pointer d-inline-flex align-items-center justify-content-center"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#modalpayAndCompleteFile-{{ $assetBooking->id }}-{{ $category_status }}">
-                                                                Bayar
-                                                                {{ $assetBooking->payment_type === 'dp' ? 'DP' : '' }}
-                                                                dan Lengkapi Berkas
-                                                            </a>
-                                                            @include('dashboardpage.assets.asset-booking.modal.payAndCompleteFile')
-                                                        @elseif ($assetBooking->status === 'rejected_dp_payment')
-                                                            <a class="btn btn-sm btn-outline-main cursor-pointer d-inline-flex align-items-center justify-content-center"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#modalpayAndCompleteFile-{{ $assetBooking->id }}-{{ $category_status }}">
-                                                                📤 Upload Ulang Bukti Pembayaran dan Berkas
-                                                            </a>
-                                                            @include('dashboardpage.assets.asset-booking.modal.payAndCompleteFile')
-                                                        @elseif ($assetBooking->status === 'rejected_full_payment')
-                                                            <a class="btn btn-sm btn-outline-main cursor-pointer d-inline-flex align-items-center justify-content-center"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#modalpayInFull-{{ $assetBooking->id }}-{{ $category_status }}">
-                                                                📤 Upload Ulang Bukti Pembayaran dan Berkas
-                                                            </a>
-                                                            @include('dashboardpage.assets.asset-booking.modal.payInFull')
-                                                        @elseif ($assetBooking->status === 'approved_dp_payment')
-                                                            <a class="btn btn-sm btn-outline-main cursor-pointer d-inline-flex align-items-center justify-content-center"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#modalpayInFull-{{ $assetBooking->id }}-{{ $category_status }}">
-                                                                Bayar Pelunasan
-                                                            </a>
-                                                            @include('dashboardpage.assets.asset-booking.modal.payInFull')
-                                                        @elseif ($assetBooking->status === 'approved_full_payment')
-                                                            <a class="btn btn-sm btn-outline-main cursor-pointer d-inline-flex align-items-center justify-content-center"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#modalConfirmAssetBooking-' . {{ $assetBooking->id }} . '">
-                                                                ⬇️ Surat Disposisi
-                                                            </a>
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody> --}}
                                 </table>
                             </div>
                         </div>
@@ -218,6 +123,182 @@
     </div>
 @endsection
 @push('script')
+    <script src="{{ asset('assets/libs/flatpickr.js/flatpickr.js') }}"></script>
+    <script>
+        $(document).on('shown.bs.modal', '.modal', function() {
+
+            const $modal = $(this);
+            const modalId = $modal.attr('id');
+
+            if (modalId.startsWith('modalResubmissionAssetBooking-')) {
+                // Flatpickr dengan class agar tidak bentrok
+                flatpickr($modal.find(".usage_date")[0], {
+                    dateFormat: "Y-m-d",
+                    minDate: "today"
+                });
+
+                flatpickr($modal.find(".start_time")[0], {
+                    enableTime: true,
+                    noCalendar: true,
+                    dateFormat: "H:i",
+                    time_24hr: true
+                });
+
+                flatpickr($modal.find(".end_time")[0], {
+                    enableTime: true,
+                    noCalendar: true,
+                    dateFormat: "H:i",
+                    time_24hr: true
+                });
+
+                const assetId = $modal.find(".asset_id").val();
+                const typeEvent = $modal.find(".type_event");
+                const selectedCategoryId = $modal.data('asset-category-id');
+
+                function calculatePrice() {
+                    let selectedOption = typeEvent.find(":selected");
+                    let selectedPrice = selectedOption.data("price");
+
+                    if (selectedPrice) {
+                        let fullPrice = parseFloat(selectedPrice);
+                        let dpPrice = fullPrice * 0.3;
+                        let remainingPrice = fullPrice - dpPrice;
+
+                        $modal.find(".dp_price").text(`DP 30% : Rp${dpPrice.toLocaleString()}`);
+                        $modal.find(".remaining_price").text(`Pelunasan : Rp${remainingPrice.toLocaleString()}`);
+                        $modal.find(".full_price").text(`Total Harga : Rp${fullPrice.toLocaleString()}`);
+                        $modal.find(".amount").val(fullPrice);
+                    } else {
+                        $modal.find(".dp_price").text("DP 30% : Rp0");
+                        $modal.find(".remaining_price").text("Pelunasan : Rp0");
+                        $modal.find(".full_price").text("Total Harga : Rp0");
+                    }
+                }
+
+                function loadCategories() {
+                    $.ajax({
+                        url: "{{ route('asset-booking.getDataCategory', '') }}/" + assetId,
+                        type: "GET",
+                        success: function(response) {
+                            typeEvent.empty();
+                            typeEvent.append('<option value="" hidden>Pilih Jenis Acara</option>');
+
+                            response.data.forEach(category => {
+                                let isSelected = category.id == selectedCategoryId ?
+                                    "selected" : "";
+                                typeEvent.append(`
+                                <option value="${category.id}" data-price="${category.external_price}" ${isSelected}>
+                                    ${category.category_name}
+                                </option>
+                            `);
+                            });
+
+                            calculatePrice();
+                        }
+                    });
+                }
+
+                loadCategories();
+                typeEvent.off('change').on('change', calculatePrice); // Hindari event ganda
+
+                // Format tanggal lokal
+                let usageData = $modal.find(".usage_date").val();
+                if (usageData) {
+                    let usageDate = new Date(usageData);
+                    let formattedDisplayDate = usageDate.toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    });
+                    $modal.find(".usage_date_display").val(formattedDisplayDate);
+                }
+            }
+
+
+
+            if (modalId.startsWith('modalResubmissionAssetBookingAnnual-')) {
+                flatpickr("#usage_date_annual", {
+                    dateFormat: "Y-m-d",
+                    minDate: "today",
+                });
+                let assetIdAnnual = $("#asset-id").val();
+                let durationInput = $("input[name='duration']");
+                let usageDateInput = $("#usage_date_annual");
+                let externalPrice = 0; // Harga per tahun
+                let startDate = null; // Tanggal mulai sewa
+
+                function calculateAnnualPrice() {
+                    let duration = parseInt(durationInput.val()) || 1; // default 1 kalau kosong
+
+                    if (externalPrice > 0 && startDate) {
+                        let fullPrice = externalPrice * duration;
+
+                        let dpPrice = fullPrice * 0.3;
+                        let remainingPrice = fullPrice - dpPrice;
+                        $("#dp_price_annual").text(`DP 30% : Rp${dpPrice.toLocaleString()}`);
+                        $("#remaining_price_annual").text(`Pelunasan : Rp${remainingPrice.toLocaleString()}`);
+                        $("#full_price_annual").text(`Pelunasan : Rp${fullPrice.toLocaleString()}`);
+
+                        $('#amount_annual').val(fullPrice);
+
+                        // Hitung tanggal selesai (menambah tahun sesuai durasi)
+                        let endDate = new Date(startDate);
+                        endDate.setFullYear(endDate.getFullYear() + duration);
+
+                        // Format tanggal ke bahasa Indonesia
+                        let startDateFormatted = startDate.toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                        });
+                        let endDateFormatted = endDate.toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                        });
+
+                        // Tampilkan periode sewa
+                        $('#rental_period').html(
+                            `<strong>Periode :</strong> ${startDateFormatted} - ${endDateFormatted}`);
+                    }
+                }
+
+                function loadFirstCategoryPrice() {
+                    $.ajax({
+                        url: "{{ route('asset-booking.getDataCategory', '') }}" + "/" + assetIdAnnual,
+                        type: "GET",
+                        success: function(response) {
+                            if (response.data.length > 0) {
+                                externalPrice = parseFloat(response.data[0].external_price) || 0;
+                                calculateAnnualPrice(); // Hitung langsung setelah dapat harga
+                            }
+                        }
+                    });
+                }
+
+                usageDateInput.change(function() {
+                    let selectedDate = new Date(usageDateInput.val());
+                    if (!isNaN(selectedDate)) {
+                        startDate = selectedDate;
+                        calculateAnnualPrice();
+                    }
+                });
+
+                durationInput.on('input', function() {
+                    calculateAnnualPrice();
+                });
+
+                let selectedDate = new Date(usageDateInput.val());
+                if (!isNaN(selectedDate)) {
+                    startDate = selectedDate;
+                }
+
+                // Load harga saat halaman load
+                loadFirstCategoryPrice();
+            }
+        });
+    </script>
+
     <script>
         $(document).ready(function() {
             const user_id = "{{ $user->id }}";

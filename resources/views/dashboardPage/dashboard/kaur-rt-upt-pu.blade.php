@@ -113,8 +113,19 @@
                                                 case 'submission_booking':
                                                     $statusText = 'Perlu Konfirmasi booking';
                                                     break;
-                                                case 'submission_full_payment':
-                                                    $statusText = 'Perlu Konfirmasi Surat Peminjaman';
+                                                case 'submission_dp_payment':
+                                                    $statusText = 'Perlu Konfirmasi DP';
+                                                    break;
+                                                case 'submission_full_payment' || 'submission_full_payment':
+                                                    $user = Auth::user()->getRoleNames()->first();
+
+                                                    $statusText =
+                                                        $user === 'Kaur RT'
+                                                            ? 'Perlu Konfirmasi Surat Peminjaman'
+                                                            : 'Perlu Konfirmasi Pelunasan';
+                                                    break;
+                                                default:
+                                                    $statusText = $booking->status;
                                                     break;
                                             }
                                         @endphp
@@ -124,6 +135,8 @@
                                     </tr>
                                 @empty
                                     <tr>
+                                        <td></td>
+                                        <td></td>
                                         <td colspan="3" class="text-center">Tidak ada peminjaman aset dalam waktu dekat
                                             ini.
                                         </td>

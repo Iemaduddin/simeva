@@ -58,23 +58,29 @@
                             class="instructor-item-two__thumb text-center rounded-circle aspect-ratio-1 p-12 border border-neutral-30 position-relative w-100 h-100">
                             <div
                                 class="instructor-item-two__thumb-inner w-100 h-100 d-block bg-main-25 rounded-circle overflow-hidden position-relative">
-                                <img src="{{ asset('storage/', $organizer->logo) }}" alt="" class="cover-img">
+                                <img src="{{ $organizer->logo ? asset('storage/' . $organizer->logo) : asset('assets/images/banner.png') }}"
+                                    alt="" class="cover-img">
                                 <ul
                                     class="social-list flex-center gap-12 d-flex position-absolute start-50 top-50 translate-middle">
                                     <li class="social-list__item">
-                                        <a href="https://www.facebook.com"
+                                        <a href="{{ $organizer->link_media_social ? $organizer->link_media_social['instagram'] : '' }}"
                                             class="flex-center border border-white text-white w-44 h-44 rounded-circle text-xl text-main-600 bg-white hover-bg-main-600 hover-text-white hover-border-main-600"><i
-                                                class="ph-bold ph-facebook-logo"></i></a>
+                                                class="ph ph-instagram-logo"></i></a>
                                     </li>
                                     <li class="social-list__item">
-                                        <a href="https://www.twitter.com"
+                                        <a href="{{ $organizer->link_media_social ? $organizer->link_media_social['youtube'] : '' }}"
                                             class="flex-center border border-white text-white w-44 h-44 rounded-circle text-xl text-main-600 bg-white hover-bg-main-600 hover-text-white hover-border-main-600">
-                                            <i class="ph-bold ph-twitter-logo"></i></a>
+                                            <i class="ph ph-youtube-logo"></i></a>
                                     </li>
                                     <li class="social-list__item">
-                                        <a href="https://www.linkedin.com"
+                                        <a href="{{ $organizer->link_media_social ? $organizer->link_media_social['tiktok'] : '' }}"
                                             class="flex-center border border-white text-white w-44 h-44 rounded-circle text-xl text-main-600 bg-white hover-bg-main-600 hover-text-white hover-border-main-600"><i
-                                                class="ph-bold ph-instagram-logo"></i></a>
+                                                class="ph ph-tiktok-logo"></i></a>
+                                    </li>
+                                    <li class="social-list__item">
+                                        <a href="{{ $organizer->link_media_social ? $organizer->link_media_social['x'] : '' }}"
+                                            class="flex-center border border-white text-white w-44 h-44 rounded-circle text-xl text-main-600 bg-white hover-bg-main-600 hover-text-white hover-border-main-600">
+                                            <i class="ph ph-x-logo"></i></a>
                                     </li>
                                 </ul>
                             </div>
@@ -99,7 +105,7 @@
                         <h5 class="text-main-600 mb-0 my-30">Visi</h5>
                         <p class="text-neutral-500 my-20">{{ $organizer->vision }}</p>
                         @php
-                            $missions = json_decode($organizer->mision, true);
+                            $missions = explode('|', $organizer->mision);
                         @endphp
                         <h5 class="text-main-600 mb-0 my-30">Misi</h5>
                         <ul class="list-dotted d-flex flex-column gap-10 my-20">

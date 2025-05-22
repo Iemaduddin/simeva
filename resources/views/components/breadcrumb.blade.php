@@ -7,8 +7,10 @@
                 Dashboard
             </a>
         </li>
-        <li>-</li>
-        <li class="fw-medium"><?php echo $subTitle; ?></li>
+        @if ($subTitle)
+            <li>-</li>
+            <li class="fw-medium"><?php echo $subTitle; ?></li>
+        @endif
         @if ($subSubTitle)
             <li>-</li>
             <li class="fw-medium"><?php echo $subSubTitle; ?></li>

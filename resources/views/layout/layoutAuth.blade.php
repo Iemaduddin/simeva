@@ -27,6 +27,40 @@
             });
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const btn = form.querySelector('button[type="submit"].submit-btn');
+                    if (!btn) return;
+
+                    if (!form.checkValidity()) {
+                        e.preventDefault();
+                        form.classList.add('was-validated');
+                        return;
+                    }
+
+                    btn.disabled = true;
+
+                    if (!btn.querySelector('.spinner-grow')) {
+                        const spinner = document.createElement('span');
+                        spinner.className = 'spinner-border spinner-border-sm me-3 text-light';
+                        spinner.role = 'status';
+                        spinner.ariaHidden = 'true';
+                        btn.prepend(spinner);
+                    }
+
+                    btn.childNodes.forEach(node => {
+                        if (node.nodeType === 3) { // text node
+                            node.textContent = 'Memproses...';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

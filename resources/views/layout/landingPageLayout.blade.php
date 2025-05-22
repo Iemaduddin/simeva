@@ -39,6 +39,31 @@
     </main>
 
     @include('components/landingpage/script')
+    <script>
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('button[type="submit"].submit-btn');
+            if (btn) {
+                // Disable tombol
+                btn.disabled = true;
+
+                // Cek apakah spinner sudah ada
+                if (!btn.querySelector('.spinner-border')) {
+                    const spinner = document.createElement('span');
+                    spinner.className = 'spinner-border spinner-border-sm me-3';
+                    spinner.role = 'status';
+                    spinner.ariaHidden = 'true';
+                    btn.prepend(spinner);
+                }
+
+                // Ubah text button ke "Memproses..." hanya jika text node
+                btn.childNodes.forEach(node => {
+                    if (node.nodeType === 3) { // text node
+                        node.textContent = 'Memproses...';
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>
