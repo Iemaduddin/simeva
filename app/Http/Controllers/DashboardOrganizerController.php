@@ -24,7 +24,7 @@ class DashboardOrganizerController extends Controller
         }
 
         $today = Carbon::today();
-        $upcomingEvents = Event::with('organizers')->withMax('steps', 'event_date')
+        $upcomingEvents = Event::with('organizers')->where('organizer_id', Auth::user()->organizer->id)->withMax('steps', 'event_date')
             ->where('status', 'published')
             ->having('steps_max_event_date', '>=', $today)
             ->take(5)
