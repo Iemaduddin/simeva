@@ -179,7 +179,7 @@ Route::group(['middleware' => ['auth', 'role:Super Admin']], function () {
         Route::get('/', 'indexJurusanProdi')->name('jurusanProdi');
         // Jurusan
         Route::get('/get-data-jurusan', 'getDataJurusan')->name('jurusan.getData');
-        Route::post('/add-urusan', 'addJurusan')->name('add.jurusan');
+        Route::post('/add-jurusan', 'addJurusan')->name('add.jurusan');
         Route::put('/update-jurusan/{id}', 'updateJurusan')->name('update.jurusan');
         Route::delete('/destroy-jurusan/{id}', 'destroyJurusan')->name('destroy.jurusan');
         // Prodi
