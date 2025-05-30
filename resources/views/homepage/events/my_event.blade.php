@@ -169,10 +169,11 @@
                                                     class='btn btn-sm btn-outline-success cursor-pointer'><i
                                                         class="ph-bold ph-ticket text-xl"></i></a>
                                             @endif
-
                                             <a href="{{ route('detail_event', $itemEvent->event->id) }}"
-                                                class='btn btn-sm btn-outline-primary cursor-pointer'><i
+                                                class='btn btn-sm btn-outline-primary cursor-pointer' data-bs-toggle="modal"
+                                                data-bs-target="#modalDetailParticipant-{{ $event->id }}"><i
                                                     class="ph-bold ph-dots-three-outline text-xl"></i></a>
+                                            @include('homepage.events.modal.detail_participant')
                                         </div>
                                     </td>
                                 </tr>
