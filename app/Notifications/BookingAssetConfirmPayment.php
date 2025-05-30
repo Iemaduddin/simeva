@@ -29,7 +29,7 @@ class BookingAssetConfirmPayment extends Notification implements ShouldQueue
     public function via($notifiable)
     {
         // return ['mail', 'database', 'broadcast'];
-        return ['database'];
+        return ['mail', 'database'];
     }
 
     public function toMail($notifiable)
@@ -40,7 +40,7 @@ class BookingAssetConfirmPayment extends Notification implements ShouldQueue
             ->line('Booking Anda telah disetujui dan selesai.')
             ->line('Detail Booking:')
             ->line('📌 Aset: ' . $this->booking->asset->name)
-            ->line('📅 Event: ' . $this->booking->event_name)
+            ->line('📅 Event: ' . $this->booking->usage_event_name)
             ->line('Terima kasih telah menggunakan layanan kami!');
     }
 
@@ -65,13 +65,13 @@ class BookingAssetConfirmPayment extends Notification implements ShouldQueue
     }
 
     // 📢 Notifikasi Real-time (Broadcast)
-    public function toBroadcast($notifiable)
-    {
-        return new BroadcastMessage([
-            'title' => 'Booking ' . $this->confirmBooking,
-            'booking' => $this->booking,
-            'user_id' => $this->user->id,
-            'message' => 'Booking Anda telah disetujui dan selesai',
-        ]);
-    }
+    // public function toBroadcast($notifiable)
+    // {
+    //     return new BroadcastMessage([
+    //         'title' => 'Booking ' . $this->confirmBooking,
+    //         'booking' => $this->booking,
+    //         'user_id' => $this->user->id,
+    //         'message' => 'Booking Anda telah disetujui dan selesai',
+    //     ]);
+    // }
 }

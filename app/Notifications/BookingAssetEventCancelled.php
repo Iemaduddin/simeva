@@ -14,11 +14,13 @@ class BookingAssetEventCancelled extends Notification implements ShouldQueue
 
     protected $bookings;
     protected $user;
+    protected $event_id;
 
-    public function __construct(array $bookings, $user)
+    public function __construct(array $bookings, $user, $event_id)
     {
         $this->bookings = $bookings;
         $this->user = $user;
+        $this->event_id = $event_id;
     }
 
     public function via($notifiable)
@@ -32,20 +34,20 @@ class BookingAssetEventCancelled extends Notification implements ShouldQueue
         $cancelled = [];
 
         foreach ($this->bookings as $booking) {
-            if ($booking['status'] === 'rejected') {
-                $cancelled[] = "📌 {$booking['asset_name']} ({$booking['usage_date']}) — 📝 {$booking['reason_cancelled']}";
+            if ($booking['status'] === 'cancelled') {
+                $cancelled[] = "{$booking['asset_name']} ({$booking['usage_date']}) — {$booking['reason_cancelled']}";
             }
         }
 
         $message = (new MailMessage)
-            ->subject('Konfirmasi Booking Aset')
+            ->subject('Booking Aset Dibatalkan')
             ->greeting('Halo, ' . $this->user->name . '!')
             ->line('Berikut adalah hasil konfirmasi permintaan booking aset Anda:');
 
 
         if (!empty($cancelled)) {
             $message->line('')
-                ->line('❌ Booking Dibatalkan:')
+                ->line('Booking Dibatalkan:')
                 ->line(implode("\n", $cancelled));
         }
 
@@ -61,8 +63,9 @@ class BookingAssetEventCancelled extends Notification implements ShouldQueue
         return [
             'title' => 'Booking Aset Dibatalkan',
             'user_id' => $this->user->id,
+            'event_id' => $this->event_id,
             'cancelled' => collect($this->bookings)->where('status', 'cancelled')->count(),
-            'message' => 'Booking aset Anda dibatalkan. Cek detail untuk melihat status masing-masing aset.'
+            'message' => 'Booking aset Anda dibatalkan. Cek detail untuk melihat peminjaman aset yang dibatalkan.'
         ];
     }
 }

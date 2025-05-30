@@ -17,14 +17,17 @@ use Illuminate\Support\Facades\DB;
 use App\Notifications\BookingAsset;
 use App\Models\AssetBookingDocument;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\BookingAssetCancelled;
 use App\Notifications\BookingAssetConfirmed;
 use Illuminate\Support\Facades\Notification;
+use App\Exports\EksternalAssetBookingsExport;
 use App\Notifications\BookingAssetConfirmPayment;
 use App\Notifications\BookingAssetEventConfirmed;
+use App\Notifications\BookingAssetDisposisiUploaded;
 use App\Notifications\BookingAssetPayAndCompleteFile;
 
 class AssetBookingController extends Controller
@@ -736,7 +739,7 @@ class AssetBookingController extends Controller
 
             $booking->save();
             // 🔥 Kirim Notifikasi ke User
-            Notification::send($user, new BookingAssetConfirmed($booking, $confirmBooking, $user, $vaNumber, $paymentAmount, $vaExpiredDate));
+            Notification::send($user, new BookingAssetConfirmed($booking, $confirmBooking, Auth::user(), $vaNumber, $paymentAmount, $vaExpiredDate));
 
 
             DB::commit(); // ✅ Semua sukses, simpan ke database
@@ -1002,7 +1005,7 @@ class AssetBookingController extends Controller
             $booking->save();
             $transaction->save();
             // 🔥 Kirim Notifikasi ke User
-            Notification::send($user, new BookingAssetConfirmPayment($booking->booking_number, $booking, $confirmBooking, $user));
+            Notification::send($user, new BookingAssetConfirmPayment($booking->booking_number, $booking, $confirmBooking, Auth::user()));
 
 
             DB::commit(); // ✅ Semua sukses, simpan ke database
@@ -1149,7 +1152,7 @@ class AssetBookingController extends Controller
             $assetBooking->reason = $request->reason;
             // Kirim notifikasi jika ada penerima
             if ($userReceived->isNotEmpty()) {
-                Notification::send($userReceived, new BookingAssetCancelled($assetBooking, $user, $userbooking));
+                Notification::send($userReceived, new BookingAssetCancelled($assetBooking, Auth::user(), $userbooking));
             }
             $assetBooking->status = 'cancelled';
 
@@ -1213,7 +1216,7 @@ class AssetBookingController extends Controller
             $assetBooking->reason = $request->reason;
             // Kirim notifikasi jika ada penerima
             if ($userReceived->isNotEmpty()) {
-                Notification::send($userReceived, new BookingAssetCancelled($assetBooking, $user, $userbooking));
+                Notification::send($userReceived, new BookingAssetCancelled($assetBooking, Auth::user(), $userbooking));
             }
             $assetBooking->status = 'cancelled';
 
@@ -1625,7 +1628,7 @@ class AssetBookingController extends Controller
                     $eventId = $booking->event->id;
                 } else {
                     $booking = AssetBooking::findOrFail($id);
-                    $fileName = $booking->user->nama ?? $booking->user->external_user . ".{$extension}";
+                    $fileName = $booking->user->name ?? $booking->user->external_user . ".{$extension}";
                 }
 
                 $asset_name = $booking->asset->name;
@@ -1648,6 +1651,12 @@ class AssetBookingController extends Controller
                     'uploaded_by' => Auth::user()->id
                 ]);
             }
+            $userReceiver = $booking->user;
+
+            // Nama peminjam
+            $event_id = $booking->event_id ?? '';
+            // Kirim notifikasi
+            Notification::send($userReceiver, new BookingAssetDisposisiUploaded(Auth::user(), $asset_name, $event_id));
 
             DB::commit();
 
@@ -1662,5 +1671,18 @@ class AssetBookingController extends Controller
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function ExportReport(Request $request)
+    {
+        $year = $request->input('year');
+
+        $yearStart = Carbon::parse("$year-01-01")->startOfDay();
+        $yearEnd = Carbon::parse("$year-12-31")->endOfDay();
+
+        return Excel::download(
+            new EksternalAssetBookingsExport($yearStart, $yearEnd),
+            'Rekapan Booking Eksternal ' . ' - ' . $year . '.xlsx'
+        );
     }
 }

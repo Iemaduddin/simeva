@@ -24,7 +24,7 @@ class BookingAsset extends Notification implements ShouldQueue
     // 📩 Notifikasi via Email
     public function via($notifiable)
     {
-        return ['database', 'broadcast'];
+        return ['database', 'mail'];
     }
 
 
@@ -41,14 +41,12 @@ class BookingAsset extends Notification implements ShouldQueue
     }
 
     // 📢 Notifikasi Real-time (Broadcast)
-    public function toBroadcast($notifiable)
+    public function toMail($notifiable)
     {
-        return new BroadcastMessage([
-            'title' => 'Booking Aset Diajukan!',
-            'user_id' => $this->user->id,
-            'booking' => $this->booking,
-            'message' => $this->user->name . ' mengajukan booking untuk aset ' . $this->booking->asset->name,
-
-        ]);
+        return (new MailMessage)
+            ->subject('Booking Aset Diajukan!')
+            ->greeting('Halo, ' . $notifiable->name . '!')
+            ->line($this->user->name . ' mengajukan booking untuk aset ' . $this->booking->asset->name)
+            ->line('Segera Konfirmasi!');
     }
 }

@@ -28,7 +28,7 @@ class BookingAssetCancelled extends Notification implements ShouldQueue
     public function via($notifiable)
     {
         // return ['mail', 'database', 'broadcast'];
-        return ['database'];
+        return ['mail', 'database'];
     }
 
     public function toMail($notifiable)

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Asset;
 use App\Models\Event;
 use App\Models\Jurusan;
@@ -15,13 +16,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\AssetBookingDocument;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
+use App\Exports\InternalAssetBookingsExport;
 use Illuminate\Support\Facades\Notification;
+use App\Notifications\BookingAssetConfirmDone;
 use App\Notifications\BookingAssetEventCancelled;
 use App\Notifications\BookingAssetEventConfirmed;
 use App\Notifications\BookingAssetEventUploadDoc;
+use App\Notifications\BookingAssetInternalConfirmDocument;
 
 class AssetBookingEventController extends Controller
 {
@@ -337,6 +342,7 @@ class AssetBookingEventController extends Controller
                 return $booking->asset->name;
             })
             ->editColumn('status', function ($booking) {
+                $cancelledReason = $booking->reason ?? null;
                 switch ($booking->status) {
                     case 'submission_booking':
                         $statusText = '⏳ Proses Pengajuan Booking';
@@ -367,7 +373,7 @@ class AssetBookingEventController extends Controller
                         $badgeClass = 'bg-dark';
                         break;
                 }
-                return '<span class="badge ' . $badgeClass . '">' . $statusText . '</span>';
+                return '<span class="badge ' . $badgeClass . '">' . $statusText . '</span>' . ($cancelledReason ? '<br>' . $cancelledReason : '');
             })
             ->addColumn('action', function ($booking) use ($id, $tableId) {
                 $assetBooking = $booking;
@@ -539,7 +545,7 @@ class AssetBookingEventController extends Controller
         try {
             $firstBooking = AssetBooking::findOrFail($data[0]['id']);
             $user = $firstBooking->user;
-
+            $event_id = $firstBooking->event_id ?? [];
             $dataForNotification = [];
 
             foreach ($data as $booking) {
@@ -569,7 +575,7 @@ class AssetBookingEventController extends Controller
                 }
             }
 
-            Notification::send($user, new BookingAssetEventConfirmed($dataForNotification, $user));
+            Notification::send($user, new BookingAssetEventConfirmed($dataForNotification, $user, $event_id));
 
             DB::commit();
             return response()->json([
@@ -629,7 +635,7 @@ class AssetBookingEventController extends Controller
         try {
             $firstBooking = AssetBooking::findOrFail($data[0]['id']);
             $user = $firstBooking->user;
-
+            $event_id = $firstBooking->event_id;
             $dataForNotification = [];
 
             foreach ($data as $booking) {
@@ -656,7 +662,7 @@ class AssetBookingEventController extends Controller
                 }
             }
 
-            Notification::send($user, new BookingAssetEventCancelled($dataForNotification, $user));
+            Notification::send($user, new BookingAssetEventCancelled($dataForNotification, $user, $event_id));
 
             DB::commit();
             return response()->json([
@@ -680,11 +686,12 @@ class AssetBookingEventController extends Controller
         $assetJurusanBookings = AssetBooking::with('asset')->where('event_id', $eventId)
             ->whereHas('asset', function ($a) {
                 $a->where('facility_scope', 'jurusan')->where('jurusan_id', auth()->user()->jurusan_id);
-            })->get();
+            })->where('status', '!=', 'cancelled')
+            ->get();
         $assetUmumBookings = AssetBooking::with('asset')->where('event_id', $eventId)
             ->whereHas('asset', function ($a) {
                 $a->where('facility_scope', 'umum');
-            })->get();
+            })->where('status', '!=', 'cancelled')->get();
         $event = Event::findOrFail($eventId);
         $assetDocument = AssetBookingDocument::where('event_id', $eventId)->where('document_type', 'Form Peminjaman')->first();
         DB::beginTransaction();
@@ -755,7 +762,28 @@ class AssetBookingEventController extends Controller
                 }
             }
             $userSender = Auth::user();
-            // Notification::send($user, new BookingAssetEventUploadDoc($userSender));
+
+            if ($request->asset_jurusan === 'true') {
+                // Ambil semua user dengan role 'Admin Jurusan'
+                $adminJurusanUsers = User::role('Admin Jurusan')->get();
+
+                // Ambil jurusan_id dari aset pertama (pastikan datanya tidak null)
+                $jurusanId = optional(optional($assetJurusanBookings->first())->asset)->jurusan_id;
+
+                // Cari user dengan jurusan yang sesuai
+                $userReceiver = $adminJurusanUsers->firstWhere('jurusan_id', $jurusanId);
+
+                // Kirim notifikasi jika ada penerima
+                if ($userReceiver) {
+                    Notification::send($userReceiver, new BookingAssetEventUploadDoc($userSender));
+                }
+            } else {
+                // Semua user dengan role 'Kaur RT'
+                $userReceiver = User::role('Kaur RT')->get();
+
+                // Kirim notifikasi ke semua
+                Notification::send($userReceiver, new BookingAssetEventUploadDoc($userSender));
+            }
 
             DB::commit();
             return response()->json([
@@ -807,6 +835,14 @@ class AssetBookingEventController extends Controller
                     ]);
                 }
             }
+            $event_id = $bookingsToApprove->first()->event_id ?? '';
+            $assetNames = $bookingsToApprove->pluck('asset.name')->toArray();
+            $isApproved = $request->actionConfirmDocument === 'approved';
+            $reason = $isApproved ? null : $request->reason_rejected;
+            $userReceiver = optional($assetUmum->first())->user;
+            $user_id = auth()->user()->id;
+            Notification::send($userReceiver, new BookingAssetInternalConfirmDocument($user_id, $event_id, $isApproved, $assetNames, $reason));
+
             DB::commit();
             return response()->json([
                 'status' => 'success',
@@ -855,11 +891,18 @@ class AssetBookingEventController extends Controller
                         'status' => 'approved',
                     ]);
                 }
+                $userReceiver = $booking->user;
+                $event_id = $booking->event_id ?? '';
+                Notification::send($userReceiver, new BookingAssetConfirmDone($booking->asset->name, auth()->user(), $event_id));
             }
             if ($request->existEventId === 'nothing') {
                 $assetBooking->update([
                     'status' => 'approved',
                 ]);
+                $userReceiver = $assetBooking->user;
+                $event_id = $booking->event_id ?? '';
+
+                Notification::send($userReceiver, new BookingAssetConfirmDone($assetBooking->asset->name, auth()->user(), $event_id));
             }
 
             DB::commit();
@@ -1010,6 +1053,7 @@ class AssetBookingEventController extends Controller
             ->whereHas('asset', function ($query) {
                 $query->where('type', 'building');
             })
+            ->where('status', '!=', 'cancelled')
             ->get();
 
         $dpk = Stakeholder::where('position', 'DPK')->where('organizer_id', $organizer->id)
@@ -1022,5 +1066,22 @@ class AssetBookingEventController extends Controller
         $letter_number = $request->letter_number;
         $event_leader = TeamMember::findOrFail($event->event_leader);
         return view('dashboardPage.assets.asset-booking-event.loan-form', compact('organizer', 'assetBookings', 'dpk', 'kajur', 'presiden', 'wadir3', 'letter_number', 'event_leader', 'leader', 'team_members'));
+    }
+
+
+    public function ExportReport(Request $request)
+    {
+        $year = $request->input('year');
+
+        $yearStart = Carbon::parse("$year-01-01")->startOfDay();
+        $yearEnd = Carbon::parse("$year-12-31")->endOfDay();
+
+        $role = auth()->user()->getRoleNames()->first();
+        $facility = $role === 'Admin Jurusan' ? auth()->user()->jurusan->kode_jurusan : 'Umum';
+
+        return Excel::download(
+            new InternalAssetBookingsExport($yearStart, $yearEnd),
+            'Rekapan Booking Fasilitas ' . $facility . ' - ' . $year . '.xlsx'
+        );
     }
 }

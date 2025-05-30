@@ -18,21 +18,24 @@
 
                 @php
                     use Illuminate\Support\Carbon;
+                    $user = auth()->user();
 
-                    $unreadNotifications = auth()
-                        ->user()
-                        ->unreadNotifications()
-                        ->whereDate('created_at', Carbon::today()) // Hanya notif hari ini
-                        ->get();
+                    if ($user) {
+                        $unreadNotifications = $user
+                            ->unreadNotifications()
+                            ->where('created_at', '>=', Carbon::now()->subDays(30))
+                            ->get();
 
-                    $allNotifications = auth()
-                        ->user()
-                        ->notifications()
-                        ->whereDate('created_at', Carbon::today()) // Hanya notif hari ini
-                        ->get();
+                        $unread = $unreadNotifications->take(5);
+                        $allNotifications = $user
+                            ->notifications()
+                            ->where('created_at', '>=', Carbon::now()->subDays(30))
+                            ->get();
 
-                    // Jika notif <= 5, tampilkan semua (unread & read), jika > 5 hanya unread
-                    $displayNotifications = $allNotifications->count() <= 5 ? $allNotifications : $unreadNotifications;
+                        $displayNotifications = $allNotifications->count() <= 5 ? $allNotifications : $unread;
+                    } else {
+                        $displayNotifications = collect(); // Kosongkan jika tidak ada user
+                    }
                 @endphp
 
                 <div class="dropdown">
@@ -56,7 +59,7 @@
                             </div>
                             <span
                                 class="text-primary-600 fw-semibold text-lg w-40-px h-40-px rounded-circle bg-base d-flex justify-content-center align-items-center">
-                                {{ $displayNotifications->count() }}
+                                {{ $unreadNotifications->count() }}
                             </span>
                         </div>
 
@@ -65,34 +68,54 @@
                                 @php
                                     $data = $notification->data;
                                     $isRead = $notification->read_at !== null;
-                                    $bgClass = $isRead ? 'bg-light' : 'bg-primary-25';
-
                                     // Ambil pengirim notifikasi
-                                    $sender = \App\Models\User::find($data['user_id']);
+                                    $sender = !empty($data['user_id'])
+                                        ? \App\Models\User::find($data['user_id'])
+                                        : null;
+
                                     $profilePhoto = $sender->profile_picture ?? 'default-avatar.png';
 
                                     // Cek apakah ada booking dan asset
                                     $booking = $data['booking'] ?? null;
                                     $asset = $booking->asset ?? null;
                                     $jurusan = $asset->jurusan ?? null;
+                                    $eventId = $data['event_id'] ?? null;
 
                                     // Tentukan route berdasarkan jurusan
-                                    if ($jurusan) {
-                                        $routeName = 'asset.fasjur.bookings';
-                                        $routeParam = ['kode_jurusan' => $jurusan->kode_jurusan];
-                                    } else {
+                                    $role = auth()->user()->getRoleNames()->first(); // Simpan dulu untuk efisiensi
+                                    if ($role === 'Organizer' && $eventId) {
+                                        $routeName = 'detail.event.page';
+                                        $routeParam = ['id' => $eventId];
+                                    } elseif ($role === 'UPT PU') {
                                         $routeName = 'asset.fasum.bookings';
                                         $routeParam = [];
+                                    } elseif ($role === 'Kaur RT') {
+                                        $routeName = 'asset.fasum.eventBookings';
+                                        $routeParam = [];
+                                    } elseif ($role === 'Admin Jurusan' && isset($jurusan['kode_jurusan'])) {
+                                        $routeName = 'asset.fasjur.bookings';
+                                        $routeParam = ['kode_jurusan' => $jurusan['kode_jurusan']];
+                                    }
+
+                                    // Default fallback jika routing gagal
+                                    $link = '#';
+                                    if ($routeName && Route::has($routeName)) {
+                                        try {
+                                            $link = route($routeName, $routeParam);
+                                        } catch (\Exception $e) {
+                                            $link = '#';
+                                        }
                                     }
                                 @endphp
 
                                 <a href="javascript:void(0);"
-                                    class="px-24 py-12 d-flex align-items-start gap-3 mb-2 justify-content-between {{ $bgClass }}"
-                                    onclick="markAsRead('{{ $notification->id }}', '{{ route($routeName, $routeParam) }}')">
+                                    class="px-24 py-12 d-flex align-items-start gap-3 mb-2 justify-content-between"
+                                    onclick="markAsRead('{{ $notification->id }}', '{{ $link }}')">
                                     <div
                                         class="text-black hover-bg-transparent hover-text-primary d-flex align-items-center gap-3">
-                                        <img src="{{ asset('storage/' . $profilePhoto) }}" alt="User Avatar"
-                                            class="w-44-px h-44-px rounded-circle flex-shrink-0">
+                                        <img src="{{ $profilePhoto ? asset('storage/' . $profilePhoto) : asset('assets/images/user.png') }}"
+                                            onerror="this.onerror=null; this.src='{{ asset('assets/images/user.png') }}';"
+                                            alt="User Avatar" class="w-44-px h-44-px rounded-circle flex-shrink-0">
                                         <div>
                                             <h6 class="text-md fw-semibold mb-4">
                                                 {{ $data['title'] ?? 'Notifikasi Baru' }}
@@ -103,7 +126,7 @@
                                         </div>
                                     </div>
                                     <span class="text-sm text-secondary-light flex-shrink-0">
-                                        {{ Carbon::parse($notification->created_at)->diffForHumans() }}
+                                        {{ $isRead ? 'Telah dibaca' : Carbon::parse($notification->created_at)->diffForHumans() }}
                                     </span>
                                 </a>
                             @endforeach
@@ -111,7 +134,8 @@
                         </div>
 
                         <div class="text-center py-12 px-16">
-                            <a href="" class="text-primary-600 fw-semibold text-md">See All Notifications</a>
+                            <a href="{{ route('notifications.index') }}"
+                                class="text-primary-600 fw-semibold text-md">See All Notifications</a>
                         </div>
                     </div>
                 </div>

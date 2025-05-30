@@ -211,11 +211,10 @@
                                 ->unreadNotifications()
                                 ->whereDate('created_at', Carbon::today())
                                 ->get();
-
+                            $unread = $unreadNotifications->take(5);
                             $allNotifications = $user->notifications()->whereDate('created_at', Carbon::today())->get();
 
-                            $displayNotifications =
-                                $allNotifications->count() <= 5 ? $allNotifications : $unreadNotifications;
+                            $displayNotifications = $allNotifications->count() <= 5 ? $allNotifications : $unread;
                         } else {
                             $displayNotifications = collect(); // Kosongkan jika tidak ada user
                         }
@@ -223,81 +222,85 @@
 
                     @if (Auth::check())
 
-                        <div class="dropdown flex-shrink-0">
-                            <button
-                                class="w-44 h-44 flex-center bg-main-50 rounded-circle text-main-600 text-lg hover-text-white hover-bg-main-600 transition-1"
-                                type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="ph-bold ph-bell-simple"></i>
-                                @if ($unreadNotifications->count() > 0)
-                                    <span
-                                        class="w-22 h-22 flex-center rounded-circle bg-main-two-600 text-white text-xs position-absolute top-n6 end-n4">
-                                        {{ $unreadNotifications->count() }}</span>
-                                @endif
-                            </button>
-                            <div class="dropdown-menu to-top dropdown-menu-lg bg-white p-0 scroll-sm">
-                                <div
-                                    class="m-16 py-12 px-16 rounded-10 bg-main-50 mb-16 d-flex align-items-center justify-content-between gap-2">
-                                    <div>
-                                        <h6 class="text-lg text-main-light fw-semibold mb-0">Notifications</h6>
+                        @hasanyrole(['Participant', 'Tenant'])
+                            <div class="dropdown flex-shrink-0">
+                                <button
+                                    class="w-44 h-44 flex-center bg-main-50 rounded-circle text-main-600 text-lg hover-text-white hover-bg-main-600 transition-1"
+                                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="ph-bold ph-bell-simple"></i>
+                                    @if ($unreadNotifications->count() > 0)
+                                        <span
+                                            class="w-22 h-22 flex-center rounded-circle bg-main-two-600 text-white text-xs position-absolute top-n6 end-n4">
+                                            {{ $unreadNotifications->count() }}</span>
+                                    @endif
+                                </button>
+                                <div class="dropdown-menu to-top dropdown-menu-lg bg-white p-0 scroll-sm">
+                                    <div
+                                        class="m-16 py-12 px-16 rounded-10 bg-main-50 mb-16 d-flex align-items-center justify-content-between gap-2">
+                                        <div>
+                                            <h6 class="text-lg text-main-light fw-semibold mb-0">Notifications</h6>
+                                        </div>
+                                        <span
+                                            class="text-main-600 fw-semibold text-lg w-40-px h-40-px rounded-circle bg-base d-flex justify-content-center align-items-center">
+                                            {{ $unreadNotifications->count() }}
+                                        </span>
                                     </div>
-                                    <span
-                                        class="text-main-600 fw-semibold text-lg w-40-px h-40-px rounded-circle bg-base d-flex justify-content-center align-items-center">
-                                        {{ $displayNotifications->count() }}
-                                    </span>
-                                </div>
 
-                                <div class="max-h-400-px overflow-y-auto scroll-sm pe-4" id="notif-list">
-                                    @foreach ($displayNotifications as $notification)
-                                        @php
-                                            $data = $notification->data;
-                                            $isRead = $notification->read_at !== null;
-                                            $bgClass = $isRead ? 'bg-light' : 'bg-primary-25';
+                                    <div class="max-h-400-px overflow-y-auto scroll-sm pe-4" id="notif-list">
+                                        @foreach ($displayNotifications as $notification)
+                                            @php
+                                                $data = $notification->data;
+                                                $isRead = $notification->read_at !== null;
 
-                                            // Ambil pengirim notifikasi
-                                            $sender = \App\Models\User::find($data['user_id']);
-                                            $profilePhoto = $sender->profile_picture ?? 'default-avatar.png';
+                                                // Ambil pengirim notifikasi
+                                                $sender = \App\Models\User::find($data['user_id']);
+                                                $profilePhoto = $sender->profile_picture ?? 'default-avatar.png';
 
-                                            // Cek apakah ada booking dan asset
-                                            $booking = $data['booking'] ?? null;
-                                            $asset = $booking->asset ?? null;
-                                            $jurusan = $asset->jurusan ?? null;
+                                                // Cek apakah ada booking dan asset
+                                                $booking = $data['booking'] ?? null;
+                                                $asset = $booking->asset ?? null;
+                                                $jurusan = $asset->jurusan ?? null;
 
-                                            // Tentukan route berdasarkan jurusan
+                                                // Tentukan route berdasarkan jurusan
 
-                                            $routeName = 'profile.myAssetBooking';
-                                            $routeParam = ['id' => $sender->id];
+                                                $routeName = 'profile.myAssetBooking';
+                                                $routeParam = ['id' => $sender->id];
 
-                                        @endphp
+                                            @endphp
 
-                                        <a href="javascript:void(0);"
-                                            class="px-24 py-12 d-flex align-items-start gap-3 mb-2 justify-content-between {{ $bgClass }}"
-                                            onclick="markAsRead('{{ $notification->id }}', '{{ route($routeName, $routeParam) }}')">
-                                            <div class="text-black hover-text-primary d-flex align-items-center gap-3">
-                                                <img src="{{ asset('storage/' . $profilePhoto) }}" alt="User Avatar"
-                                                    class="w-44-px h-44-px rounded-circle flex-shrink-0">
-                                                <div>
-                                                    <h6 class="text-md fw-semibold mb-4">
-                                                        {{ $data['title'] ?? 'Notifikasi Baru' }}
-                                                    </h6>
-                                                    <p class="mb-0 text-sm text-secondary-light text-w-200-px">
-                                                        {{ $data['message'] ?? 'Tidak ada pesan' }}
-                                                    </p>
+                                            <a href="javascript:void(0);"
+                                                class="px-24 py-12 d-flex align-items-start gap-3 mb-2 justify-content-between"
+                                                onclick="markAsRead('{{ $notification->id }}', '{{ route($routeName, $routeParam) }}')">
+                                                <div class="text-black hover-text-primary d-flex align-items-center gap-3">
+                                                    <img src="{{ $profilePhoto ? asset('storage/' . $profilePhoto) : asset('assets/images/user.png') }}"
+                                                        onerror="this.onerror=null; this.src='{{ asset('assets/images/user.png') }}';"
+                                                        alt="User Avatar" class="rounded-circle flex-shrink-0"
+                                                        width="50px">
+                                                    <div>
+                                                        <h6 class="text-md fw-semibold mb-4">
+                                                            {{ $data['title'] ?? 'Notifikasi Baru' }}
+                                                        </h6>
+                                                        <p class="mb-0 text-sm text-secondary-light text-w-200-px text-line-1">
+                                                            {{ $data['message'] ?? 'Tidak ada pesan' }}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <span class="text-sm text-secondary-light flex-shrink-0">
-                                                {{ Carbon::parse($notification->created_at)->diffForHumans() }}
-                                            </span>
-                                        </a>
-                                    @endforeach
+                                                <span class="text-sm text-secondary-light flex-shrink-0">
+                                                    {{ $isRead ? 'Telah dibaca' : Carbon::parse($notification->created_at)->diffForHumans() }}
+                                                </span>
+                                            </a>
+                                        @endforeach
 
-                                </div>
+                                    </div>
 
-                                <div class="text-center py-12 px-16">
-                                    <a href="" class="text-primary-600 fw-semibold text-md">See All
-                                        Notifications</a>
+                                    <div class="text-center py-12 px-16">
+                                        <a href="{{ route('notifications.index') }}"
+                                            class="text-primary-600 fw-semibold text-md">See All
+                                            Notifications</a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        @endhasanyrole
                         <!-- Jika Sudah Login, Tampilkan Nama & Dropdown -->
                         <div class="dropdown d-none d-lg-block ">
                             <a class="btn bg-main-50 border border-main-600 px-24 hover-bg-main-600 rounded-pill p-9 d-flex align-items-center justify-content-center text-2xl text-neutral-500 hover-text-white hover-border-main-600 me-5 dropdown-toggle"

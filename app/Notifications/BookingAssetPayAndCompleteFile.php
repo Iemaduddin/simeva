@@ -24,7 +24,7 @@ class BookingAssetPayAndCompleteFile extends Notification implements ShouldQueue
     // 📩 Notifikasi via Email
     public function via($notifiable)
     {
-        return ['database', 'broadcast'];
+        return ['database', 'mail'];
     }
 
 
@@ -35,18 +35,26 @@ class BookingAssetPayAndCompleteFile extends Notification implements ShouldQueue
             'title' => 'Bukti Pembayaran dan Formulir Peminjaman',
             'booking' => $this->booking,
             'user_id' => $this->user->id,
-            'message' => $this->user->name . ' telah menggunggah bukti pembayaran dan formulir peminjaman aset' . $this->booking->asset->name,
+            'message' => $this->user->name . ' telah menggunggah bukti pembayaran dan formulir peminjaman aset ' . $this->booking->asset->name,
         ];
     }
 
     // 📢 Notifikasi Real-time (Broadcast)
-    public function toBroadcast($notifiable)
+    // public function toBroadcast($notifiable)
+    // {
+    //     return new BroadcastMessage([
+    //         'title' => 'Bukti Pembayaran dan Formulir Peminjaman',
+    //         'booking' => $this->booking,
+    //         'user_id' => $this->user->id,
+    //         'message' => $this->user->name . ' telah menggunggah bukti pembayaran dan formulir peminjaman aset' . $this->booking->asset->name,
+    //     ]);
+    // }
+    public function toMail($notifiable)
     {
-        return new BroadcastMessage([
-            'title' => 'Bukti Pembayaran dan Formulir Peminjaman',
-            'booking' => $this->booking,
-            'user_id' => $this->user->id,
-            'message' => $this->user->name . ' telah menggunggah bukti pembayaran dan formulir peminjaman aset' . $this->booking->asset->name,
-        ]);
+        return (new MailMessage)
+            ->subject('Bukti Pembayaran dan Formulir Peminjaman')
+            ->greeting('Halo, ' . $this->user->name . '!')
+            ->line($this->user->name . ' telah menggunggah bukti pembayaran dan formulir peminjaman aset ' . $this->booking->asset->name)
+            ->line('Segera Konfirmasi!');
     }
 }

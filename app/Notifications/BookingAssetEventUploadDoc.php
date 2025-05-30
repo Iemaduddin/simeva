@@ -22,7 +22,7 @@ class BookingAssetEventUploadDoc extends Notification implements ShouldQueue
     public function via($notifiable)
 
     {
-        return ['database'];
+        return ['database', 'mail'];
     }
     // 📩 Notifikasi via Email
     public function toMail($notifiable)
@@ -37,7 +37,7 @@ class BookingAssetEventUploadDoc extends Notification implements ShouldQueue
     {
         return [
             'title' => 'Surat Peminjaman telah diunggah!',
-            'message' => $this->organizer->name . ' telah mengunggah surat peminjaman yang telah selesai',
+            'message' => $this->organizer->name . ' telah mengunggah surat peminjaman yang telah selesai. Segera konfirmasi, terima kasih!',
         ];
     }
 }

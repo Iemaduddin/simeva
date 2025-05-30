@@ -32,7 +32,7 @@ class BookingAssetConfirmed extends Notification implements ShouldQueue
 
     {
 
-        return ['mail', 'database', 'broadcast'];
+        return ['mail', 'database'];
     }
     // 📩 Notifikasi via Email
     public function toMail($notifiable)
@@ -44,11 +44,11 @@ class BookingAssetConfirmed extends Notification implements ShouldQueue
                 ->line('Booking Anda telah disetujui.')
                 ->line('Detail Booking:')
                 ->line('📌 Aset: ' . $this->booking->asset->name)
-                ->line('📅 Event: ' . $this->booking->event_name)
+                ->line('📅 Event: ' . $this->booking->usage_event_name)
                 ->line('💰 Total Harga: Rp ' . number_format($this->paymentAmount, 2))
                 ->line('🏦 Virtual Account: ' . $this->vaNumber)
                 ->line('⏳ Berlaku Sampai: ' . $this->vaExpiredDate)
-                ->action('Bayar Sekarang', url('/payment?booking_id=' . $this->booking->id))
+                // ->action('Bayar Sekarang', url('/payment?booking_id=' . $this->booking->id))
                 ->line('Terima kasih telah menggunakan layanan kami!');
         } else {
             return (new MailMessage)
@@ -57,7 +57,7 @@ class BookingAssetConfirmed extends Notification implements ShouldQueue
                 ->line('Mohon maaf, booking Anda tidak dapat disetujui.')
                 ->line('Detail Booking:')
                 ->line('📌 Aset: ' . $this->booking->asset->name)
-                ->line('📅 Event: ' . $this->booking->event_name)
+                ->line('📅 Event: ' . $this->booking->usage_event_name)
                 ->line('❌ Status: Ditolak')
                 ->line('📝 Alasan Penolakan: ' . $this->booking->reason)
                 ->action('Buat Booking Baru', url('/assets'))
@@ -88,24 +88,24 @@ class BookingAssetConfirmed extends Notification implements ShouldQueue
         }
     }
 
-    public function toBroadcast($notifiable)
-    {
-        if ($this->confirmBooking === 'approved') {
-            return new BroadcastMessage([
-                'title' => 'Booking Dikonfirmasi',
-                'message' => 'Silakan lakukan pembayaran sebelum ' . $this->vaExpiredDate,
-                'va_number' => $this->vaNumber,
-                'amount' => $this->paymentAmount,
-                'expired_date' => $this->vaExpiredDate
-            ]);
-        } else {
-            return new BroadcastMessage([
-                'title' => 'Booking Ditolak',
-                'message' => 'Booking ' . $this->booking->asset->name . ' ditolak: ' . $this->booking->reason,
-                'status' => 'rejected',
-                'booking_id' => $this->booking->id,
-                'reason' => $this->booking->reason
-            ]);
-        }
-    }
+    // public function toBroadcast($notifiable)
+    // {
+    //     if ($this->confirmBooking === 'approved') {
+    //         return new BroadcastMessage([
+    //             'title' => 'Booking Dikonfirmasi',
+    //             'message' => 'Silakan lakukan pembayaran sebelum ' . $this->vaExpiredDate,
+    //             'va_number' => $this->vaNumber,
+    //             'amount' => $this->paymentAmount,
+    //             'expired_date' => $this->vaExpiredDate
+    //         ]);
+    //     } else {
+    //         return new BroadcastMessage([
+    //             'title' => 'Booking Ditolak',
+    //             'message' => 'Booking ' . $this->booking->asset->name . ' ditolak: ' . $this->booking->reason,
+    //             'status' => 'rejected',
+    //             'booking_id' => $this->booking->id,
+    //             'reason' => $this->booking->reason
+    //         ]);
+    //     }
+    // }
 }
