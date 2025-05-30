@@ -13,12 +13,31 @@
             <h6 class="card-title mb-0 align-content-center px-20 pt-20">Aset Fasilitas
                 {{ $kode_jurusan ?? 'Umum' }}
             </h6>
-            <button class="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2"
-                data-bs-toggle="modal" data-bs-target="#modalAddManualBooking">
-                <iconify-icon icon="ic:baseline-plus" class="icon text-xl line-height-1"></iconify-icon>
-                Tambah Booking
-            </button>
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <label for="filterTahun" class="form-label mb-0">Tahun:</label>
+                <select id="filterTahun" name="tahun" class="form-select form-select-sm" style="width: auto;">
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                </select>
+
+                <a href="{{ route('assetBookingEvent.report') }}" id="btnDownload"
+                    class="btn btn-dark d-flex align-items-center gap-2">
+                    <iconify-icon icon="typcn:export-outline" class="text-xl"></iconify-icon>
+                    Rekapan Booking
+                </a>
+
+
+                <!-- Tombol Tambah Booking -->
+                <button class="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2"
+                    data-bs-toggle="modal" data-bs-target="#modalAddManualBooking">
+                    <iconify-icon icon="ic:baseline-plus" class="text-xl"></iconify-icon>
+                    Tambah Booking
+                </button>
+            </div>
         </div>
+
         <div class="card-body px-24">
             @php
                 $statusBooking = [
@@ -149,6 +168,19 @@
 
         });
     </script>
+    <script>
+        const selectTahun = document.getElementById('filterTahun');
+        const btnDownload = document.getElementById('btnDownload');
 
+        function updateHref() {
+            const year = selectTahun.value;
+            const baseUrl = "{{ route('assetBookingEvent.report') }}";
+            btnDownload.href = baseUrl + '?year=' + encodeURIComponent(year);
+        }
+
+        // Update link saat halaman load dan saat user ganti tahun
+        updateHref();
+        selectTahun.addEventListener('change', updateHref);
+    </script>
     @include('components.script-crud')
 @endpush

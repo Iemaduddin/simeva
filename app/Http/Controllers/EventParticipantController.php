@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\EventParticipant;
 use App\Models\EventTransaction;
+use App\Notifications\SendETicket;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Exports\EventParticipantsExport;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Notification;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 
@@ -384,6 +386,7 @@ class EventParticipantController extends Controller
                 ]);
             }
 
+            Notification::send($participant->user, new SendETicket($event, $event->organizers->user, $participant, "Participant"));
 
             DB::commit();
             return response()->json([
@@ -610,7 +613,16 @@ class EventParticipantController extends Controller
                 'ticket_code' => $user->id,
                 'status' => $status,
             ]);
+            if ($event->is_free) {
+                $clean_event_id = str_replace('-', '', $event->id);
+                $clean_participant_id = str_replace('-', '', $participant->id);
+                $uuid_event = substr($clean_event_id, (strlen($clean_event_id) - 8) / 2, 8);
+                $uuid_participant = substr($clean_participant_id, (strlen($clean_participant_id) - 8) / 2, 8);
+                $kode_ticket = strtoupper("{$uuid_event}{$uuid_participant}");
 
+                $participant->ticket_code = $kode_ticket;
+                $participant->save();
+            }
             // Jika event berbayar, buat transaksi dan simpan bukti
             if (!$event->is_free) {
                 $request->validate([
@@ -639,7 +651,14 @@ class EventParticipantController extends Controller
                     'payment_date' => Carbon::now()
                 ]);
             }
+
             DB::commit();
+            if ($event->is_free) {
+                Notification::send($event->organizers->user, new SendETicket($event, $user, $participant, "Organizer"));
+                Notification::send($participant->user, new SendETicket($event, $event->organizers->user, $participant, "Participant"));
+            } else {
+                Notification::send($event->organizers->user, new SendETicket($event, $user, $participant, "Organizer"));
+            }
 
             notyf()->ripple(true)->success('Berhasil mendaftar event!');
             return redirect()->back();
@@ -702,6 +721,8 @@ class EventParticipantController extends Controller
                     $fileName,
                     'public'
                 );
+
+                Notification::send($event->organizers->user, new SendETicket($event, $user, $participant, "Organizer"));
 
                 // Update status peserta jadi pending_approval kembali
                 $participant->update([
@@ -789,6 +810,8 @@ class EventParticipantController extends Controller
                     ]
                 );
             }
+            Notification::send($eventParticipant->user, new SendETicket($event, $event->organizers->user, $eventParticipant, "Participant"));
+
             DB::commit();
             return response()->json([
                 'status' => 'success',

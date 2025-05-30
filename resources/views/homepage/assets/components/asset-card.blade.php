@@ -43,9 +43,7 @@
                         @endforeach
                         <div class="flex-align gap-8 mt-20">
                             <span
-                                class="badge {{ $asset->status === 'OPEN' ? 'badge-success' : 'badge-danger' }}rounded-10 px-10 py-10 bg-success text-white text-sm fw-bold ">
-                                {{ $asset->status }}
-                            </span>
+                                class="badge {{ $asset->status == 'OPEN' ? 'bg-success' : 'bg-danger' }} rounded-10 px-10 py-10  text-white text-sm fw-bold ">{{ $asset->status }}</span>
                             @if ($asset->available_at)
                                 <div class="row">
                                     <div class="col-12 fw-bold">Tersedia:</div>

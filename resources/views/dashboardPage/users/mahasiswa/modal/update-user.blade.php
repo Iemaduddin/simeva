@@ -14,9 +14,9 @@
                     @method('PUT')
                     <div class="row">
                         <div class="col-md-4 mb-20">
-                            <label class="form-label fw-semibold text-primary-light text-sm mb-8">NIM<span
+                            <label class="form-label fw-semibold text-primary-light text-sm mb-8">NIM <span
                                     class="text-danger">*</span></label>
-                            <input type="number" name="nim" class="form-control radius-8"
+                            <input type="text" name="nim" class="form-control radius-8"
                                 placeholder="Masukkan NIM Mahasiswa" value="{{ $mahasiswa->nim }}" required>
                         </div>
                         <div class="col-md-4 mb-20">
@@ -202,7 +202,7 @@
                             </button>
                             <button type="submit"
                                 class="btn btn-primary border border-primary-600 text-md px-24 py-12 radius-8">
-                                Tambah
+                                Perbarui
                             </button>
                         </div>
                     </div>

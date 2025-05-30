@@ -41,7 +41,7 @@
                     <div class="modal-footer">
                         <button type="reset" class="btn btn-secondary  flex-center gap-8"
                             data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-success">Ajukan</button>
+                        <button type="submit" class="btn btn-success">Kirim</button>
                     </div>
                 </form>
 

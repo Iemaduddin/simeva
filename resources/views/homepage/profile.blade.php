@@ -155,7 +155,8 @@
                 </div>
 
                 <div class="col-sm-12">
-                    <label for="address" class="text-neutral-700 text-lg fw-medium mb-12">Alamat Lengkap
+                    <label for="address" class="text-neutral-700 text-lg fw-medium mb-12">Alamat Lengkap <span
+                            class="text-danger-600">*</span>
                     </label>
                     <textarea class="common-input bg-main-25 rounded-24 border-transparent focus-border-main-600" id="address"
                         name="address" placeholder="Masukkan Alamat Lengkap..." required>{{ $user->address }}</textarea>

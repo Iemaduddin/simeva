@@ -493,8 +493,7 @@
                                 <div class="event-speaker">
                                     <div class="row gy-3 mt-3 border-3 border-dashed border-primary p-3 mb-3 rounded">
                                         <div class="col-md-3">
-                                            <label class="form-label">Tanggal & Jam Pelaksanaan <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">Tanggal & Jam Pelaksanaan </label>
                                             <select class="form-select event-date-select" name="event_date_speakers[]">
                                                 <option value="" disabled selected>Pilih Tanggal</option>
                                             </select>
@@ -503,7 +502,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Nama <span class="text-danger">*</span></label>
+                                            <label class="form-label">Nama <span class="text-danger"></label>
                                             <input type="text" class="form-control" name="speaker_name[]"
                                                 placeholder="Masukkan Nama...">
                                             <div class="invalid-feedback">
@@ -513,7 +512,7 @@
                                         <div class="col-md-3">
                                             <div class="form-group">
                                                 <label class="form-label" for="role">Peran <span
-                                                        class="text-danger">*</span></label>
+                                                        class="text-danger"></label>
                                                 <select class="form-select role" name="role[]">
                                                     <option value="Keynote Speaker">Keynote Speaker</option>
                                                     <option value="Pemateri">Pemateri / Narasumber</option>
@@ -580,26 +579,22 @@
                                 <div class="asset-loan">
                                     <div class="row gy-3 mt-3 border-3 border-dashed border-primary p-3 mb-3 rounded">
                                         <div class="col-md-3">
-                                            <label class="form-label">Tanggal Peminjaman <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">Tanggal Peminjaman </label>
                                             <input type="text" class="form-control date-loans-pickr"
                                                 name="loan_dates[]">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Jam Mulai Peminjaman <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">Jam Mulai Peminjaman </label>
                                             <input type="text" class="form-control time-loans-pickr"
                                                 name="loan_time_starts[]">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Jam Selesai Peminjaman <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">Jam Selesai Peminjaman </label>
                                             <input type="text" class="form-control time-loans-pickr"
                                                 name="loan_time_ends[]">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Aset Kampus <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">Aset Kampus </label>
                                             <select class="form-select asset-selected" name="loan_assets[]">
                                                 <option disabled selected>Pilih Aset Kampus</option>
                                                 {{-- Optgroup Gedung --}}

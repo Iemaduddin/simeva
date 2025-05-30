@@ -525,9 +525,8 @@
                                 </div>
                             </div>
                             <div class="modal-footer">
-                                <button type="reset" class="btn btn-secondary rounded-pill flex-center gap-8"
-                                    data-bs-dismiss="modal">Batal</button>
-                                <button type="submit" class="btn btn-main rounded-pill flex-center gap-8">
+                                <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-main">
                                     Ajukan
                                     <i class="ph-bold ph-arrow-up-right d-flex text-lg"></i>
                                 </button>

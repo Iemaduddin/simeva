@@ -246,11 +246,11 @@ class AttendanceEventController extends Controller
         }
 
         // Cari peserta berdasarkan kode tiket
-        $participant = EventParticipant::where('ticket_code', $request->ticket_code)->first();
+        $participant = EventParticipant::where('ticket_code', $request->ticket_code)->where('status', 'registered')->first();
         if (!$participant) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Peserta tidak ditemukan.',
+                'message' => 'Peserta tidak ditemukan atau belum terdaftar.',
                 'errors' => $validator->errors()
             ], 422);
         }

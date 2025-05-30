@@ -265,7 +265,7 @@ class EventController extends Controller
         $team_members = TeamMember::select('id', 'name')->where('organizer_id', $organizer_id)->get();
 
         $event = Event::with(['prices', 'steps.event_speaker'])->findOrFail($id);
-        $assetBookings = AssetBooking::with(['asset'])->where('event_id', $id)->get();
+        $assetBookings = AssetBooking::with(['asset'])->where('event_id', $id)->where('status', '!=', 'cancelled')->get();
         $documentPath = AssetBookingDocument::where('event_id', $id)->value('document_path');
         return view('dashboardPage.events.detail-event', compact('event', 'documentPath', 'assetBookings', 'buildings', 'transportations', 'team_members', 'shorten_name'));
     }
