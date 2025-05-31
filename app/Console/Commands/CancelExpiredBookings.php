@@ -18,9 +18,9 @@ class CancelExpiredBookings extends Command
         $expiredDate = now()->subDays(4);
 
         $expiredBookings = AssetBooking::where('status', 'booked')
+            ->whereNotNull('asset_category_id')
             ->where('updated_at', '<=', $expiredDate)
             ->get();
-
         foreach ($expiredBookings as $booking) {
             $booking->status = 'cancelled';
             $booking->reason = 'Peminjaman dibatalkan, karena Anda tidak mengonfirmasi dalam 4 hari setelah pemesanan.';
