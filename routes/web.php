@@ -71,6 +71,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthenticationController::class, 'logout'])->name('logout');
 });
 
+
+Route::middleware('auth')->controller(NotificationsController::class)->group(function () {
+    Route::get('notifications', 'index')->name('notifications.index');
+});
 /// Start Dashboard
 Route::prefix('dashboard')->middleware('auth')->group(function () {
     // Super Admin
@@ -272,6 +276,9 @@ Route::group(['middleware' => ['auth']], function () {
 
                 // Upload Surat Disposisi
                 Route::post('/upload-surat-disposisi/{id}', 'uploadSuratDisposisi')->name('assetBooking.uploadSuratDisposisi');
+
+                // Export booking eksternal
+                Route::get('export-report-eksternal', 'ExportReport')->name('assetBooking.report');
             });
             // Tenant Bisa Melakukan Booking Aset
             Route::group(['middleware' => ['auth', 'profile.complete', 'role:Tenant']], function () {
@@ -284,6 +291,8 @@ Route::group(['middleware' => ['auth']], function () {
             // Tenant atau UPT PU/Admin Jurusan/Super Adminn membatalkan booking
             Route::post('/asset-booking/{id}/cancelled', 'cancelledBooking')->name('assetBooking.cancelled')
                 ->middleware(['role:Super Admin|Kaur RT|UPT PU|Admin Jurusan|Tenant|Organizer']);
+            Route::get('/asset-booking/{id}', 'bookingLetter')->name('assetBooking.letter')
+                ->middleware(['role:Super Admin|Kaur RT|UPT PU|Admin Jurusan|Tenant']);
         });
     });
 });
@@ -364,6 +373,9 @@ Route::prefix('events')->group(function () {
 
             // Tambah Aset Booking secara manual
             Route::post('/add-asset-booking', 'assetBookingManualInternal')->name('assetBookingEvent.addManual');
+
+            // Export Report Booking Internal
+            Route::get('export-report-internal', 'ExportReport')->name('assetBookingEvent.report');
         });
         // Dashboard Booking Fasilitas Umum (Kaur RT)
         Route::group(['middleware' => ['auth', 'role:Super Admin|Kaur RT']], function () {

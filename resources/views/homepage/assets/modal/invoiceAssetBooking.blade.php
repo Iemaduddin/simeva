@@ -170,9 +170,10 @@
 {{-- Tombol cetak --}}
 <div class="mt-12 mb-24 text-end">
     @if ($assetBooking->status !== 'approved_dp_payment' && $assetBooking->status !== 'approved_full_payment')
-        <button onclick="printInvoice()" class="btn btn-sm btn-outline-primary">
-            <i class="ph ph-printer"></i> Surat Pernyataan dan Formulir Peminjaman
-        </button>
+        <a href="{{ route('assetBooking.letter', $assetBooking->id) }}" target="_blank"
+            class="btn btn-sm btn-outline-primary">
+            <i class="ph ph-printer"></i> Berkas Booking
+        </a>
     @endif
     <button onclick="printInvoice()" class="btn btn-sm btn-outline-primary">
         <i class="ph ph-printer"></i> Cetak Invoice

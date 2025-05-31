@@ -1685,4 +1685,11 @@ class AssetBookingController extends Controller
             'Rekapan Booking Eksternal ' . ' - ' . $year . '.xlsx'
         );
     }
+
+    public function bookingLetter($id)
+    {
+        $assetBooking = AssetBooking::findOrFail($id);
+
+        return view('homepage/assets/booking_letter', compact('assetBooking'));
+    }
 }
