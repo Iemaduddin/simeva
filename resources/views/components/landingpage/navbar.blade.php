@@ -55,22 +55,20 @@
                                 $imageProfile = '';
                                 if (Auth::user()->hasRole('Organizer')) {
                                     $logoPath = Auth::user()->organizer->logo;
-                                    if ($logoPath && \Illuminate\Support\Facades\Storage::exists($logoPath)) {
-                                        $imageProfile = asset('storage/' . $logoPath);
-                                    } elseif ($logoPath) {
-                                        $imageProfile = asset($logoPath);
-                                    } else {
-                                        $imageProfile = asset('assets/images/user.png');
-                                    }
+                                    $imageProfile = $logoPath
+                                        ? asset('storage/' . $logoPath)
+                                        : asset('assets/images/user.png');
                                 } else {
                                     $profilPath = Auth::user()->profile_picture;
-                                    $imageProfile = $profilPath ? asset('storage/' . $profilPath) : '';
+                                    $imageProfile = $profilPath
+                                        ? asset('storage/' . $profilPath)
+                                        : asset('assets/images/user.png');
                                 }
                             @endphp
                             @if ($imageProfile !== '')
                                 <div style="width: 30px; height: 30px;">
                                     <img id="profilePicture" src="{{ $imageProfile }}" alt="Profile Picture"
-                                        class="rounded-circle object-fit-cover w-100 h-100">
+                                        class="profile-picture rounded-circle object-fit-cover w-100 h-100">
                                 </div>
                             @else
                                 <i class="ph ph-user-circle"></i>
@@ -89,11 +87,39 @@
                             aria-labelledby="userDropdown">
                             <div class="card border border-gray-100 rounded-12 box-shadow-custom">
                                 <div class="card-body p-16">
-                                    @hasanyrole(['Super Admin', 'UPT PU', 'Kaur RT', 'Admin Jurusan', 'Organizer'])
-                                        <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
-                                                href="{{ route('stakeholderUsers') }}"><i class="ph ph-user"></i>
-                                                Dashboard</a></li>
-                                    @endhasanyrole
+                                    @php
+                                        $shorten_name = Auth::user()->organizer->shorten_name ?? '-';
+                                        $kode_jurusan_user = Auth::user()->jurusan->kode_jurusan ?? '-';
+                                        $menuItems = [
+                                            [
+                                                'role' => 'Super Admin',
+                                                'route' => route('dashboard.super-admin'),
+                                            ],
+                                            [
+                                                'role' => 'Organizer',
+                                                'route' => route('dashboard.organizer', $shorten_name),
+                                            ],
+                                            [
+                                                'role' => 'Admin Jurusan',
+                                                'route' => route('dashboard.admin-jurusan', $kode_jurusan_user),
+                                            ],
+                                            [
+                                                'role' => 'Kaur RT',
+                                                'route' => route('dashboard.kaur-rt-pu'),
+                                            ],
+                                            [
+                                                'role' => 'UPT PU',
+                                                'route' => route('dashboard.kaur-rt-pu'),
+                                            ],
+                                        ];
+                                    @endphp
+                                    @foreach ($menuItems as $item)
+                                        @hasrole($item['role'])
+                                            <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
+                                                    href="{{ $item['route'] }}"><i class="ph ph-user"></i>
+                                                    Dashboard</a></li>
+                                        @endhasrole
+                                    @endforeach
                                     @hasanyrole(['Participant', 'Tenant'])
                                         <li><a class="dropdown-item hover-bg-main-50  text-neutral-700"
                                                 href="{{ route('profileUserHomepage') }}"><i class="ph ph-user"></i>
@@ -225,81 +251,79 @@
                         @hasanyrole(['Participant', 'Tenant'])
                             <div class="dropdown flex-shrink-0">
                                 <button
-                                    class="w-44 h-44 flex-center bg-main-50 rounded-circle text-main-600 text-lg hover-text-white hover-bg-main-600 transition-1"
+                                    class="w-44 h-44 d-flex justify-content-center align-items-center bg-main-50 rounded-circle text-main-600 text-lg hover-text-white hover-bg-main-600 transition-1 position-relative"
                                     type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="ph-bold ph-bell-simple"></i>
                                     @if ($unreadNotifications->count() > 0)
                                         <span
-                                            class="w-22 h-22 flex-center rounded-circle bg-main-two-600 text-white text-xs position-absolute top-n6 end-n4">
-                                            {{ $unreadNotifications->count() }}</span>
+                                            class="w-22 h-22 d-flex justify-content-center align-items-center rounded-circle bg-main-two-600 text-white text-xs position-absolute top-0 start-100 translate-middle">
+                                            {{ $unreadNotifications->count() }}
+                                        </span>
                                     @endif
                                 </button>
-                                <div class="dropdown-menu to-top dropdown-menu-lg bg-white p-0 scroll-sm">
+
+                                <div class="dropdown-menu dropdown-menu-end dropdown-menu-lg bg-white p-0 overflow-hidden"
+                                    style="min-width: 320px; max-width: 100vw;">
                                     <div
-                                        class="m-16 py-12 px-16 rounded-10 bg-main-50 mb-16 d-flex align-items-center justify-content-between gap-2">
-                                        <div>
-                                            <h6 class="text-lg text-main-light fw-semibold mb-0">Notifications</h6>
-                                        </div>
+                                        class="m-16 py-12 px-16 rounded-10 bg-main-50 mb-16 d-flex justify-content-between align-items-center">
+                                        <h6 class="text-lg text-main-light fw-semibold mb-0">Notifications</h6>
                                         <span
                                             class="text-main-600 fw-semibold text-lg w-40-px h-40-px rounded-circle bg-base d-flex justify-content-center align-items-center">
                                             {{ $unreadNotifications->count() }}
                                         </span>
                                     </div>
 
-                                    <div class="max-h-400-px overflow-y-auto scroll-sm pe-4" id="notif-list">
+                                    <div class="max-h-400-px overflow-y-auto scroll-sm px-3" id="notif-list">
                                         @foreach ($displayNotifications as $notification)
                                             @php
                                                 $data = $notification->data;
                                                 $isRead = $notification->read_at !== null;
-
-                                                // Ambil pengirim notifikasi
                                                 $sender = \App\Models\User::find($data['user_id']);
                                                 $profilePhoto = $sender->profile_picture ?? 'default-avatar.png';
-
-                                                // Cek apakah ada booking dan asset
                                                 $booking = $data['booking'] ?? null;
                                                 $asset = $booking->asset ?? null;
                                                 $jurusan = $asset->jurusan ?? null;
-
-                                                // Tentukan route berdasarkan jurusan
-
-                                                $routeName = 'profile.myAssetBooking';
-                                                $routeParam = ['id' => $sender->id];
-
+                                                $role = auth()->user()->getRoleNames()->first();
+                                                if ($role === 'Tenant') {
+                                                    $routeName = 'profile.myAssetBooking';
+                                                } elseif ($role === 'Participant') {
+                                                    $routeName = 'profile.myEvent';
+                                                }
                                             @endphp
 
                                             <a href="javascript:void(0);"
-                                                class="px-24 py-12 d-flex align-items-start gap-3 mb-2 justify-content-between"
-                                                onclick="markAsRead('{{ $notification->id }}', '{{ route($routeName, $routeParam) }}')">
-                                                <div class="text-black hover-text-primary d-flex align-items-center gap-3">
+                                                class="px-16 py-12 d-flex flex-column flex-md-row align-items-start justify-content-between gap-3 mb-2"
+                                                onclick="markAsRead('{{ $notification->id }}', '{{ route($routeName) }}')">
+
+                                                <div class="d-flex align-items-center gap-3 w-100">
                                                     <img src="{{ $profilePhoto ? asset('storage/' . $profilePhoto) : asset('assets/images/user.png') }}"
                                                         onerror="this.onerror=null; this.src='{{ asset('assets/images/user.png') }}';"
-                                                        alt="User Avatar" class="rounded-circle flex-shrink-0"
-                                                        width="50px">
-                                                    <div>
-                                                        <h6 class="text-md fw-semibold mb-4">
-                                                            {{ $data['title'] ?? 'Notifikasi Baru' }}
-                                                        </h6>
-                                                        <p class="mb-0 text-sm text-secondary-light text-w-200-px text-line-1">
+                                                        alt="User Avatar" class="rounded-circle flex-shrink-0" width="50"
+                                                        height="50">
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="text-md fw-semibold mb-2">
+                                                            {{ $data['title'] ?? 'Notifikasi Baru' }}</h6>
+                                                        <p class="mb-0 text-sm text-secondary-light text-truncate"
+                                                            style="max-width: 220px;">
                                                             {{ $data['message'] ?? 'Tidak ada pesan' }}
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <span class="text-sm text-secondary-light flex-shrink-0">
-                                                    {{ $isRead ? 'Telah dibaca' : Carbon::parse($notification->created_at)->diffForHumans() }}
+
+                                                <span class="text-sm text-secondary-light text-nowrap mt-2 mt-md-0">
+                                                    {{ $isRead ? 'Telah dibaca' : \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }}
                                                 </span>
                                             </a>
                                         @endforeach
-
                                     </div>
 
-                                    <div class="text-center py-12 px-16">
+                                    <div class="text-center py-12 px-16 border-top">
                                         <a href="{{ route('notifications.index') }}"
-                                            class="text-primary-600 fw-semibold text-md">See All
-                                            Notifications</a>
+                                            class="text-primary-600 fw-semibold text-md">See All Notifications</a>
                                     </div>
                                 </div>
                             </div>
+
                         @endhasanyrole
                         <!-- Jika Sudah Login, Tampilkan Nama & Dropdown -->
                         <div class="dropdown d-none d-lg-block ">
