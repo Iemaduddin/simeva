@@ -1,66 +1,140 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Simeva - Sistem Informasi Manajemen Event dan Aset
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Simeva** adalah sistem informasi berbasis web yang dirancang untuk mendukung pengelolaan event dan aset secara terintegrasi di lingkungan institusi, khususnya kampus. Aplikasi ini memfasilitasi berbagai jenis pengguna (multi-role system) dengan kebutuhan spesifik, mulai dari manajemen event, peminjaman aset, hingga pengelolaan peserta dan notifikasi real-time.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🚀 Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 1. 🎯 Event Management
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Modul ini dikhususkan untuk pengguna dengan role **Organizer**, dengan kemampuan sebagai berikut:
 
-## Learning Laravel
+-   CRUD event (buat, ubah, hapus, dan lihat detail event)
+-   Otomatisasi peminjaman aset saat pembuatan event
+-   Manajemen peserta event
+-   Manajemen tamu undangan & pembicara
+-   Presensi peserta dan panitia berdasarkan tahapan event
+-   Export daftar kehadiran ke dalam format Excel
+-   Otomatisasi pembuatan surat peminjaman aset dan undangan untuk tamu
+-   Fitur internal calendar untuk keperluan event pribadi non-publik
+-   Pengelolaan anggota tim event oleh setiap organizer
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 2. 🏛️ Asset Management
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Simeva membagi aset ke dalam dua kategori utama:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+-   **Fasilitas Umum (Kaur Rumah Tangga):** Aset yang dapat dipinjam oleh civitas kampus secara gratis.
+-   **Fasilitas Jurusan (Admin Jurusan):** Aset khusus jurusan masing-masing, juga dikelola secara gratis.
 
-## Laravel Sponsors
+Fitur:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+-   CRUD Aset (tambah, ubah, hapus, dan tampilkan aset)
+-   Penempatan aset di beranda untuk publikasi/promosi
+-   Klasifikasi aset berdasarkan scope: umum vs jurusan
 
-### Premium Partners
+### 3. 📅 Asset Bookings Management
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Proses peminjaman aset melibatkan alur validasi oleh role tertentu:
 
-## Contributing
+-   **Organizer:** Meminjam aset internal kampus (fasilitas umum dan jurusan), secara gratis.
+-   **Tenant:** Peminjam dari luar kampus, dengan jalur berbayar.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Alur:
 
-## Code of Conduct
+-   Pengajuan peminjaman berdasarkan kalender penggunaan aset
+-   Booking harian maupun tahunan
+-   Status real-time: pending, approved, rejected, cancelled
+-   Riwayat peminjaman oleh masing-masing tenant/organizer
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## ✉️ Notifikasi Sistem & Email
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Simeva dilengkapi dengan fitur notifikasi dan email:
 
-## License
+-   Notifikasi sistem untuk permintaan booking, approved booking dan lainnya
+-   Email otomatis untuk:
+    -   Status peminjaman aset
+    -   Undangan peserta atau pembicara
+    -   Pendaftaran event
+    -   Informasi penting lainnya
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 👥 Role & Hak Akses
+
+Simeva menyediakan sistem multi-user dengan 7 role utama:
+
+| Role              | Akses & Tanggung Jawab                                                               |
+| ----------------- | ------------------------------------------------------------------------------------ |
+| **Super Admin**   | Akses penuh ke seluruh sistem, termasuk CRUD user, jurusan, dan prodi                |
+| **Organizer**     | Kelola event, peserta, presensi, peminjaman aset, dan anggota tim event              |
+| **UPT PU**        | Kelola peminjaman aset eksternal (berbayar), manajemen tenant                        |
+| **Kaur RT**       | Kelola aset fasilitas umum, approval booking internal (gratis)                       |
+| **Admin Jurusan** | Kelola aset jurusan, approval booking internal (gratis)                              |
+| **Participant**   | Mahasiswa atau pihak luar yang bisa mendaftar event, melihat riwayat, harga dinamis  |
+| **Tenant**        | Peminjam eksternal aset kampus, dengan fitur kalender booking dan histori peminjaman |
+
+---
+
+## 🧩 Fitur Tambahan
+
+-   Manajemen user berbasis role
+-   Participant mendapatkan E-Ticket untuk presensi kehadiran
+-   CRUD Jurusan dan Program Studi
+-   Harga tiket event otomatis berdasarkan jenis peserta (internal/eksternal)
+-   Export data ke Excel
+-   Kalender internal user
+-   Riwayat peminjaman
+-   Validasi booking aset sesuai wewenang
+-   Terdapat invoice untuk tenant
+-   Dashboard real-time untuk pengguna yang berbeda (super admin, organizer, tenant, dll.)
+
+---
+
+## 🛠️ Teknologi
+
+-   **Backend:** Laravel
+-   **Frontend:** Blade
+-   **Database:** MySQL
+
+---
+
+## ⚙️ Instalasi
+
+```bash
+# Clone repository
+git clone https://github.com/Iemaduddin/simeva.git
+cd simeva
+
+# Install dependencies
+composer install
+npm install
+
+# Copy environment
+cp .env.example .env
+
+# Generate app key
+php artisan key:generate
+
+# Migrate dan seed database
+php artisan migrate --seed
+
+# Jalankan server lokal
+php artisan serve
+```
+
+---
+
+## 📄 Lisensi
+
+Aplikasi ini dikembangkan untuk mendukung proses manajemen event dan aset di lingkungan institusi kampus. Lisensi mengikuti ketentuan dari pemilik repository ini. Kontak jika ada pertanyaan atau permintaan lisensi tambahan.
+
+---
+
+### 📬 Kontak
+
+Silakan hubungi kami untuk pertanyaan, saran, atau kontribusi:
+
+Email: iemaduddin17@gmail.com
