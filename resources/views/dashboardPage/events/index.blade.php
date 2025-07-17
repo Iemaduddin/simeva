@@ -79,6 +79,9 @@
                         name: 'register_date',
                         render: function(data, type, row) {
                             function formatDate(dateStr) {
+                                if (!dateStr || dateStr.startsWith('0000')) {
+                                    return '-';
+                                }
                                 let date = new Date(dateStr);
                                 let options = {
                                     day: '2-digit',

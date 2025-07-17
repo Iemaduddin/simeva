@@ -587,17 +587,21 @@ class AssetBookingController extends Controller
             ->where('id', '!==', $id)->exists();
         if ($request->booking_type_annual) {
             if ($conflict) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Aset ini sudah digunakan pada bulan dan tahun tersebut. Silakan pilih waktu lain.'
-                ], 422);
+                notyf()->ripple(true)->error('Aset ini sudah digunakan pada bulan dan tahun tersebut. Silakan pilih waktu lain.');
+                return redirect()->back();
+                // return response()->json([
+                //     'status' => 'error',
+                //     'message' => 'Aset ini sudah digunakan pada bulan dan tahun tersebut. Silakan pilih waktu lain.'
+                // ], 422);
             }
         } else {
             if ($conflict) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Aset ini sudah dipesan pada tanggal dan waktu tersebut. Silakan pilih waktu lain.'
-                ], 422);
+                notyf()->ripple(true)->error('Aset ini sudah dipesan pada tanggal dan waktu tersebut. Silakan pilih waktu lain.');
+                return redirect()->back();
+                // return response()->json([
+                //     'status' => 'error',
+                //     'message' => 'Aset ini sudah dipesan pada tanggal dan waktu tersebut. Silakan pilih waktu lain.'
+                // ], 422);
             }
         }
 
@@ -613,7 +617,8 @@ class AssetBookingController extends Controller
                         'usage_event_name' => $request->usage_event_name,
                         'payment_type' => $request->payment_type,
                         'total_amount' => $request->amount,
-                        'status' => 'submission_booking'
+                        'status' => 'submission_booking',
+                        'reason' => NULL
                     ]);
                 } else {
                     $booking->update([
@@ -623,7 +628,8 @@ class AssetBookingController extends Controller
                         'usage_event_name' => $request->usage_event_name,
                         'payment_type' => $request->payment_type,
                         'total_amount' => $request->amount,
-                        'status' => 'submission_booking'
+                        'status' => 'submission_booking',
+                        'reason' => NULL
                     ]);
                 }
 
@@ -667,11 +673,13 @@ class AssetBookingController extends Controller
             notyf()->ripple(true)->success('Rebooking aset berhasil!');
             return redirect()->back();
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan saat rebooking aset.',
-                'error' => $e->getMessage()
-            ], 500);
+            notyf()->ripple(true)->error('Terjadi kesalahan saat rebooking aset.');
+            return redirect()->back();
+            // return response()->json([
+            //     'status' => 'error',
+            //     'message' => 'Terjadi kesalahan saat rebooking aset.',
+            //     'error' => $e->getMessage()
+            // ], 500);
         }
     }
 
@@ -811,7 +819,6 @@ class AssetBookingController extends Controller
             foreach ($documents as $field => $documentName) {
                 if ($request->hasFile($field)) {
                     $file = $request->file($field);
-
                     $extension = $file->getClientOriginalExtension();
                     $userName = Str::slug(auth()->user()->name); // Konversi ke format aman
                     $eventName = Str::slug($booking->usage_event_name); // Konversi ke format aman
@@ -848,7 +855,8 @@ class AssetBookingController extends Controller
                 }
             }
             $booking->update([
-                'status' => $booking->payment_type === 'dp' ? 'submission_dp_payment' : 'submission_full_payment'
+                'status' => $booking->payment_type === 'dp' ? 'submission_dp_payment' : 'submission_full_payment',
+                'reason' => NULL
             ]);
             $upt_pu = User::role('UPT PU')->get(); // Semua Tenant
 
@@ -857,17 +865,20 @@ class AssetBookingController extends Controller
 
 
             DB::commit(); // ✅ Semua sukses, simpan ke database
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Pengajuan Bukti Pembayaran dan Berkas berhasil.',
-            ]);
+            notyf()->ripple(true)->success('Pengajuan Bukti Pembayaran dan Berkas berhasil.');
+            return redirect()->back();
+            // return response()->json([
+            //     'status' => 'success',
+            //     'message' => 'Pengajuan Bukti Pembayaran dan Berkas berhasil.',
+            // ]);
         } catch (\Exception $e) {
             DB::rollBack(); // ❌ Jika ada error, batalkan semua perubahan
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
+            notyf()->ripple(true)->error('Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back();
+            // return response()->json([
+            //     'status' => 'error',
+            //     'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            // ], 500);
         }
     }
 
@@ -986,6 +997,7 @@ class AssetBookingController extends Controller
                     $successMessage = 'Pembayaran dan Pengajuan Berkas berhasil dikonfirmasi';
                 }
 
+                $transaction->save();
 
                 $booking->update([
                     'reason' => '',
@@ -1003,7 +1015,6 @@ class AssetBookingController extends Controller
             $confirmBooking = $request->actionConfirmPayment;
 
             $booking->save();
-            $transaction->save();
             // 🔥 Kirim Notifikasi ke User
             Notification::send($user, new BookingAssetConfirmPayment($booking->booking_number, $booking, $confirmBooking, Auth::user()));
 
@@ -1070,7 +1081,8 @@ class AssetBookingController extends Controller
             }
 
             $booking->update([
-                'status' => 'submission_full_payment'
+                'status' => 'submission_full_payment',
+                'reason' => NULL
             ]);
             $upt_pu = User::role('UPT PU')->get(); // Semua Tenant
 
@@ -1080,16 +1092,20 @@ class AssetBookingController extends Controller
 
             DB::commit(); // ✅ Semua sukses, simpan ke database
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Upload Bukti Pembayaran dan Berkas berhasil',
-            ]);
+            // return response()->json([
+            //     'status' => 'success',
+            //     'message' => 'Upload Bukti Pembayaran dan Berkas berhasil',
+            // ]);
+            notyf()->ripple(true)->success('Upload Bukti Pembayaran dan Berkas berhasil.');
+            return redirect()->back();
         } catch (\Exception $e) {
             DB::rollBack(); // ❌ Jika ada error, batalkan semua perubahan
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
+            // return response()->json([
+            //     'status' => 'error',
+            //     'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            // ], 500);
+            notyf()->ripple(true)->error('Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back();
         }
     }
 
@@ -1159,16 +1175,20 @@ class AssetBookingController extends Controller
             $assetBooking->save();
 
             DB::commit(); // ✅ Simpan perubahan jika berhasil
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Booking aset berhasil dibatalkan!',
-            ]);
+            // return response()->json([
+            //     'status' => 'success',
+            //     'message' => 'Booking aset berhasil dibatalkan!',
+            // ]);
+            notyf()->ripple(true)->success('Booking aset berhasil dibatalkan!');
+            return redirect()->back();
         } catch (\Exception $e) {
             DB::rollBack(); // ❌ Jika ada error, batalkan semua perubahan
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
+            // return response()->json([
+            //     'status' => 'error',
+            //     'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            // ], 500);
+            notyf()->ripple(true)->error('Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back();
         }
     }
     public function cancelledAssetBookingEvent(Request $request, $id)

@@ -134,46 +134,87 @@ class EventController extends Controller
     {
 
         $organizer_id = Organizer::where('shorten_name', $shorten_name)->pluck('id')->first();
-        $events = Event::with('steps')->where('organizer_id', $organizer_id)->get();
+        $events = Event::with('steps')->where('organizer_id', $organizer_id)->latest();
         $tableId = $shorten_name . '-EventsTable';
 
 
         return DataTables::of($events)
             ->addIndexColumn()
             ->editColumn('event_date_location', function ($event) {
-                $eventSteps = EventStep::where('event_id', $event->id)->orderBy('event_date')->get();
-                $eventCount = $eventSteps->count();
+                $eventSteps = EventStep::where('event_id', $event->id)
+                    ->orderBy('event_date')
+                    ->get();
 
-                return $eventSteps->map(function ($step, $index) use ($eventCount) {
-                    $stepInfo = $eventCount > 1 ? ($index + 1) . ". " . ucwords($step->step_name) . " (" : "";
-                    $stepInfo .= Carbon::parse($step->event_date)->translatedFormat('d M Y') . ", " .
-                        Carbon::parse($step->event_time_start)->translatedFormat('H.i') . " - " .
-                        Carbon::parse($step->event_time_end)->translatedFormat('H.i') . ")";
+                $grouped = $eventSteps->groupBy(function ($step) {
+                    return implode('|', [
+                        $step->event_time_start,
+                        $step->event_time_end,
+                        $step->location_type,
+                        $step->location,
+                    ]);
+                });
 
-                    // Decode lokasi (JSON)
-                    $locations = json_decode($step->location, true);
+                return $grouped->map(function ($steps) {
+                    $firstStep = $steps->first();
+
+                    // Urutkan tanggal
+                    $dates = $steps->pluck('event_date')->map(function ($d) {
+                        return Carbon::parse(trim($d));
+                    })->sort()->values();
+
+                    // Bagi jadi rentang tanggal berurutan
+                    $ranges = [];
+                    $start = $dates[0];
+                    $end = $dates[0];
+
+                    for ($i = 1; $i < $dates->count(); $i++) {
+                        if ($dates[$i]->isSameDay($end->copy()->addDay())) {
+                            $end = $dates[$i];
+                        } else {
+                            $ranges[] = [$start, $end];
+                            $start = $end = $dates[$i];
+                        }
+                    }
+                    $ranges[] = [$start, $end];
+
+                    // Format rentang tanggal
+                    $dateText = collect($ranges)->map(function ($range) {
+                        [$start, $end] = $range;
+                        if ($start->equalTo($end)) {
+                            return $start->translatedFormat('d M Y');
+                        } elseif ($start->month === $end->month) {
+                            return $start->translatedFormat('d') . ' - ' . $end->translatedFormat('d M Y');
+                        } else {
+                            return $start->translatedFormat('d M') . ' - ' . $end->translatedFormat('d M Y');
+                        }
+                    })->implode(', ');
+
+                    // Waktu
+                    $timeText = Carbon::parse($firstStep->event_time_start)->translatedFormat('H.i') . ' - ' .
+                        Carbon::parse($firstStep->event_time_end)->translatedFormat('H.i');
+
+                    // Lokasi
+                    $locations = json_decode($firstStep->location, true);
                     $locationText = collect($locations)->map(function ($loc) {
                         switch ($loc['type']) {
                             case 'offline':
                                 $assetName = Asset::where('id', $loc['location'])->value('name');
-                                return ($assetName ?? $loc["location"]) . " <strong>(Offline)</strong>";
-
+                                return ($assetName ?? $loc['location']) . ' <strong>(Offline)</strong>';
                             case 'online':
-                                return  $loc['location'] . " <strong>(Online)</strong>";
+                                return $loc['location'] . ' <strong>(Online)</strong>';
                             case 'hybrid':
                                 $assetName = Asset::where('id', $loc['location_offline'])->value('name');
                                 return "<ul>
-                                            <li><strong>Hybrid</strong>
+                                            <li><strong>Hybrid</strong></li>
                                             <li>Offline: " . ($assetName ?? $loc['location_offline']) . "</li>
                                             <li>Online: " . $loc['location_online'] . "</li>
                                         </ul>";
-
                             default:
                                 return "📌 Lokasi tidak diketahui";
                         }
                     })->implode('<br>');
 
-                    return $stepInfo . "<br>" . $locationText;
+                    return "<strong>{$dateText}</strong><br>{$timeText}<br>{$locationText}";
                 })->implode('<br><br>');
             })
             ->editColumn('quota', function ($event) {
@@ -239,7 +280,7 @@ class EventController extends Controller
         $buildings = Asset::with('jurusan')->where('type', 'building')->where('booking_type', 'daily')->get();
         $transportations = Asset::with('jurusan')->where('type', 'transportation')->where('booking_type', 'daily')->get();
 
-        $team_members = TeamMember::select('id', 'name')->where('organizer_id', $organizer_id)->where('level', 'OC')->get();
+        $team_members = TeamMember::where('organizer_id', $organizer_id)->where('level', 'OC')->get();
         return view('dashboardPage.events.add-event', compact('buildings', 'transportations', 'team_members', 'shorten_name'));
     }
     public function updateEventPage($id)
@@ -271,91 +312,92 @@ class EventController extends Controller
     }
     public function storeEvent(Request $request)
     {
+
         // dd($request->all());
-        $validator = Validator::make($request->all(), [
-            'title' => 'required',
-            'theme' => 'required',
-            'description' => 'required',
-            'scope' => 'required',
-            'quota' => 'required',
-            'name_category_prices' => 'array',
-            'prices' => 'array',
-            'scopes' => 'array',
-            'event_leader' => 'required',
-            'is_publish' => 'required|in:0,1',
-            'is_free' => 'required|in:0,1',
-            // 'benefit' => 'array',
-            // 'contact_person' => 'array',
-            // 'date_registration_start' => 'required',
-            // 'date_registration_end' => 'required',
-            'event_dates' => 'required|array',
-            'event_time_starts' => 'required|array',
-            'event_time_ends' => 'required|array',
-            'execution_systems' => 'required|array',
-            'locations' => 'array',
-            'event_date_speakers' => 'array',
-            'speaker_name' => 'array',
-            'role' => 'array',
-            // 'questions' => 'required|array',
-            // 'field_types' => 'required|array',
-            // 'answers' => 'required|array',
-            // 'is_required' => 'required|in:0,1',
-            // 'pamphlet_path' => 'required',
-            // 'banner_path' => 'required',
-            // 'sponsored_by' => 'required',
-            // 'media_partner' => 'required',
+        // $validator = Validator::make($request->all(), [
+        //     'title' => 'required',
+        //     'theme' => 'required',
+        //     'description' => 'required',
+        //     'scope' => 'required',
+        //     'quota' => 'required',
+        //     'name_category_prices' => 'array',
+        //     'prices' => 'array',
+        //     'scopes' => 'array',
+        //     'event_leader' => 'required',
+        //     'is_publish' => 'required|in:0,1',
+        //     'is_free' => 'required|in:0,1',
+        //     // 'benefit' => 'array',
+        //     // 'contact_person' => 'array',
+        //     // 'date_registration_start' => 'required',
+        //     // 'date_registration_end' => 'required',
+        //     'event_dates' => 'required|array',
+        //     'event_time_starts' => 'required|array',
+        //     'event_time_ends' => 'required|array',
+        //     'execution_systems' => 'required|array',
+        //     'locations' => 'array',
+        //     'event_date_speakers' => 'array',
+        //     // 'speaker_name' => 'array',
+        //     // 'role' => 'array',
+        //     // 'questions' => 'required|array',
+        //     // 'field_types' => 'required|array',
+        //     // 'answers' => 'required|array',
+        //     // 'is_required' => 'required|in:0,1',
+        //     // 'pamphlet_path' => 'required',
+        //     // 'banner_path' => 'required',
+        //     // 'sponsored_by' => 'required',
+        //     // 'media_partner' => 'required',
 
-        ], [
-            'title.required' => 'Judul acara wajib diisi.',
-            'theme.required' => 'Tema acara wajib diisi.',
-            'description.required' => 'Deskripsi acara wajib diisi.',
-            'scope.required' => 'Lingkup acara wajib diisi.',
-            'quota.required' => 'Kuota peserta wajib diisi.',
-            'event_leader.required' => 'Nama ketua acara wajib diisi.',
-            // 'name_category_prices.array' => 'Waktu mulai acara harus berupa array.',
-            // 'prices.array' => 'Waktu mulai acara harus berupa array.',
-            // 'scopes.array' => 'Waktu mulai acara harus berupa array.',
-            'is_free.required' => 'Status biaya event wajib diisi.',
-            'is_free.in' => 'Status biaya event  harus bernilai Free atau Paid.',
-            'is_publish.required' => 'Status publikasi wajib diisi.',
-            'is_publish.in' => 'Status publikasi harus bernilai Ya atau Tidak.',
-            // 'benefit.array' => 'Benefit harus berupa array.',
-            // 'contact_person.array' => 'Contact person harus berupa array.',
+        // ], [
+        //     'title.required' => 'Judul acara wajib diisi.',
+        //     'theme.required' => 'Tema acara wajib diisi.',
+        //     'description.required' => 'Deskripsi acara wajib diisi.',
+        //     'scope.required' => 'Lingkup acara wajib diisi.',
+        //     'quota.required' => 'Kuota peserta wajib diisi.',
+        //     'event_leader.required' => 'Nama ketua acara wajib diisi.',
+        //     // 'name_category_prices.array' => 'Waktu mulai acara harus berupa array.',
+        //     // 'prices.array' => 'Waktu mulai acara harus berupa array.',
+        //     // 'scopes.array' => 'Waktu mulai acara harus berupa array.',
+        //     'is_free.required' => 'Status biaya event wajib diisi.',
+        //     'is_free.in' => 'Status biaya event  harus bernilai Free atau Paid.',
+        //     'is_publish.required' => 'Status publikasi wajib diisi.',
+        //     'is_publish.in' => 'Status publikasi harus bernilai Ya atau Tidak.',
+        //     // 'benefit.array' => 'Benefit harus berupa array.',
+        //     // 'contact_person.array' => 'Contact person harus berupa array.',
 
-            'date_registration_start.required' => 'Tanggal mulai pendaftaran wajib diisi.',
-            'date_registration_end.required' => 'Tanggal akhir pendaftaran wajib diisi.',
-            'event_dates.required' => 'Tanggal acara wajib diisi.',
-            // 'event_dates.array' => 'Tanggal acara harus berupa array.',
-            'event_time_starts.required' => 'Waktu mulai acara wajib diisi.',
-            // 'event_time_starts.array' => 'Waktu mulai acara harus berupa array.',
-            'event_time_ends.required' => 'Waktu selesai acara wajib diisi.',
-            // 'event_time_ends.array' => 'Waktu selesai acara harus berupa array.',
-            'execution_systems.required' => 'Sistem pelaksanaan wajib diisi.',
-            // 'execution_systems.array' => 'Sistem pelaksanaan harus berupa array.',
-            // 'locations.required' => 'Lokasi acara wajib diisi.',
-            // 'locations.array' => 'Lokasi acara harus berupa array.',
+        //     'date_registration_start.required' => 'Tanggal mulai pendaftaran wajib diisi.',
+        //     'date_registration_end.required' => 'Tanggal akhir pendaftaran wajib diisi.',
+        //     'event_dates.required' => 'Tanggal acara wajib diisi.',
+        //     // 'event_dates.array' => 'Tanggal acara harus berupa array.',
+        //     'event_time_starts.required' => 'Waktu mulai acara wajib diisi.',
+        //     // 'event_time_starts.array' => 'Waktu mulai acara harus berupa array.',
+        //     'event_time_ends.required' => 'Waktu selesai acara wajib diisi.',
+        //     // 'event_time_ends.array' => 'Waktu selesai acara harus berupa array.',
+        //     'execution_systems.required' => 'Sistem pelaksanaan wajib diisi.',
+        //     // 'execution_systems.array' => 'Sistem pelaksanaan harus berupa array.',
+        //     // 'locations.required' => 'Lokasi acara wajib diisi.',
+        //     // 'locations.array' => 'Lokasi acara harus berupa array.',
 
-            // 'event_date_speakers.required' => 'Tanggal sesi pembicara wajib diisi.',
-            // 'event_date_speakers.array' => 'Tanggal sesi pembicara harus berupa array.',
-            // 'speaker_name.required' => 'Nama pembicara wajib diisi.',
-            // 'speaker_name.array' => 'Nama pembicara harus berupa array.',
-            // 'role.required' => 'Peran pembicara wajib diisi.',
-            // 'role.array' => 'Peran pembicara harus berupa array.',
-            // 'questions.required' => 'Pertanyaan wajib diisi.',
-            // 'questions.array' => 'Pertanyaan harus berupa array.',
-            // 'field_types.required' => 'Tipe field wajib diisi.',
-            // 'field_types.array' => 'Tipe field harus berupa array.',
-            // 'answers.required' => 'Jawaban wajib diisi.',
-            // 'answers.array' => 'Jawaban harus berupa array.',
-            // 'is_required.required' => 'Status required wajib diisi.',
-            // 'is_required.in' => 'Status required harus bernilai Ya atau Tidak.',
-        ]);
+        //     // 'event_date_speakers.required' => 'Tanggal sesi pembicara wajib diisi.',
+        //     // 'event_date_speakers.array' => 'Tanggal sesi pembicara harus berupa array.',
+        //     // 'speaker_name.required' => 'Nama pembicara wajib diisi.',
+        //     // 'speaker_name.array' => 'Nama pembicara harus berupa array.',
+        //     // 'role.required' => 'Peran pembicara wajib diisi.',
+        //     // 'role.array' => 'Peran pembicara harus berupa array.',
+        //     // 'questions.required' => 'Pertanyaan wajib diisi.',
+        //     // 'questions.array' => 'Pertanyaan harus berupa array.',
+        //     // 'field_types.required' => 'Tipe field wajib diisi.',
+        //     // 'field_types.array' => 'Tipe field harus berupa array.',
+        //     // 'answers.required' => 'Jawaban wajib diisi.',
+        //     // 'answers.array' => 'Jawaban harus berupa array.',
+        //     // 'is_required.required' => 'Status required wajib diisi.',
+        //     // 'is_required.in' => 'Status required harus bernilai Ya atau Tidak.',
+        // ]);
 
-        if ($validator->fails()) {
-            $firstError = $validator->errors()->first(); // Ambil error pertama dari validasi
-            notyf()->ripple(true)->error($firstError);
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
+        // if ($validator->fails()) {
+        //     $firstError = $validator->errors()->first(); // Ambil error pertama dari validasi
+        //     notyf()->ripple(true)->error($firstError);
+        //     return redirect()->back()->withErrors($validator)->withInput();
+        // }
         DB::beginTransaction();
         try {
 
@@ -504,55 +546,48 @@ class EventController extends Controller
             $locationsOnlineIndex = 0;
             $locationIndex = 0;
             $addressIndex = 0; // Tambahkan index untuk address offline
+
             $event_steps = [];
             $asset_bookings = [];
-            foreach ($request->event_dates as $index => $event_date) {
-                $executionSystem = $request->execution_systems[$index];
-                $locations = [];
+            if (is_null($request->event_dates[0])) {
+
+                $executionSystem = $request->event_long_execution_system;
+                $eventLongLocation = [];
 
                 // ** OFFLINE **
                 if ($executionSystem === 'offline') {
-                    $location = $request->locations[$locationIndex] ?? null;
+                    $location = $request->event_long_location ?? null;
                     $locationData = [
                         'type' => 'offline',
                         'location' => $location,
                     ];
 
                     // Jika location_type manual, tambahkan address
-                    if ($request->location_type[$index] === 'manual') {
-                        $addressLocation = $request->address_locations[$addressIndex] ?? null;
+                    if ($request->event_long_location_type === 'manual') {
+                        $addressLocation = $request->address_locations ?? null;
                         if (!is_null($addressLocation)) {
                             $locationData['address'] = $addressLocation;
                         }
-                        $addressIndex++; // Hanya tambah jika offline manual
                     }
 
-                    $locations[] = $locationData;
-
-                    if (!is_null($location)) {
-                        $locationIndex++;
-                    }
+                    $eventLongLocation[] = $locationData;
                 }
 
                 // ** ONLINE **
                 elseif ($executionSystem === 'online') {
-                    $location = $request->locations[$locationIndex] ?? null;
+                    $location = $request->event_long_location ?? null;
 
-                    $locations[] = [
+                    $eventLongLocation[] = [
                         'type' => 'online',
                         'location' => $location,
                     ];
-
-                    if (!is_null($location)) {
-                        $locationIndex++;
-                    }
                 }
 
                 // ** HYBRID **
                 elseif ($executionSystem === 'hybrid') {
-                    $locationOffline = $request->locations_offline[$locationsOfflineIndex] ?? null;
-                    $addressLocationOffline = $request->address_locations_offline[$locationsOfflineIndex] ?? null;
-                    $locationOnline = $request->locations_online[$locationsOnlineIndex] ?? null;
+                    $locationOffline = $request->event_long_location_offline ?? null;
+                    $addressLocationOffline = $request->event_long_address_location_offline ?? null;
+                    $locationOnline = $request->event_long_location_online ?? null;
 
                     $locationData = [
                         'type' => 'hybrid',
@@ -560,107 +595,279 @@ class EventController extends Controller
                         'location_online' => $locationOnline,
                     ];
 
-                    if ($request->location_type[$index] === 'manual' && !is_null($addressLocationOffline)) {
+                    if ($request->event_long_location_type === 'manual' && !is_null($addressLocationOffline)) {
                         $locationData['address_location_offline'] = $addressLocationOffline;
                     }
 
-                    $locations[] = $locationData;
+                    $eventLongLocation[] = $locationData;
+                }
+                $event_dates = explode(',', $request->event_long_date);
 
-                    if (!is_null($locationOffline)) {
-                        $locationsOfflineIndex++;
-                    }
-                    if (!is_null($locationOnline)) {
-                        $locationsOnlineIndex++;
-                    }
+                // Hilangkan spasi ekstra
+                $event_dates = array_map('trim', $event_dates);
+
+                // Urutkan secara kronologis
+                sort($event_dates);
+
+
+                $timeStart = $request->event_long_time_start; // Sama untuk semua tanggal
+                $timeEnd = $request->event_long_time_end;
+                $locationType = $request->event_long_location_type;
+                // Simpan data ke tabel EventStep
+                foreach ($event_dates as $index => $event_date_raw) {
+                    $event_date = trim($event_date_raw); // Bersihkan spasi ekstra
+
+                    $event_steps[] = EventStep::create([
+                        'event_id' => $event->id,
+                        'step_name' => 'Hari ke-' . ($index + 1),
+                        'event_date' => $event_date,
+                        'event_time_start' => $timeStart,
+                        'event_time_end' => $timeEnd,
+                        'description' => null,
+                        'execution_system' => $executionSystem,
+                        'location_type' => $locationType,
+                        'location' => json_encode($eventLongLocation),
+                    ]);
                 }
 
-                // Simpan data ke tabel EventStep
-                $event_steps[] =  EventStep::create([
-                    'event_id' => $event->id,
-                    'step_name' => count($request->event_dates) > 1 ? $request->step_names[$index] : null,
-                    'event_date' => $event_date,
-                    'event_time_start' => $request->event_time_starts[$index],
-                    'event_time_end' => $request->event_time_ends[$index],
-                    'description' => $request->event_step_descriptions[$index] ?? null,
-                    'execution_system' => $executionSystem,
-                    'location_type' => $request->location_type[$index],
-                    'location' => json_encode($locations), // Simpan dalam format JSON
-                ]);
 
-                if ($request->location_type[$index] === 'campus' && $executionSystem !== 'online') {
+                if ($request->event_long_location_type === 'campus' && $executionSystem !== 'online') {
 
                     if ($executionSystem === 'offline') {
-                        $location_id = $request->locations[$locationIndex - 1] ?? null; // Ambil lokasi terakhir
+                        $location_id = $request->event_long_location ?? null; // Ambil lokasi terakhir
                     } elseif ($executionSystem === 'hybrid') {
-                        $location_id = $request->locations_offline[$locationsOfflineIndex - 1] ?? null;
+                        $location_id = $request->event_long_location_offline ?? null;
                     }
 
                     // **Pastikan location_id adalah UUID yang ada di tabel assets**
                     $locationExists = Asset::where('id', $location_id)->exists();
-                    if (!$locationExists) {
-                        continue; // Lewati jika tidak valid
+
+                    $conflictedDates = [];
+                    foreach ($event_dates as $date) {
+                        $date = trim($date); // Bersihkan spasi
+                        $usageDateStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $timeStart);
+                        $usageDateEnd = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $timeEnd);
+                        // **Cek apakah ada booking yang bentrok dengan waktu yang dipilih**
+                        $conflict = AssetBooking::where('asset_id', $location_id)
+                            ->where(function ($query) {
+                                $query->where('status', 'NOT LIKE', 'submission%')
+                                    ->where('status', '!=', 'rejected_booking')
+                                    ->where('status', '!=', 'rejected')
+                                    ->where('status', '!=', 'cancelled');
+                            })
+                            ->where(function ($query) use ($usageDateStart, $usageDateEnd) {
+                                $query->where(function ($q) use ($usageDateStart, $usageDateEnd) {
+                                    $q->where('usage_date_start', '<', $usageDateEnd)
+                                        ->where('usage_date_end', '>', $usageDateStart);
+                                });
+                            })
+                            ->exists();
+
+                        if ($conflict) {
+                            $conflictedDates[] = $date;
+                        }
+                        if ($location_id) {
+                            $booking = AssetBooking::create([
+                                'asset_id' => $location_id,
+                                'user_id' => Auth::id(),
+                                'booking_number' => '', // sementara kosong
+                                'event_id' => $event->id,
+                                'usage_date_start' => $usageDateStart,
+                                'usage_date_end' => $usageDateEnd,
+                                'usage_event_name' => $event->title,
+                                'status' => 'submission_booking',
+                            ]);
+                            $asset_bookings[] = $booking;
+
+                            // Generate nomor booking hanya untuk tanggal pertama
+                            if ($index === 0) {
+                                $scope = optional($booking->asset)->facility_scope == 'umum' ? 'FU' : 'FJ';
+                                $bookingDate = $booking->created_at->format('Ymd');
+                                $uuidClean = str_replace('-', '', $booking->id);
+                                $uuidPart1 = substr($uuidClean, 0, 4);
+                                $uuidPart2 = substr($uuidClean, -4);
+
+                                $bookingNo = strtoupper("{$scope}{$bookingDate}{$uuidPart1}{$uuidPart2}");
+                                $booking->update(['booking_number' => $bookingNo]);
+                            }
+
+                            // Klasifikasi aset berdasarkan facility_scope
+                            if (optional($booking->asset)->facility_scope === 'umum') {
+                                $umumAssets[] = $booking->asset->name;
+                            } elseif ($booking->asset->facility_scope === 'jurusan') {
+                                $jurusanAssets[] = [
+                                    'name' => $booking->asset->name,
+                                    'jurusan_id' => $booking->asset->jurusan_id,
+                                ];
+                            }
+                        }
+                        if (count($conflictedDates) > 0) {
+                            $formatted = collect($conflictedDates)->map(function ($date) {
+                                return Carbon::parse($date)->translatedFormat('d F Y');
+                            })->implode(', ');
+
+                            notyf()->ripple(true)->error("Peminjaman bentrok pada tanggal: $formatted.");
+                            return redirect()->back();
+                        }
                     }
-                    $usageDateStart = Carbon::createFromFormat('Y-m-d H:i', $request->event_dates[$index] . ' ' . $request->event_time_starts[$index]);
-                    $usageDateEnd = Carbon::createFromFormat('Y-m-d H:i', $request->event_dates[$index] . ' ' . $request->event_time_ends[$index]);
+                }
+            } else {
+                foreach ($request->event_dates as $index => $event_date) {
+                    $executionSystem = $request->execution_systems[$index];
+                    $locations = [];
 
-                    // **Cek apakah ada booking yang bentrok dengan waktu yang dipilih**
-                    $conflict = AssetBooking::where('asset_id', $location_id)
-                        ->where(function ($query) {
-                            $query->where('status', 'NOT LIKE', 'submission%')
-                                ->where('status', '!=', 'rejected_booking')
-                                ->where('status', '!=', 'rejected')
-                                ->where('status', '!=', 'cancelled');
-                        })
-                        ->where(function ($query) use ($usageDateStart, $usageDateEnd) {
-                            $query->where(function ($q) use ($usageDateStart, $usageDateEnd) {
-                                $q->where('usage_date_start', '<', $usageDateEnd)
-                                    ->where('usage_date_end', '>', $usageDateStart);
-                            });
-                        })
-                        ->exists();
-
-
-                    if ($conflict) {
-                        return response()->json([
-                            'status' => 'error',
-                            'message' => 'Aset ini sudah dipesan pada tanggal dan waktu tersebut. Silakan pilih waktu lain.'
-                        ], 422);
-                    }
-                    if ($location_id) {
-                        $booking = AssetBooking::create([
-                            'asset_id' => $location_id,
-                            'user_id' => Auth::user()->id,
-                            'booking_number' => '',
-                            'event_id' => $event->id,
-                            'usage_date_start' => $usageDateStart,
-                            'usage_date_end' => $usageDateEnd,
-                            'usage_event_name' => $event->title,
-                            'status' => 'submission_booking',
-                        ]);
-                        $asset_bookings[] = $booking;
-                    }
-                    if ($index === 0) {
-                        $scope = optional($booking->asset)->facility_scope == 'umum' ? 'FU' : 'FJ';
-                        $bookingDate = $booking->created_at->format('Ymd'); // Tanggal Booking
-
-                        // Ambil 4 karakter dari UUID dengan cara yang lebih aman
-                        $uuidPart1 = substr(str_replace('-', '', $booking->id), 0, 4);  // 4 karakter pertama tanpa "-"
-                        $uuidPart2 = substr(str_replace('-', '', $booking->id), -4); // 4 karakter terakhir tanpa "-"
-
-                        // Generate booking number
-                        $bookingNo = "{$scope}{$bookingDate}{$uuidPart1}{$uuidPart2}";
-
-                        // Update booking_number
-                        $booking->update(['booking_number' => strtoupper($bookingNo)]);
-                    }
-
-                    if (optional($booking->asset)->facility_scope === 'umum') {
-                        $umumAssets[] = $booking->asset->name;
-                    } elseif ($booking->asset->facility_scope === 'jurusan') {
-                        $jurusanAssets[] = [
-                            'name' => $booking->asset->name,
-                            'jurusan_id' => $booking->asset->jurusan_id,
+                    // ** OFFLINE **
+                    if ($executionSystem === 'offline') {
+                        $location = $request->locations[$locationIndex] ?? null;
+                        $locationData = [
+                            'type' => 'offline',
+                            'location' => $location,
                         ];
+
+                        // Jika location_type manual, tambahkan address
+                        if ($request->location_type[$index] === 'manual') {
+                            $addressLocation = $request->address_locations[$addressIndex] ?? null;
+                            if (!is_null($addressLocation)) {
+                                $locationData['address'] = $addressLocation;
+                            }
+                            $addressIndex++; // Hanya tambah jika offline manual
+                        }
+
+                        $locations[] = $locationData;
+
+                        if (!is_null($location)) {
+                            $locationIndex++;
+                        }
+                    }
+
+                    // ** ONLINE **
+                    elseif ($executionSystem === 'online') {
+                        $location = $request->locations[$locationIndex] ?? null;
+
+                        $locations[] = [
+                            'type' => 'online',
+                            'location' => $location,
+                        ];
+
+                        if (!is_null($location)) {
+                            $locationIndex++;
+                        }
+                    }
+
+                    // ** HYBRID **
+                    elseif ($executionSystem === 'hybrid') {
+                        $locationOffline = $request->locations_offline[$locationsOfflineIndex] ?? null;
+                        $addressLocationOffline = $request->address_locations_offline[$locationsOfflineIndex] ?? null;
+                        $locationOnline = $request->locations_online[$locationsOnlineIndex] ?? null;
+
+                        $locationData = [
+                            'type' => 'hybrid',
+                            'location_offline' => $locationOffline,
+                            'location_online' => $locationOnline,
+                        ];
+
+                        if ($request->location_type[$index] === 'manual' && !is_null($addressLocationOffline)) {
+                            $locationData['address_location_offline'] = $addressLocationOffline;
+                        }
+
+                        $locations[] = $locationData;
+
+                        if (!is_null($locationOffline)) {
+                            $locationsOfflineIndex++;
+                        }
+                        if (!is_null($locationOnline)) {
+                            $locationsOnlineIndex++;
+                        }
+                    }
+
+                    // Simpan data ke tabel EventStep
+                    $event_steps[] =  EventStep::create([
+                        'event_id' => $event->id,
+                        'step_name' => count($request->event_dates) > 1 ? $request->step_names[$index] : null,
+                        'event_date' => $event_date,
+                        'event_time_start' => $request->event_time_starts[$index],
+                        'event_time_end' => $request->event_time_ends[$index],
+                        'description' => $request->event_step_descriptions[$index] ?? null,
+                        'execution_system' => $executionSystem,
+                        'location_type' => $request->location_type[$index],
+                        'location' => json_encode($locations), // Simpan dalam format JSON
+                    ]);
+
+                    if ($request->location_type[$index] === 'campus' && $executionSystem !== 'online') {
+
+                        if ($executionSystem === 'offline') {
+                            $location_id = $request->locations[$locationIndex - 1] ?? null; // Ambil lokasi terakhir
+                        } elseif ($executionSystem === 'hybrid') {
+                            $location_id = $request->locations_offline[$locationsOfflineIndex - 1] ?? null;
+                        }
+
+                        // **Pastikan location_id adalah UUID yang ada di tabel assets**
+                        $locationExists = Asset::where('id', $location_id)->exists();
+                        if (!$locationExists) {
+                            continue; // Lewati jika tidak valid
+                        }
+                        $usageDateStart = Carbon::createFromFormat('Y-m-d H:i', $request->event_dates[$index] . ' ' . $request->event_time_starts[$index]);
+                        $usageDateEnd = Carbon::createFromFormat('Y-m-d H:i', $request->event_dates[$index] . ' ' . $request->event_time_ends[$index]);
+
+                        // **Cek apakah ada booking yang bentrok dengan waktu yang dipilih**
+                        $conflict = AssetBooking::where('asset_id', $location_id)
+                            ->where(function ($query) {
+                                $query->where('status', 'NOT LIKE', 'submission%')
+                                    ->where('status', '!=', 'rejected_booking')
+                                    ->where('status', '!=', 'rejected')
+                                    ->where('status', '!=', 'cancelled');
+                            })
+                            ->where(function ($query) use ($usageDateStart, $usageDateEnd) {
+                                $query->where(function ($q) use ($usageDateStart, $usageDateEnd) {
+                                    $q->where('usage_date_start', '<', $usageDateEnd)
+                                        ->where('usage_date_end', '>', $usageDateStart);
+                                });
+                            })
+                            ->exists();
+
+
+                        if ($conflict) {
+                            return response()->json([
+                                'status' => 'error',
+                                'message' => 'Aset ini sudah dipesan pada tanggal dan waktu tersebut. Silakan pilih waktu lain.'
+                            ], 422);
+                        }
+                        if ($location_id) {
+                            $booking = AssetBooking::create([
+                                'asset_id' => $location_id,
+                                'user_id' => Auth::user()->id,
+                                'booking_number' => '',
+                                'event_id' => $event->id,
+                                'usage_date_start' => $usageDateStart,
+                                'usage_date_end' => $usageDateEnd,
+                                'usage_event_name' => $event->title,
+                                'status' => 'submission_booking',
+                            ]);
+                            $asset_bookings[] = $booking;
+                        }
+                        if ($index === 0) {
+                            $scope = optional($booking->asset)->facility_scope == 'umum' ? 'FU' : 'FJ';
+                            $bookingDate = $booking->created_at->format('Ymd'); // Tanggal Booking
+
+                            // Ambil 4 karakter dari UUID dengan cara yang lebih aman
+                            $uuidPart1 = substr(str_replace('-', '', $booking->id), 0, 4);  // 4 karakter pertama tanpa "-"
+                            $uuidPart2 = substr(str_replace('-', '', $booking->id), -4); // 4 karakter terakhir tanpa "-"
+
+                            // Generate booking number
+                            $bookingNo = "{$scope}{$bookingDate}{$uuidPart1}{$uuidPart2}";
+
+                            // Update booking_number
+                            $booking->update(['booking_number' => strtoupper($bookingNo)]);
+                        }
+
+                        if (optional($booking->asset)->facility_scope === 'umum') {
+                            $umumAssets[] = $booking->asset->name;
+                        } elseif ($booking->asset->facility_scope === 'jurusan') {
+                            $jurusanAssets[] = [
+                                'name' => $booking->asset->name,
+                                'jurusan_id' => $booking->asset->jurusan_id,
+                            ];
+                        }
                     }
                 }
             }
@@ -748,6 +955,7 @@ class EventController extends Controller
 
                 // diproses jika validasi berhasil
                 if (!empty($filteredSpeakers)) {
+                    $otherIndex = 0;
                     foreach ($filteredSpeakers as $index => $speaker) {
                         $event_date = $request->event_date_speakers[$index];
                         $event_step_id = EventStep::where('event_date', $event_date)
@@ -755,7 +963,13 @@ class EventController extends Controller
                             ->value('id');
 
                         // Menentukan role
-                        $role = $request->role[$index] === 'other' ? $request->other_role[$index] : $request->role[$index];
+                        if ($request->role[$index] === 'other') {
+                            $role = $request->other_role[$otherIndex];
+                            $otherIndex++; // Naikkan setelah dipakai
+                        } else {
+                            $role = $request->role[$index];
+                        }
+                        // $role = $request->role[$index] === 'other' ? $request->other_role[$index] : $request->role[$index];
 
                         EventSpeaker::create([
                             'event_step_id' => $event_step_id,
@@ -774,9 +988,8 @@ class EventController extends Controller
 
                 foreach ($groupedJurusanAssets as $jurusan_id => $assets) {
                     $assetNames = collect($assets)->pluck('name')->join(', ');
-                    $adminJurusanUsers = User::role('Admin Jurusan'); // Semua Tenant
-
-                    $adminJurusanUsers->where('jurusan_id', $jurusan_id)
+                    $adminJurusanUsers = User::role('Admin Jurusan')
+                        ->where('jurusan_id', $jurusan_id)
                         ->get();
 
                     $message = "Peminjaman aset berikut telah dilakukan oleh " . Auth::user()->name . ": {$assetNames}.";
@@ -802,9 +1015,11 @@ class EventController extends Controller
             return redirect()->back();
         } catch (\Exception $e) {
             DB::rollBack();
-
-            notyf()->ripple(true)->error('Terjadi kesalahan saat menambahkan event.');
-            return redirect()->back();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan saat menambahkan event.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
     public function updateEvent(Request $request, $id)
@@ -824,16 +1039,16 @@ class EventController extends Controller
             'is_free' => 'required|in:0,1',
             // 'benefit' => 'array',
             // 'contact_person' => 'array',
-            'date_registration_start' => 'required',
-            'date_registration_end' => 'required',
+            // 'date_registration_start' => 'required',
+            // 'date_registration_end' => 'required',
             'event_dates' => 'required|array',
             'event_time_starts' => 'required|array',
             'event_time_ends' => 'required|array',
             'execution_systems' => 'required|array',
             'locations' => 'required_if:execution_systems,offline|array',
             'event_date_speakers' => 'array',
-            'speaker_name' => 'required|array',
-            'role' => 'required|array',
+            // 'speaker_name' => 'required|array',
+            // 'role' => 'required|array',
             // 'questions' => 'required|array',
             // 'field_types' => 'required|array',
             // 'answers' => 'required|array',
@@ -860,8 +1075,8 @@ class EventController extends Controller
             // 'benefit.array' => 'Benefit harus berupa array.',
             // 'contact_person.array' => 'Contact person harus berupa array.',
 
-            'date_registration_start.required' => 'Tanggal mulai pendaftaran wajib diisi.',
-            'date_registration_end.required' => 'Tanggal akhir pendaftaran wajib diisi.',
+            // 'date_registration_start.required' => 'Tanggal mulai pendaftaran wajib diisi.',
+            // 'date_registration_end.required' => 'Tanggal akhir pendaftaran wajib diisi.',
             'event_dates.required' => 'Tanggal acara wajib diisi.',
             // 'event_dates.array' => 'Tanggal acara harus berupa array.',
             'event_time_starts.required' => 'Waktu mulai acara wajib diisi.',
@@ -875,9 +1090,9 @@ class EventController extends Controller
 
             // 'event_date_speakers.required' => 'Tanggal sesi pembicara wajib diisi.',
             // 'event_date_speakers.array' => 'Tanggal sesi pembicara harus berupa array.',
-            'speaker_name.required' => 'Nama pembicara wajib diisi.',
+            // 'speaker_name.required' => 'Nama pembicara wajib diisi.',
             // 'speaker_name.array' => 'Nama pembicara harus berupa array.',
-            'role.required' => 'Peran pembicara wajib diisi.',
+            // 'role.required' => 'Peran pembicara wajib diisi.',
             // 'role.array' => 'Peran pembicara harus berupa array.',
             // 'questions.required' => 'Pertanyaan wajib diisi.',
             // 'questions.array' => 'Pertanyaan harus berupa array.',
@@ -1172,10 +1387,40 @@ class EventController extends Controller
                         $locationsOnlineIndex++;
                     }
                 }
+                if ($request->location_type[$index] === 'campus' && $executionSystem !== 'online') {
 
-
+                    if ($executionSystem === 'offline') {
+                        $location_id = $request->locations[$locationIndex - 1] ?? null; // Ambil lokasi terakhir
+                    } elseif ($executionSystem === 'hybrid') {
+                        $location_id = $request->locations_offline[$locationsOfflineIndex - 1] ?? null;
+                    }
+                }
                 if ($stepId) {
                     $eventStep = EventStep::findOrFail($stepId);
+                    $usage_date_start = Carbon::parse($eventStep->event_date . ' ' . $eventStep->event_time_start);
+                    $usage_date_end = Carbon::parse($eventStep->event_date . ' ' . $eventStep->event_time_end);
+                    $assetBooking = AssetBooking::where('event_id', $event->id)
+                        ->whereHas('event', function ($query) use ($eventStep) {
+                            $query->whereHas('steps', function ($q) use ($eventStep) {
+                                $q->where('id', $eventStep->id)
+                                    ->where('event_date', $eventStep->event_date)
+                                    ->where('event_time_start', $eventStep->event_time_start)
+                                    ->where('event_time_end', $eventStep->event_time_end);
+                            });
+                        })->first();
+                    $usage_date_start_update = Carbon::parse($event_date . ' ' . $request->event_time_starts[$index]);
+                    $usage_date_end_update = Carbon::parse($event_date . ' ' . $request->event_time_ends[$index]);
+
+                    $booking = $assetBooking->update([
+                        'asset_id' => $location_id,
+                        'user_id' => Auth::id(),
+                        'booking_number' => '', // sementara kosong
+                        'event_id' => $event->id,
+                        'usage_date_start' => $usage_date_start_update,
+                        'usage_date_end' => $usage_date_end_update,
+                    ]);
+
+
                     $eventStep->update([
                         'step_name' => count($request->event_dates) > 1 ? $request->step_names[$index] : null,
                         'event_date' => $event_date,
@@ -1356,9 +1601,8 @@ class EventController extends Controller
 
                 foreach ($groupedJurusanAssets as $jurusan_id => $assets) {
                     $assetNames = collect($assets)->pluck('name')->join(', ');
-                    $adminJurusanUsers = User::role('Admin Jurusan'); // Semua Tenant
-
-                    $adminJurusanUsers->where('jurusan_id', $jurusan_id)
+                    $adminJurusanUsers = User::role('Admin Jurusan')
+                        ->where('jurusan_id', $jurusan_id)
                         ->get();
 
                     $message = "Peminjaman aset berikut telah dilakukan oleh " . Auth::user()->name . ": {$assetNames}.";

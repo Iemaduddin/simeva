@@ -97,14 +97,14 @@
                                 <input type="text" class="form-control flatpickr-datetime" name="loading_date_start"
                                     id="loading_date_start" placeholder="Pilih Tanggal & Waktu"
                                     value="{{ $assetBooking->loading_date_start ?? '' }}"
-                                    data-error-message="Tanggal dan waktu mulai loading harus diisi" required>
+                                    data-error-message="Tanggal dan waktu mulai loading harus diisi">
                             </div>
                             <div class="col-md-3">
                                 <label for="loading_date_end">Tanggal Selesai Loading</label>
                                 <input type="text" class="form-control flatpickr-datetime" name="loading_date_end"
                                     id="loading_date_end" placeholder="Pilih Tanggal & Waktu"
                                     value="{{ $assetBooking->loading_date_end ?? '' }}"
-                                    data-error-message="Tanggal dan waktu selesai loading harus diisi" required>
+                                    data-error-message="Tanggal dan waktu selesai loading harus diisi">
                             </div>
                             <div class="col-md-3">
                                 <label for="unloading_date_start">Tanggal Mulai Unloading</label>
@@ -112,14 +112,14 @@
                                     name="unloading_date_start" id="unloading_date_start"
                                     placeholder="Pilih Tanggal & Waktu"
                                     value="{{ $assetBooking->unloading_date_end ?? '' }}"
-                                    data-error-message="Tanggal dan waktu unloading harus diisi" required>
+                                    data-error-message="Tanggal dan waktu unloading harus diisi">
                             </div>
                             <div class="col-md-3">
                                 <label for="unloading_date_end">Tanggal Selesai Unloading</label>
                                 <input type="text" class="form-control flatpickr-datetime" name="unloading_date_end"
                                     id="unloading_date_end" placeholder="Pilih Tanggal & Waktu"
                                     value="{{ $assetBooking->unloading_date_end ?? '' }}"
-                                    data-error-message="Tanggal dan waktu unloading harus diisi" required>
+                                    data-error-message="Tanggal dan waktu unloading harus diisi">
                             </div>
                         </div>
                     @endif

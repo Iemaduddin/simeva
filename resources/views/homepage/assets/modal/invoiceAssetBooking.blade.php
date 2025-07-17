@@ -171,12 +171,10 @@
 <div class="mt-12 mb-24 text-end">
     @if ($assetBooking->status !== 'approved_dp_payment' && $assetBooking->status !== 'approved_full_payment')
         <a href="{{ route('assetBooking.letter', $assetBooking->id) }}" target="_blank"
-            class="btn btn-sm btn-outline-primary">
-            <i class="ph ph-printer"></i> Berkas Booking
+            class="btn btn-sm btn-outline-primary"> Berkas Booking
         </a>
     @endif
-    <button onclick="printInvoice()" class="btn btn-sm btn-outline-primary">
-        <i class="ph ph-printer"></i> Cetak Invoice
+    <button onclick="printInvoice()" class="btn btn-sm btn-outline-primary">Cetak Invoice
     </button>
 </div>
 <script>

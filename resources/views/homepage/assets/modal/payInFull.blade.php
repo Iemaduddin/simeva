@@ -11,7 +11,7 @@
 
                 <hr class="my-10">
                 <form id="assetBookingProfile" action="{{ route('assetBooking.payInFull', $assetBooking->id) }}"
-                    method="POST" data-table="assetBookingProfile-{{ $status_booking }}">
+                    method="POST" enctype="multipart/form-data" data-table="assetBookingProfile-{{ $status_booking }}">
                     @csrf
                     <div class="row">
                         <label for="proofOfPayment" class="text-neutral-700 text-sm fw-bold mb-6 d-block">Bukti

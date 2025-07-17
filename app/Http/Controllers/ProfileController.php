@@ -141,7 +141,6 @@ class ProfileController extends Controller
                     'name' => $request->name,
                     'username' => $request->username,
                     'email' => $request->email,
-                    'category_user' => 'Eksternal Kampus',
                     'phone_number' => $request->phone_number,
                     'province' => $request->province,
                     'city' => $request->city,
@@ -154,7 +153,6 @@ class ProfileController extends Controller
                     'name' => $request->name,
                     'username' => $request->username,
                     'email' => $request->email,
-                    'category_user' => 'Internal Kampus',
                 ]);
                 $organizer->update(['whatsapp_number' => $request->phone_number]);
             }

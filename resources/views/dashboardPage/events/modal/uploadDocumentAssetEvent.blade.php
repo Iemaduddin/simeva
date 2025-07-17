@@ -28,7 +28,7 @@
                         @php
                             $booking = $event->bookings->first();
                         @endphp
-                        @if ($booking->status === 'rejected_full_payment')
+                        @if (optional($booking)->status === 'rejected_full_payment')
                             <div class="col-md-12 mt-3">
                                 <p class="fw-bold">Alasan Penolakan:</p>
                                 <div class="border-1 p-10 radius-10">{{ $booking->reason }} </div>

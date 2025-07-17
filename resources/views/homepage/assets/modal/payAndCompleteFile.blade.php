@@ -11,7 +11,7 @@
                 @include('homepage.assets.modal.invoiceAssetBooking')
                 <form id="assetBookingProfile-{{ $status_booking }}"
                     action="{{ route('assetBooking.payAndCompleteFile', $assetBooking->id) }}" method="POST"
-                    data-table="assetBookingProfile-{{ $status_booking }}">
+                    enctype="multipart/form-data" data-table="assetBookingProfile-{{ $status_booking }}">
                     @csrf
                     <div class="row">
                         <div class="col-sm-3">

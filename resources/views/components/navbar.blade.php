@@ -69,12 +69,13 @@
                                     $data = $notification->data;
                                     $isRead = $notification->read_at !== null;
                                     // Ambil pengirim notifikasi
-                                    $sender = !empty($data['user_id'])
-                                        ? \App\Models\User::find($data['user_id'])
-                                        : null;
+                                    if (isset($data['user_id'])) {
+                                        $sender = !empty($data['user_id'])
+                                            ? \App\Models\User::find($data['user_id'])
+                                            : null;
 
-                                    $profilePhoto = $sender->profile_picture ?? 'default-avatar.png';
-
+                                        $profilePhoto = $sender->profile_picture ?? 'default-avatar.png';
+                                    }
                                     // Cek apakah ada booking dan asset
                                     $booking = $data['booking'] ?? null;
                                     $asset = $booking->asset ?? null;
@@ -92,9 +93,9 @@
                                     } elseif ($role === 'Kaur RT') {
                                         $routeName = 'asset.fasum.eventBookings';
                                         $routeParam = [];
-                                    } elseif ($role === 'Admin Jurusan' && isset($jurusan['kode_jurusan'])) {
+                                    } elseif ($role === 'Admin Jurusan') {
                                         $routeName = 'asset.fasjur.bookings';
-                                        $routeParam = ['kode_jurusan' => $jurusan['kode_jurusan']];
+                                        $routeParam = ['kode_jurusan' => Auth::user()->Jurusan->kode_jurusan];
                                     }
 
                                     // Default fallback jika routing gagal

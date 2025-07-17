@@ -179,7 +179,7 @@
                 <div class="card-header">
                     <div class="d-flex align-items-center flex-wrap gap-2 justify-content-between">
                         <h6 class="mb-2 fw-bold text-lg mb-0">Peserta yang Baru Bergabung</h6>
-                        <a href="{{ route('data.listEvent') }}"
+                        <a href="{{ route('data.events', $shorten_name) }}"
                             class="text-primary-600 hover-text-primary d-flex align-items-center gap-1">
                             Lihat Semua
                             <iconify-icon icon="solar:alt-arrow-right-linear" class="icon"></iconify-icon>

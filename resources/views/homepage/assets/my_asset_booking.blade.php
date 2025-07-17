@@ -359,5 +359,5 @@
         });
     </script>
 
-    @include('components.script-crud')
+    {{-- @include('components.script-crud') --}}
 @endpush

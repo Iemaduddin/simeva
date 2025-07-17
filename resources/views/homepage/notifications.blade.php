@@ -58,10 +58,10 @@
                                 @php
                                     $data = $notification->data;
                                     $isRead = $notification->read_at !== null;
-
-                                    $sender = \App\Models\User::find($data['user_id']);
-                                    $profilePhoto = $sender->profile_picture ?? 'default-avatar.png';
-
+                                    if (isset($data['user_id'])) {
+                                        $sender = \App\Models\User::find($data['user_id']);
+                                        $profilePhoto = $sender->profile_picture ?? 'default-avatar.png';
+                                    }
                                     $booking = $data['booking'] ?? null;
                                     $eventId = $data['event_id'] ?? null;
                                     $asset = $booking->asset ?? null;

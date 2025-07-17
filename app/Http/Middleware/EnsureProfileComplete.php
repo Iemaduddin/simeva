@@ -29,8 +29,7 @@ class EnsureProfileComplete
                 is_null($user->village) ||
                 is_null($user->address)
             ) {
-                notyf()
-                    ->dismissible(true)->ripple(true)->duration(0)
+                notyf()->ripple(true)
                     ->warning('Silahkan lengkapi data profil Anda!');
                 return redirect()->route('profileUserHomepage');
             }

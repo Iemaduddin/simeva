@@ -177,7 +177,9 @@
                                         <select class="form-select" name="event_leader" required>
                                             <option disabled selected>Pilih Ketua Pelaksana</option>
                                             @foreach ($team_members as $member)
-                                                <option value="{{ $member->id }}">{{ $member->name }}</option>
+                                                <option value="{{ $member->id }}">{{ $member->name }}
+                                                    ({{ $member->nim }})
+                                                </option>
                                             @endforeach
                                         </select>
                                         <div class="invalid-feedback">
@@ -356,136 +358,288 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="card p-0 overflow-hidden position-relative radius-12 h-100">
+                                <div
+                                    class="card-header pt-16 pb-0 px-24 bg-base border border-end-0 border-start-0 border-top-0 d-flex align-items-center flex-wrap justify-content-between">
+                                    <ul class="nav bordered-tab d-inline-flex nav-pills mb-0" id="pills-tab-six"
+                                        role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link px-16 py-10 text-start active"
+                                                id="pills-header-short-tab" data-bs-toggle="pill"
+                                                data-bs-target="#pills-header-short" type="button" role="tab"
+                                                aria-controls="pills-header-short" aria-selected="true"
+                                                tabindex="-1">Short Event </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link px-16 py-10 text-start" id="pills-header-long-tab"
+                                                data-bs-toggle="pill" data-bs-target="#pills-header-long" type="button"
+                                                role="tab" aria-controls="pills-header-long" aria-selected="false"
+                                                tabindex="-1">Long Event </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="card-body p-24 pt-10">
+                                    <div class="tab-content" id="pills-tabContent-six">
+                                        <div class="tab-pane fade show active" id="pills-header-short" role="tabpanel"
+                                            aria-labelledby="pills-header-short-tab" tabindex="0">
+                                            <div id="event-steps-container">
+                                                <div class="event-step">
+                                                    <div
+                                                        class="row gy-3 mt-3 border-3 border-dashed border-primary p-3 mb-3 rounded">
+                                                        <div class="col-md-6 event_step_name d-none">
+                                                            <label class="form-label">Nama Tahapan Event <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control"
+                                                                placeholder="Masukkan nama tahapan event"
+                                                                name="step_names[]">
+                                                            <div class="invalid-feedback">
+                                                                Nama Tahapan Event wajib diisi!
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6 event_step_description d-none">
+                                                            <label class="form-label">Deskripsi Tahapan Event </label>
+                                                            <textarea class="form-control" name="event_step_descriptions[]" rows="4" cols="50"
+                                                                placeholder="Masukkan deskripsi tahapan event..."></textarea>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <label class="form-label">Tanggal Pelaksanaan <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="text"
+                                                                class="form-control date-execution-pickr"
+                                                                name="event_dates[]" required>
+                                                            <div class="invalid-feedback">
+                                                                Tanggal Pelaksanaan wajib diisi!
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <label class="form-label"> Jam Mulai <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="text"
+                                                                class="form-control time-start-execution-pickr"
+                                                                name="event_time_starts[]" required>
+                                                            <div class="invalid-feedback">
+                                                                Jam Mulai wajib diisi!
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <label class="form-label">Jam Selesai <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="text"
+                                                                class="form-control time-end-execution-pickr"
+                                                                name="event_time_ends[]" required>
+                                                            <div class="invalid-feedback">
+                                                                Jam Selesai wajib diisi!
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label class="form-label">Sistem Pelaksanaan <span
+                                                                    class="text-danger">*</span></label>
+                                                            <select class="form-select execution-system"
+                                                                name="execution_systems[]" required>
+                                                                <option disabled selected>Pilih Sistem Pelaksanaan</option>
+                                                                <option value="offline">Offline</option>
+                                                                <option value="online">Online</option>
+                                                                <option value="hybrid">Hybrid</option>
+                                                            </select>
+                                                            <div class="invalid-feedback">
+                                                                Sistem Pelaksanaan wajib diisi!
+                                                            </div>
 
-                            <div id="event-steps-container">
-                                <div class="event-step">
-                                    <div class="row gy-3 mt-3 border-3 border-dashed border-primary p-3 mb-3 rounded">
-                                        <div class="col-md-6 event_step_name d-none">
-                                            <label class="form-label">Nama Tahapan Event <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control"
-                                                placeholder="Masukkan nama tahapan event" name="step_names[]">
-                                            <div class="invalid-feedback">
-                                                Nama Tahapan Event wajib diisi!
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 event_step_description d-none">
-                                            <label class="form-label">Deskripsi Tahapan Event </label>
-                                            <textarea class="form-control" name="event_step_descriptions[]" rows="4" cols="50"
-                                                placeholder="Masukkan deskripsi tahapan event..."></textarea>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label">Tanggal Pelaksanaan <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control date-execution-pickr"
-                                                name="event_dates[]" required>
-                                            <div class="invalid-feedback">
-                                                Tanggal Pelaksanaan wajib diisi!
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label"> Jam Mulai Pelaksanaan <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control time-start-execution-pickr"
-                                                name="event_time_starts[]" required>
-                                            <div class="invalid-feedback">
-                                                Jam Mulai Pelaksanaan wajib diisi!
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <label class="form-label">Jam Selesai Pelaksanaan <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control time-end-execution-pickr"
-                                                name="event_time_ends[]" required>
-                                            <div class="invalid-feedback">
-                                                Jam Selesai Pelaksanaan wajib diisi!
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label">Sistem Pelaksanaan <span
-                                                    class="text-danger">*</span></label>
-                                            <select class="form-select execution-system" name="execution_systems[]"
-                                                required>
-                                                <option disabled selected>Pilih Sistem Pelaksanaan</option>
-                                                <option value="offline">Offline</option>
-                                                <option value="online">Online</option>
-                                                <option value="hybrid">Hybrid</option>
-                                            </select>
-                                            <div class="invalid-feedback">
-                                                Sistem Pelaksanaan wajib diisi!
-                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3 location-container">
+                                                            <label class="form-label">Lokasi Event <span
+                                                                    class="text-danger">*</span></label>
+                                                            <select class="form-select location-type"
+                                                                name="location_type[]" required>
+                                                                <option value="campus">Gunakan Aset Kampus</option>
+                                                                <option value="manual">Isi Manual</option>
+                                                            </select>
+                                                            <select class="form-select mt-3 asset-select"
+                                                                name="locations[]" id="campus-asset">
+                                                                <option value="" disabled selected>Pilih Aset
+                                                                    Kampus...</option>
 
-                                        </div>
-                                        <div class="col-md-3 location-container">
-                                            <label class="form-label">Lokasi Event <span
-                                                    class="text-danger">*</span></label>
-                                            <select class="form-select location-type" name="location_type[]" required>
-                                                <option value="campus">Gunakan Aset Kampus</option>
-                                                <option value="manual">Isi Manual</option>
-                                            </select>
-                                            <select class="form-select mt-3 asset-select" name="locations[]"
-                                                id="campus-asset">
-                                                <option value="" disabled selected>Pilih Aset Kampus...</option>
+                                                                {{-- Fasilitas Umum --}}
+                                                                @if ($buildings->where('facility_scope', 'umum')->isNotEmpty())
+                                                                    <optgroup label="Fasilitas Umum">
+                                                                        @foreach ($buildings->where('facility_scope', 'umum')->sortBy('name') as $asset)
+                                                                            <option value="{{ $asset->id }}">
+                                                                                {{ $asset->name }}
+                                                                            </option>
+                                                                        @endforeach
+                                                                    </optgroup>
+                                                                @endif
 
-                                                {{-- Fasilitas Umum --}}
-                                                @if ($buildings->where('facility_scope', 'umum')->isNotEmpty())
-                                                    <optgroup label="Fasilitas Umum">
-                                                        @foreach ($buildings->where('facility_scope', 'umum')->sortBy('name') as $asset)
-                                                            <option value="{{ $asset->id }}">{{ $asset->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </optgroup>
-                                                @endif
+                                                                {{-- Fasilitas Berdasarkan Jurusan --}}
+                                                                @foreach ($buildings->where('facility_scope', '!=', 'umum')->groupBy('facility_scope') as $facilityScope => $groupedAssets)
+                                                                    @foreach ($groupedAssets->groupBy('jurusan.nama')->sortKeys() as $namaJurusan => $jurusanBuildings)
+                                                                        <optgroup
+                                                                            label="Fasilitas {{ ucwords($namaJurusan) }}">
+                                                                            @foreach ($jurusanBuildings->sortBy('name') as $asset)
+                                                                                <option value="{{ $asset->id }}">
+                                                                                    {{ $asset->name }}
+                                                                                </option>
+                                                                            @endforeach
+                                                                        </optgroup>
+                                                                    @endforeach
+                                                                @endforeach
+                                                            </select>
+                                                            <input type="text" class="form-control location-input"
+                                                                name="locations[]" placeholder="Masukkan lokasi event..."
+                                                                style="display: none;">
+                                                            <div class="invalid-feedback">
+                                                                Lokasi event wajib diisi!
+                                                            </div>
+                                                            <input type="text"
+                                                                class="form-control address-location-input"
+                                                                name="address_locations[]"
+                                                                placeholder="Masukkan alamat lokasi event..."
+                                                                style="display: none;">
+                                                            <div class="invalid-feedback">
+                                                                Lokasi event wajib diisi!
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-start mt-3">
+                                                            <a href="#"
+                                                                class="btn btn-sm btn-danger-600 remove-event-step"
+                                                                style="display: none;">Hapus</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                                {{-- Fasilitas Berdasarkan Jurusan --}}
-                                                @foreach ($buildings->where('facility_scope', '!=', 'umum')->groupBy('facility_scope') as $facilityScope => $groupedAssets)
-                                                    @foreach ($groupedAssets->groupBy('jurusan.nama')->sortKeys() as $namaJurusan => $jurusanBuildings)
-                                                        <optgroup label="Fasilitas {{ ucwords($namaJurusan) }}">
-                                                            @foreach ($jurusanBuildings->sortBy('name') as $asset)
-                                                                <option value="{{ $asset->id }}">{{ $asset->name }}
-                                                                </option>
-                                                            @endforeach
-                                                        </optgroup>
-                                                    @endforeach
-                                                @endforeach
-                                            </select>
-                                            <input type="text" class="form-control location-input" name="locations[]"
-                                                placeholder="Masukkan lokasi event..." style="display: none;">
-                                            <div class="invalid-feedback">
-                                                Lokasi event wajib diisi!
                                             </div>
-                                            <input type="text" class="form-control address-location-input"
-                                                name="address_locations[]" placeholder="Masukkan alamat lokasi event..."
-                                                style="display: none;">
-                                            <div class="invalid-feedback">
-                                                Lokasi event wajib diisi!
+                                            <div class="d-flex justify-content-center align-items-center">
+                                                <a href="#" id="add-event-step"
+                                                    class="btn btn-sm btn-dark d-inline-flex align-items-center gap-2 rounded-pill">
+                                                    <iconify-icon icon="zondicons:add-outline"
+                                                        class="menu-icon"></iconify-icon> Tambah
+                                                    Hari
+                                                </a>
                                             </div>
                                         </div>
-                                        <div class="text-start mt-3">
-                                            <a href="#" class="btn btn-sm btn-danger-600 remove-event-step"
-                                                style="display: none;">Hapus</a>
+                                        <div class="tab-pane fade" id="pills-header-long" role="tabpanel"
+                                            aria-labelledby="pills-header-long-tab" tabindex="0">
+                                            <div id="event-long-container">
+                                                <div class="event-long">
+                                                    <div
+                                                        class="row gy-3 mt-3 border-3 border-dashed border-primary p-3 mb-3 rounded">
+                                                        <div class="col-md-2">
+                                                            <label class="form-label">Tanggal Pelaksanaan<span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="text"
+                                                                class="form-control event-long-date-execution-pickr"
+                                                                name="event_long_date" required>
+                                                            <div class="invalid-feedback">
+                                                                Tanggal Pelaksanaan Mulai wajib diisi!
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <label class="form-label"> Jam Mulai <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="text"
+                                                                class="form-control time-start-execution-pickr"
+                                                                name="event_long_time_start" required>
+                                                            <div class="invalid-feedback">
+                                                                Jam Mulai wajib diisi!
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <label class="form-label">Jam Selesai <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="text"
+                                                                class="form-control time-end-execution-pickr"
+                                                                name="event_long_time_end" required>
+                                                            <div class="invalid-feedback">
+                                                                Jam Selesai wajib diisi!
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label class="form-label">Sistem Pelaksanaan <span
+                                                                    class="text-danger">*</span></label>
+                                                            <select class="form-select event-long-execution-system"
+                                                                name="event_long_execution_system" required>
+                                                                <option disabled selected>Pilih Sistem Pelaksanaan</option>
+                                                                <option value="offline">Offline</option>
+                                                                <option value="online">Online</option>
+                                                                <option value="hybrid">Hybrid</option>
+                                                            </select>
+                                                            <div class="invalid-feedback">
+                                                                Sistem Pelaksanaan wajib diisi!
+                                                            </div>
+
+                                                        </div>
+                                                        <div class="col-md-3 event-long-location-container">
+                                                            <label class="form-label">Lokasi Event <span
+                                                                    class="text-danger">*</span></label>
+                                                            <select class="form-select event-long-location-type"
+                                                                name="event_long_location_type" required>
+                                                                <option value="campus">Gunakan Aset Kampus</option>
+                                                                <option value="manual">Isi Manual</option>
+                                                            </select>
+                                                            <select class="form-select mt-3 event-long-asset-select"
+                                                                name="event_long_location" id="campus-asset">
+                                                                <option value="" disabled selected>Pilih Aset
+                                                                    Kampus...</option>
+
+                                                                {{-- Fasilitas Umum --}}
+                                                                @if ($buildings->where('facility_scope', 'umum')->isNotEmpty())
+                                                                    <optgroup label="Fasilitas Umum">
+                                                                        @foreach ($buildings->where('facility_scope', 'umum')->sortBy('name') as $asset)
+                                                                            <option value="{{ $asset->id }}">
+                                                                                {{ $asset->name }}
+                                                                            </option>
+                                                                        @endforeach
+                                                                    </optgroup>
+                                                                @endif
+
+                                                                {{-- Fasilitas Berdasarkan Jurusan --}}
+                                                                @foreach ($buildings->where('facility_scope', '!=', 'umum')->groupBy('facility_scope') as $facilityScope => $groupedAssets)
+                                                                    @foreach ($groupedAssets->groupBy('jurusan.nama')->sortKeys() as $namaJurusan => $jurusanBuildings)
+                                                                        <optgroup
+                                                                            label="Fasilitas {{ ucwords($namaJurusan) }}">
+                                                                            @foreach ($jurusanBuildings->sortBy('name') as $asset)
+                                                                                <option value="{{ $asset->id }}">
+                                                                                    {{ $asset->name }}
+                                                                                </option>
+                                                                            @endforeach
+                                                                        </optgroup>
+                                                                    @endforeach
+                                                                @endforeach
+                                                            </select>
+                                                            <input type="text"
+                                                                class="form-control event-long-location-input"
+                                                                name="event_long_location"
+                                                                placeholder="Masukkan lokasi event..."
+                                                                style="display: none;">
+                                                            <div class="invalid-feedback">
+                                                                Lokasi event wajib diisi!
+                                                            </div>
+                                                            <input type="text"
+                                                                class="form-control event-long-address-location-input"
+                                                                name="event_long_address_location"
+                                                                placeholder="Masukkan alamat lokasi event..."
+                                                                style="display: none;">
+                                                            <div class="invalid-feedback">
+                                                                Lokasi event wajib diisi!
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                            </div>
-                            <div class="d-flex justify-content-center align-items-center">
-                                <a href="#" id="add-event-step"
-                                    class="btn btn-sm btn-dark d-inline-flex align-items-center gap-2 rounded-pill">
-                                    <iconify-icon icon="zondicons:add-outline" class="menu-icon"></iconify-icon> Tambah
-                                    Hari
-                                </a>
-                            </div>
-                            <hr class="my-3">
-                            <div class="form-group d-flex justify-content-between align-items-center">
-                                <button type="button"
-                                    class="form-wizard-previous-btn btn btn-sm btn-neutral-500 border-neutral-100 px-32">
-                                    Kembali
-                                </button>
-                                <button type="button" class="form-wizard-next-btn btn btn-sm btn-primary-600 px-32">
-                                    Lanjut
-                                </button>
-                            </div>
+                                    <hr class="my-3">
+                                    <div class="form-group d-flex justify-content-between align-items-center">
+                                        <button type="button"
+                                            class="form-wizard-previous-btn btn btn-sm btn-neutral-500 border-neutral-100 px-32">
+                                            Kembali
+                                        </button>
+                                        <button type="button"
+                                            class="form-wizard-next-btn btn btn-sm btn-primary-600 px-32">
+                                            Lanjut
+                                        </button>
+                                    </div>
                         </fieldset>
                         <fieldset class="wizard-fieldset">
                             <h6 class="text-md text-neutral-500">Pengisi Tamu Undangan Event</h6>
@@ -498,7 +652,7 @@
                                                 <option value="" disabled selected>Pilih Tanggal</option>
                                             </select>
                                             <div class="invalid-feedback">
-                                                Tanggal & Jam Selesai Pelaksanaan wajib diisi!
+                                                Tanggal & Jam Selesai wajib diisi!
                                             </div>
                                         </div>
                                         <div class="col-md-3">
@@ -960,6 +1114,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const eventStepsContainer = document.getElementById('event-steps-container');
+            const eventLongContainer = document.getElementById('event-long-container');
             const addEventStepButton = document.getElementById('add-event-step');
 
             const eventSpeakersContainer = document.getElementById('event-speakers-container');
@@ -1008,6 +1163,45 @@
                         updateEventDateDropdown();
                     },
                 });
+                flatpickr(".event-long-date-execution-pickr", {
+                    dateFormat: "Y-m-d",
+                    minDate: "today",
+                    mode: "multiple",
+                    time_24hr: true,
+                    onChange(selectedDates, dateStr, instance) {
+                        const parentElement = instance.input.closest(".event-long");
+                        const timeStartInput = parentElement.querySelector(".time-start-execution-pickr");
+                        const timeEndInput = parentElement.querySelector(".time-end-execution-pickr");
+                        const locationInput = parentElement.querySelector(
+                            ".location-input"); // Pastikan ada input lokasi
+
+                        const oldDate = instance.input.dataset.oldDate;
+                        instance.input.dataset.oldDate = dateStr;
+
+                        const fullDateList = selectedDates.map(d => formatDateEventLong(d));
+
+                        updateEventDetails(
+                            parentElement,
+                            fullDateList,
+                            timeStartInput.value,
+                            timeEndInput.value,
+                            locationInput?.value || null
+                        );
+
+                        // Update eventDates array
+                        eventDates.length = 0; // kosongkan dulu
+                        eventDates.push(...fullDateList);
+
+                        updateEventDateDropdown();
+                    },
+                });
+
+                function formatDateEventLong(date) {
+                    const yyyy = date.getFullYear();
+                    const mm = String(date.getMonth() + 1).padStart(2, "0");
+                    const dd = String(date.getDate()).padStart(2, "0");
+                    return `${yyyy}-${mm}-${dd}`;
+                }
 
                 // Inisialisasi Time Picker untuk waktu mulai
                 flatpickr(".time-start-execution-pickr", {
@@ -1145,22 +1339,23 @@
 
 
             // Fungsi untuk mengupdate data event berdasarkan elemen terkait
-            function updateEventDetails(parentElement, date, timeStart, timeEnd, locationName) {
+            function updateEventDetails(parentElement, dates, timeStart, timeEnd, locationName) {
                 const index = Array.from(document.querySelectorAll(".event-step")).indexOf(parentElement);
 
-                if (!date || !timeStart || !timeEnd || !locationName) {
-                    eventDetails.splice(index, 1); // Hapus data jika ada input yang kosong
+                if (!dates || dates.length === 0 || !timeStart || !timeEnd || !locationName) {
+                    eventDetails.splice(index, 1); // Hapus jika tidak lengkap
                 } else {
                     eventDetails[index] = {
-                        date,
+                        dates,
                         timeStart,
                         timeEnd,
-                        location: locationName, // Simpan nama lokasi
+                        location: locationName,
                     };
                 }
 
                 updateEventTable();
             }
+
 
 
             // Fungsi untuk memperbarui tabel event
@@ -1176,27 +1371,32 @@
         `;
                 } else {
                     eventDetails.forEach(({
-                        date,
+                        dates,
                         timeStart,
                         timeEnd,
                         location
                     }) => {
-                        const formattedDate = new Date(date).toLocaleDateString("id-ID", {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                        });
+                        if (!Array.isArray(dates)) return;
 
-                        tableBody.innerHTML += `
-                <tr>
-                    <td>${formattedDate}</td>
-                    <td>${timeStart} - ${timeEnd}</td>
-                    <td>${location}</td>
-                </tr>
-            `;
+                        dates.forEach(date => {
+                            const formattedDate = new Date(date).toLocaleDateString("id-ID", {
+                                day: "2-digit",
+                                month: "long",
+                                year: "numeric",
+                            });
+
+                            tableBody.innerHTML += `
+                    <tr>
+                        <td>${formattedDate}</td>
+                        <td>${timeStart} - ${timeEnd}</td>
+                        <td>${location}</td>
+                    </tr>
+                `;
+                        });
                     });
                 }
             }
+
 
 
             function handleExecutionSystemChange(eventStep) {
@@ -1350,6 +1550,156 @@
                 });
             }
 
+            function handleEventLongExecutionSystemChange(eventLong) {
+                const eventLongExecutionSystem = eventLong.querySelector('.event-long-execution-system');
+                const locationContainer = eventLong.querySelector('.event-long-location-container');
+                const locationType = eventLong.querySelector('.event-long-location-type');
+                const assetSelect = eventLong.querySelector('.event-long-asset-select');
+                // const locationInput = eventStep.querySelector('.location-input');
+
+                eventLongExecutionSystem.addEventListener('change', function() {
+                    // Bersihkan konten dalam locationContainer setiap kali sistem pelaksanaan berubah
+                    locationContainer.innerHTML = `
+            <label class="form-label">Lokasi Event <span class="text-danger">*</span></label>
+            <select class="form-select event-long-location-type" name="event_long_location_type">
+                <option value="campus">Gunakan Aset Kampus</option>
+                <option value="manual">Isi Manual</option>
+            </select>
+            <select class="form-select mt-3 event-long-asset-select" name="event_long_location" id="campus-asset" required>
+                ${assetOptions} 
+            </select>
+            <input type="text" class="form-control mt-3 event-long-location-input" name="event_long_location_type" placeholder="Masukkan lokasi event..." style="display: none;" disabled>
+            <input type="text" class="form-control mt-3  event-long-address-location-input" name="event_long_address_location" placeholder="Masukkan alamat lokasi event..." style="display: none;" disabled>
+        `;
+
+                    const newLocationType = locationContainer.querySelector('.event-long-location-type');
+                    const newAssetSelect = locationContainer.querySelector('.event-long-asset-select');
+                    const newLocationInput = locationContainer.querySelector('.event-long-location-input');
+                    const newAddressLocationInput = locationContainer.querySelector(
+                        '.event-long-address-location-input');
+
+                    if (this.value === 'online') {
+                        newLocationType.value = 'manual';
+                        // newLocationType.setAttribute('disabled', true);
+                        newAssetSelect.style.display = 'none';
+                        newAssetSelect.removeAttribute('required');
+                        newAssetSelect.setAttribute('disabled', true);
+                        newLocationInput.style.display = 'block';
+                        newLocationInput.setAttribute('required', true);
+                        newLocationInput.removeAttribute('disabled');
+                    } else if (this.value === 'offline') {
+                        // newLocationType.removeAttribute('disabled');
+                        // newLocationInput.removeAttribute('required');
+
+                        newLocationType.addEventListener('change', function() {
+                            if (this.value === 'manual') {
+                                // Sembunyikan assetSelect dan aktifkan locationInput
+                                newAssetSelect.style.display = 'none';
+                                newAssetSelect.removeAttribute('required');
+                                newAssetSelect.setAttribute('disabled', true);
+
+                                newLocationInput.style.display = 'block';
+                                newLocationInput.setAttribute('required', true);
+                                newLocationInput.removeAttribute('disabled');
+
+                                newAddressLocationInput.style.display = 'block';
+                                newAddressLocationInput.removeAttribute('disabled');
+                                newAddressLocationInput.setAttribute('required', true);
+                            } else {
+                                // Tampilkan assetSelect dan nonaktifkan locationInput
+                                newAssetSelect.style.display = 'block';
+                                newAssetSelect.removeAttribute('disabled');
+                                newAssetSelect.setAttribute('required', true);
+
+                                newLocationInput.style.display = 'none';
+                                newLocationInput.removeAttribute('required');
+                                newLocationInput.setAttribute('disabled', true);
+
+                                newAddressLocationInput.style.display = 'none';
+                                newAddressLocationInput.removeAttribute('required');
+                                newAddressLocationInput.setAttribute('disabled', true);
+                            }
+                        });
+                    } else if (this.value === 'hybrid') {
+                        locationContainer.innerHTML = `
+                <label class="form-label">Lokasi Offline <span class="text-danger">*</span></label>
+                <select class="form-select event-long-location-type-offline" name="event_long_location_type">
+                    <option value="campus">Gunakan Aset Kampus</option>
+                    <option value="manual">Isi Manual</option>
+                </select>
+                <select class="form-select mt-3 event-long-asset-select-offline" name="event_long_location_offline" id="campus-asset" required>
+                    ${assetOptions} 
+                </select>
+                <input type="text" class="form-control mt-3 event-long-location-input-offline" name="event_long_location_offline" placeholder="Masukkan lokasi offline..." style="display: none;" disabled>
+                <input type="text" class="form-control mt-3 event-long-address-location-input-offline" name="event_long_address_location_offline" placeholder="Masukkan alamat lokasi event..." style="display: none;">
+
+                <label class="form-label mt-2">Lokasi Online <span class="text-danger">*</span></label></label>
+                <input type="text" class="form-control event-long-location-input-online" name="event_long_location_online" placeholder="Masukkan lokasi online..." required>
+            `;
+
+                        const eventLongLocationTypeOffline = locationContainer.querySelector(
+                            '.event-long-location-type-offline');
+                        const eventLongAssetSelectOffline = locationContainer.querySelector(
+                            '.event-long-asset-select-offline');
+                        const eventLongLocationInputOffline = locationContainer.querySelector(
+                            '.event-long-location-input-offline');
+                        const eventLongAddressLocationInputOffline = locationContainer.querySelector(
+                            '.event-long-address-location-input-offline');
+
+                        // Iterasi untuk setiap elemen eventLongLocationTypeOffline
+
+                        eventLongLocationTypeOffline.addEventListener('change', function() {
+                            if (this.value === 'manual') {
+                                eventLongAssetSelectOffline.style.display = 'none';
+                                eventLongAssetSelectOffline.removeAttribute('required');
+                                eventLongAssetSelectOffline.setAttribute('disabled',
+                                    true);
+                                eventLongLocationInputOffline.style.display = 'block';
+                                eventLongLocationInputOffline.setAttribute('required',
+                                    true);
+                                eventLongLocationInputOffline.removeAttribute('disabled');
+
+                                eventLongAddressLocationInputOffline.style.display =
+                                    'block';
+                                eventLongAddressLocationInputOffline.removeAttribute(
+                                    'disabled');
+                                eventLongAddressLocationInputOffline.setAttribute(
+                                    'required', true);
+
+                            } else {
+                                eventLongAssetSelectOffline.style.display = 'block';
+                                eventLongAssetSelectOffline.removeAttribute('disabled');
+                                eventLongAssetSelectOffline.setAttribute('required',
+                                    true);
+                                eventLongLocationInputOffline.style.display = 'none';
+                                eventLongLocationInputOffline.removeAttribute('required');
+                                eventLongLocationInputOffline.setAttribute('disabled',
+                                    true);
+
+                                eventLongAddressLocationInputOffline.style.display =
+                                    'none';
+                                eventLongAddressLocationInputOffline.removeAttribute(
+                                    'required');
+                                eventLongAddressLocationInputOffline.setAttribute(
+                                    'disabled', true);
+                            }
+                        });
+
+                    }
+
+                    // Tambahkan event listener ke elemen-elemen baru jika diperlukan
+                    // newLocationType.addEventListener('change', function() {
+                    //     if (this.value === 'manual') {
+                    //         newAssetSelect.style.display = 'none';
+                    //         newLocationInput.style.display = 'block';
+                    //     } else {
+                    //         newAssetSelect.style.display = 'block';
+                    //         newLocationInput.style.display = 'none';
+                    //     }
+                    // });
+                });
+            }
+
 
             function updateRemoveStepButtons() {
                 const removeButtons = document.querySelectorAll('.remove-event-step');
@@ -1416,12 +1766,12 @@
                         name="event_dates[]" required>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label"> Jam Mulai Pelaksanaan <span class="text-danger">*</span></label>
+                    <label class="form-label"> Jam Mulai <span class="text-danger">*</span></label>
                     <input type="text" class="form-control time-start-execution-pickr"
                         name="event_time_starts[]" required>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Jam Selesai Pelaksanaan <span class="text-danger">*</span></label>
+                    <label class="form-label">Jam Selesai <span class="text-danger">*</span></label>
                     <input type="text" class="form-control time-end-execution-pickr"
                         name="event_time_ends[]" required>
                 </div>
@@ -1458,6 +1808,7 @@
 
 
             function updateEventDateDropdown() {
+                eventDates.sort((a, b) => new Date(a) - new Date(b));
                 document.querySelectorAll('.event-date-select').forEach(select => {
                     select.innerHTML = `<option value="" disabled selected>Pilih Tanggal</option>`;
 
@@ -1471,6 +1822,7 @@
                     });
                 });
             }
+
 
 
 
@@ -1635,6 +1987,7 @@
             }
 
             handleExecutionSystemChange(eventStepsContainer.querySelector('.event-step'));
+            handleEventLongExecutionSystemChange(eventLongContainer.querySelector('.event-long'));
             handleOtherRoleSelected(eventSpeakersContainer.querySelector('.event-speaker'));
             updateRemoveStepButtons();
             eventDateTimePickrChange();
